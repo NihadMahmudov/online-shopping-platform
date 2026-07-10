@@ -1,0 +1,290 @@
+.ordersContainer {
+  padding: 2rem;
+  width: 100%;
+}
+
+.pageTitle {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: var(--secondary);
+}
+
+.emptyOrders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: 1rem;
+  color: #ccc;
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.orderCard {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--bg-offset);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--bg-offset);
+}
+
+.orderId {
+  font-weight: 700;
+  color: var(--secondary);
+  display: block;
+}
+
+.orderDate {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.orderStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Progress Tracker */
+.progressTracker {
+  display: flex;
+  justify-content: space-between;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.progressTracker::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 30px;
+  right: 30px;
+  height: 2px;
+  background: var(--bg-offset);
+  z-index: 1;
+}
+
+.progressStep {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 80px;
+}
+
+.stepDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 3px solid var(--bg-offset);
+  transition: all 0.3s;
+}
+
+.stepLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.progressStep.completed .stepDot {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.progressStep.completed .stepLabel {
+  color: var(--primary);
+}
+
+.progressStep.active .stepDot {
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+.orderItems {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.orderItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.itemImg {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.itemDetails h4 {
+  font-size: 0.95rem;
+  color: var(--secondary);
+  margin-bottom: 4px;
+}
+
+.itemDetails p {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--bg-offset);
+}
+
+.deliveryInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.orderTotal {
+  font-size: 1.1rem;
+  color: var(--secondary);
+}
+
+.orderTotal strong {
+  color: var(--primary);
+  margin-left: 8px;
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 640px) {
+  .ordersContainer {
+    padding: 16px;
+  }
+
+  .orderHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .progressTracker {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 20px 0;
+    position: relative;
+    padding-left: 0;
+  }
+
+  .progressTracker::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: 2px;
+    height: calc(100% - 20px);
+    right: auto;
+    background: var(--bg-offset);
+    z-index: 1;
+  }
+
+  .progressStep {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stepDot {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  .stepLabel {
+    font-size: 0.82rem;
+    text-align: left;
+  }
+
+  .orderFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.inPanel { padding: 2rem; width: 100%; }
+
+.lockIcon, .emptyIcon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.emptyOrders h2 {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  color: var(--secondary);
+}
+
+.emptyOrders p {
+  font-size: 0.9rem;
+  max-width: 320px;
+  margin-bottom: 24px;
+  color: var(--text-light);
+}
+
+.loginBtn {
+  background: linear-gradient(135deg, #1A1A1A, #2D2D2D);
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+
+.loginBtn:hover {
+  background: linear-gradient(135deg, #D4AF37, #F5C842);
+  color: #1A1A1A;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212,175,55,0.3);
+}
+

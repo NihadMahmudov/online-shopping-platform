@@ -1,0 +1,257 @@
+/* ═══════════════════════════════════════════════════
+   SHOP PAGE — Mobile-First
+   2 columns on mobile → 3 on tablet → 4 on desktop
+═══════════════════════════════════════════════════ */
+
+.shopPage {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ─── Page Header ─── */
+.pageHeader {
+  background: linear-gradient(135deg, #f5f0e8 0%, #ede8df 100%);
+  padding: 36px 0 28px;
+  text-align: center;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+[data-theme='dark'] .pageHeader {
+  background: linear-gradient(135deg, #1a1a1a 0%, #141414 100%);
+}
+
+.breadcrumb {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.breadcrumb span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.pageHeader h1 {
+  font-size: clamp(1.5rem, 5vw, 2.6rem);
+  color: var(--secondary);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ─── Shop Container ─── */
+.shopContainer {
+  padding: 16px 0 80px;
+}
+
+/* ─── Toolbar ─── */
+.toolBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 10px 16px;
+  flex: 1;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.searchBox:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.searchIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.searchBox input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  background: transparent;
+  color: var(--text);
+}
+
+.searchBox input::placeholder {
+  color: var(--text-muted);
+}
+
+.sortWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sortBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  background: var(--white);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.sortBtn:hover {
+  border-color: var(--primary);
+}
+
+.rotated {
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+}
+
+.sortDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  overflow: hidden;
+  min-width: 200px;
+}
+
+.sortOption {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  color: var(--text);
+  cursor: pointer;
+  background: none;
+  transition: var(--transition);
+  border: none;
+  font-family: inherit;
+}
+
+.sortOption:hover {
+  background: var(--bg-offset);
+  color: var(--primary);
+}
+
+.sortActive {
+  color: var(--primary);
+  font-weight: 700;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+/* ─── Result Info ─── */
+.resultInfo {
+  margin-bottom: 14px;
+}
+
+.resultCount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.activeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--secondary);
+  color: var(--white);
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.activeTag button {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* ─── Product Grid ─── */
+/* Mobile-first: 2 columns on all phones */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* Tablet: 3 columns */
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Desktop: 4 columns */
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+
+/* ─── Mobile toolbar adjustments ─── */
+@media (max-width: 479px) {
+  .sortBtn span {
+    display: none;
+  }
+
+  .toolBar {
+    gap: 8px;
+  }
+
+  .shopContainer {
+    padding: 12px 0 80px;
+  }
+}
+
+/* ─── In Panel Mode ─── */
+.inPanel {
+  padding: 0;
+}
+
+.inPanel .shopContainer {
+  padding: 12px 0;
+}

@@ -1,0 +1,19 @@
+.feed {
+  padding: 40px 0 100px;
+  background: var(--bg);
+}
+
+.feedTitle {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  text-align: center;
+  color: var(--secondary);
+}
+
+.posts {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

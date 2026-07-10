@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════
+   GIFT FINDER — Mobile-First Modal
+═══════════════════════════════════════════════════ */
+
+.triggerBtn {
+  position: fixed;
+  bottom: calc(var(--bottombar-height) + 16px);
+  right: 16px;
+  background: var(--secondary);
+  color: var(--primary);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  z-index: 990;
+  transition: var(--transition);
+}
+
+.triggerBtn:hover {
+  transform: translateY(-4px);
+  background: var(--primary);
+  color: var(--secondary);
+}
+
+/* On desktop, no bottom bar so position lower */
+@media (min-width: 768px) {
+  .triggerBtn {
+    bottom: 30px;
+    right: 30px;
+    font-size: 0.9rem;
+    padding: 14px 24px;
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 2000;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .overlay {
+    align-items: center;
+    padding: 20px;
+  }
+}
+
+.modal {
+  background: var(--bg);
+  width: 100%;
+  max-width: 900px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.3);
+  max-height: 92vh;
+}
+
+@media (min-width: 640px) {
+  .modal {
+    border-radius: var(--radius-xl);
+    max-height: 90vh;
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--bg-offset);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--secondary);
+  z-index: 10;
+  transition: var(--transition);
+}
+
+.closeBtn:hover {
+  background: var(--border);
+}
+
+.modalContent {
+  padding: 32px 20px 40px;
+}
+
+@media (min-width: 640px) {
+  .modalContent {
+    padding: 50px;
+  }
+}
+
+.progress {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.progressBar {
+  height: 5px;
+  background: var(--bg-offset);
+  border-radius: 10px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.4s ease;
+  border-radius: 10px;
+}
+
+.question {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-family: var(--font-serif);
+  color: var(--secondary);
+  margin-bottom: 2rem;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.optionCard {
+  background: var(--white);
+  border: 2px solid var(--border);
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.optionCard:hover, .optionCard:active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateY(-3px);
+}
+
+.optionIcon {
+  font-size: 2rem;
+}
+
+.optionLabel {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--secondary);
+  line-height: 1.3;
+}
+
+/* Results */
+.resultTitle {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-family: var(--font-serif);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.resultSub {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+.resultsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+@media (min-width: 640px) {
+  .resultsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+.resultActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.resetBtn, .shopBtn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-family: inherit;
+}
+
+.resetBtn {
+  background: var(--bg-offset);
+  color: var(--secondary);
+}
+
+.shopBtn {
+  background: var(--secondary);
+  color: var(--white);
+}
+
+.shopBtn:hover {
+  background: var(--primary);
+  color: var(--secondary);
+}
+
+[data-theme='dark'] .optionCard {
+  background: var(--bg-alt);
+}

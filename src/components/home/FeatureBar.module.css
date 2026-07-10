@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════
+   FEATURE BAR — Mobile-First
+   2-col grid on mobile, 4-col on desktop
+═══════════════════════════════════════════════════ */
+
+.section {
+  padding: 24px 0;
+  background: var(--bg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.card {
+  background: var(--white);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.card:hover::after {
+  transform: scaleX(1);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.iconWrapper {
+  background: var(--primary-light);
+  color: var(--primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.info h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--secondary);
+  font-family: var(--font-sans);
+  line-height: 1.2;
+}
+
+.info p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .card {
+  background: var(--bg-alt);
+  border-color: var(--border);
+}
+
+[data-theme='dark'] .iconWrapper {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* ─── Desktop ─── */
+@media (min-width: 768px) {
+  .section {
+    padding: 40px 0;
+  }
+
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .card {
+    padding: 22px 20px;
+  }
+
+  .iconWrapper {
+    width: 46px;
+    height: 46px;
+  }
+
+  .info h3 {
+    font-size: 0.95rem;
+  }
+
+  .info p {
+    font-size: 0.82rem;
+  }
+}

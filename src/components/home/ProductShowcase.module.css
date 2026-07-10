@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════
+   PRODUCT SHOWCASE — Mobile-First Design
+   Curated design featuring dynamic tab switching
+═══════════════════════════════════════════════════ */
+
+.section {
+  padding: 40px 0;
+  background: var(--white);
+}
+
+[data-theme='dark'] .section {
+  background: #090909;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(212, 175, 55, 0.09);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.sparkleIcon {
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.title {
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-family: var(--font-serif);
+  color: var(--secondary);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* --- Filter Buttons --- */
+.filtersWrapper {
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+  scrollbar-width: none; /* Firefox */
+}
+
+.filtersWrapper::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-alt);
+  padding: 6px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.filterBtn {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: color 0.3s;
+}
+
+.filterBtn:hover {
+  color: var(--secondary);
+}
+
+.active {
+  color: var(--secondary);
+}
+
+[data-theme='dark'] .active {
+  color: #1A1A1A;
+}
+
+.activeBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #D4AF37, #F5C842);
+  border-radius: 50px;
+  z-index: 1;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
+}
+
+.btnLabel {
+  position: relative;
+  z-index: 2;
+}
+
+/* --- Products Grid --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* --- Action Button --- */
+.footerAction {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.shopMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #1A1A1A, #2D2D2D);
+  color: #fff;
+  padding: 15px 36px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shopMoreBtn:hover {
+  background: linear-gradient(135deg, #D4AF37, #F5C842);
+  color: #1A1A1A;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.35);
+}
+
+.shopMoreBtn svg {
+  transition: transform 0.3s;
+}
+
+.shopMoreBtn:hover svg {
+  transform: translateX(4px);
+}
+
+/* --- Responsive Layout --- */
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding: 70px 0;
+  }
+
+  .header {
+    margin-bottom: 45px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  .filtersWrapper {
+    margin-bottom: 40px;
+  }
+}

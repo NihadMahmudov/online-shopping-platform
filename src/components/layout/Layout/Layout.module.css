@@ -1,0 +1,24 @@
+.layoutWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mainContent {
+  flex: 1;
+  padding-top: var(--navbar-height-mobile);
+}
+
+/* Desktop: add top padding for taller navbar */
+@media (min-width: 768px) {
+  .mainContent {
+    padding-top: var(--navbar-height-desktop);
+  }
+}
+
+/* Mobile: add bottom padding for BottomBar */
+@media (max-width: 767px) {
+  .layoutWrapper {
+    padding-bottom: var(--bottombar-height);
+  }
+}
