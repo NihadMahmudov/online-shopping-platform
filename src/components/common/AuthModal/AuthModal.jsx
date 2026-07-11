@@ -58,7 +58,7 @@ const AuthModal = ({ isOpen, onClose, message = '' }) => {
           <p className={styles.subtitle}>
             {mode === 'login'
               ? 'Davam etmək üçün hesabınıza daxil olun.'
-              : 'Bame ailəsinə qoşulun.'}
+              : 'AtlasMall ailəsinə qoşulun.'}
           </p>
         </div>
 

@@ -22,7 +22,7 @@ const FeatureBar = () => {
     {
       icon: <Sparkles size={24} className={styles.icon} />,
       title: 'Eksklüziv Əl İşləri',
-      desc: 'Bame Gift Shop tərəfindən seçilmiş xüsusi dizaynlar'
+      desc: 'AtlasMall platforması tərəfindən seçilmiş xüsusi dizaynlar'
     }
   ];
 

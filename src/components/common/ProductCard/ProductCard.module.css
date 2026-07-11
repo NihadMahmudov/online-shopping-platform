@@ -172,6 +172,24 @@
   min-height: 2.2em;
 }
 
+.storeLink {
+  font-size: 0.72rem;
+  color: var(--primary);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  width: fit-content;
+  transition: color 0.2s;
+}
+
+.storeLink:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
 .ratingRow {
   display: flex;
   align-items: center;

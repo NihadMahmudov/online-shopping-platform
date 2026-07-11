@@ -9,9 +9,9 @@ const Footer = () => {
       <div className={`container ${styles.footerGrid}`}>
         <div className={styles.info}>
           <div className={styles.logo}>
-            BAME<span>.</span>
+            Atlas<span>Mall</span>
           </div>
-          <p>Unudulmaz anlar üçün ən zərif hədiyyələrin tək ünvanı. Biz hər bir detala sevgi ilə yanaşırıq.</p>
+          <p>Yüzlərlə fərqli mağaza və minlərlə məhsul çeşidi ilə xidmətinizdə olan vahid satış platforması.</p>
           <div className={styles.socials}>
             <a href="#"><Globe size={20} /></a>
             <a href="#"><Share2 size={20} /></a>
@@ -34,7 +34,7 @@ const Footer = () => {
           <ul>
             <li><MapPin size={18} /> Bakı şəhəri, Nizami küç. 45</li>
             <li><Phone size={18} /> +994 50 123 45 67</li>
-            <li><Mail size={18} /> info@bamegift.com</li>
+            <li><Mail size={18} /> info@atlasmall.com</li>
           </ul>
         </div>
 
@@ -48,7 +48,7 @@ const Footer = () => {
         </div>
       </div>
       <div className={styles.bottom}>
-        <p>&copy; {new Date().getFullYear()} BAME Gift Shop. Bütün hüquqlar qorunur.</p>
+        <p>&copy; {new Date().getFullYear()} AtlasMall Platforması. Bütün hüquqlar qorunur.</p>
       </div>
     </footer>
   );

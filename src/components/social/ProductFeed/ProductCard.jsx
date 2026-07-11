@@ -30,9 +30,9 @@ const ProductCard = ({ product }) => {
       viewport={{ once: true }}
     >
       <div className={styles.header}>
-        <div className={styles.avatar}>B</div>
+        <div className={styles.avatar}>A</div>
         <div className={styles.userInfo}>
-          <span className={styles.username}>bame_giftshop</span>
+          <span className={styles.username}>atlasmall</span>
           <span className={styles.location}>Bakı, Azərbaycan</span>
         </div>
       </div>

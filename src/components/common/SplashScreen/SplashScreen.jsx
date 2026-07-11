@@ -20,21 +20,21 @@ const SplashScreen = ({ onFinish }) => {
         <div className={`${styles.logoRing} ${phase !== 'enter' ? styles.ringVisible : ''}`}>
           <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="40" cy="40" r="36" stroke="#D4AF37" strokeWidth="1.5" strokeDasharray="226" className={styles.ringCircle}/>
-            <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fill="#D4AF37" fontSize="22" fontFamily="Playfair Display, serif" fontWeight="700">B</text>
+            <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fill="#D4AF37" fontSize="22" fontFamily="Playfair Display, serif" fontWeight="700">A</text>
           </svg>
         </div>
 
         {/* Brand name */}
         <div className={styles.brandWrap}>
           <h1 className={styles.brandName}>
-            {'Bame'.split('').map((char, i) => (
+            {'Atlas'.split('').map((char, i) => (
               <span key={i} className={styles.letter} style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
                 {char}
               </span>
             ))}
           </h1>
           <p className={styles.tagline}>
-            <span className={styles.taglineInner}>GiftShop</span>
+            <span className={styles.taglineInner}>Mall</span>
           </p>
         </div>
 

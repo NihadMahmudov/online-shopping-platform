@@ -109,6 +109,10 @@ const ProductCard = ({ product }) => {
             <h3 className={styles.name}>{product.name}</h3>
           </Link>
 
+          <Link to={`/store/${product.storeId}`} className={styles.storeLink}>
+            🏪 {product.storeName || 'AtlasMall'}
+          </Link>
+
           <div className={styles.ratingRow}>
             <div className={styles.stars}>
               {[...Array(5)].map((_, i) => (

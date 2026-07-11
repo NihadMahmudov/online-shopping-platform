@@ -3,7 +3,8 @@
 ═══════════════════════════════════════════════════ */
 
 .page {
-  padding: 20px 0 60px;
+  padding-top: 20px;
+  padding-bottom: 60px;
   min-height: 80vh;
 }
 
@@ -88,7 +89,34 @@
   font-weight: 700;
   letter-spacing: 1px;
   font-size: 0.78rem;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.metaSeparator {
+  color: var(--border);
+}
+
+.sellerLink {
+  font-size: 0.82rem;
+  color: var(--text-color);
+  transition: color 0.2s;
+}
+
+.sellerLink strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.sellerLink:hover strong {
+  text-decoration: underline;
+  color: var(--primary-dark);
 }
 
 .title {
@@ -312,9 +340,9 @@
    REVIEWS SECTION
 ═══════════════════════════════════════════ */
 .reviewsSection {
-  margin-top: 48px;
-  padding-top: 32px;
-  border-top: 1px solid var(--bg-alt);
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
 }
 
 .reviewsHeader {
@@ -352,7 +380,7 @@
 .reviewsGrid {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 @media (min-width: 768px) {
@@ -366,10 +394,28 @@
 /* Comment Form */
 .commentFormBox {
   background: var(--white);
-  padding: 24px;
-  border-radius: 20px;
-  border: 1px solid var(--bg-alt);
+  padding: 32px 28px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   height: fit-content;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.commentFormBox:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.commentFormBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
 }
 
 @media (min-width: 768px) {
@@ -380,14 +426,19 @@
 }
 
 .commentFormBox h3 {
-  font-size: 1.2rem;
-  margin-bottom: 6px;
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--secondary);
+  padding-top: 8px;
 }
 
 .commentFormBox p {
   color: var(--text-muted);
-  font-size: 0.88rem;
-  margin-bottom: 20px;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .successNote {
@@ -403,77 +454,76 @@
 .commentForm {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.formGroup label {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--secondary);
-}
-
-.formGroup input,
-.formGroup textarea {
-  padding: 12px 14px;
-  border: 1.5px solid var(--bg-alt);
-  border-radius: 10px;
+.commentForm input,
+.commentForm textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
   font-family: inherit;
   outline: none;
   font-size: 0.9rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.25s, box-shadow 0.25s;
   color: var(--text);
   background: var(--bg);
+  box-sizing: border-box;
 }
 
-.formGroup input:focus,
-.formGroup textarea:focus {
+.commentForm input:focus,
+.commentForm textarea:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.commentForm input::placeholder,
+.commentForm textarea::placeholder {
+  color: var(--text-light);
 }
 
 .starSelector {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  padding: 6px 0;
 }
 
 .starSelector button {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
-  color: var(--bg-alt);
-  transition: transform 0.15s;
+  padding: 4px;
+  color: var(--border);
+  transition: transform 0.15s, color 0.15s;
+  border-radius: 4px;
 }
 
 .starSelector button:hover {
-  transform: scale(1.15);
-}
-
-.starActive {
-  color: var(--primary) !important;
+  transform: scale(1.2);
+  color: var(--primary);
 }
 
 .submitComment {
-  background: var(--secondary);
+  background: linear-gradient(135deg, var(--secondary), #333);
   color: var(--white);
   border: none;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
   font-family: inherit;
   font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
 }
 
 .submitComment:hover {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: var(--secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Comments List */
@@ -630,25 +680,128 @@
 }
 
 .relatedSection {
-  margin-top: 60px;
-  padding-top: 40px;
-  border-top: 1px solid var(--border, #eaeaea);
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .relatedSection {
+    margin-top: 60px;
+    padding-top: 40px;
+  }
 }
 
 .relatedSection h2 {
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.2rem, 4vw, 2rem);
   font-family: var(--font-serif);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .relatedGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 @media (min-width: 768px) {
   .relatedGrid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Skeleton Loader Styles */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .skeletonGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.skeletonImage {
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+  border-radius: var(--radius-lg);
+  aspect-ratio: 1;
+  width: 100%;
+}
+
+.skeletonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonLineShort {
+  width: 30%;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+}
+
+.skeletonLineLong {
+  width: 85%;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+}
+
+.skeletonLineMedium {
+  width: 60%;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+}
+
+.skeletonLinePrice {
+  width: 40%;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+  margin-top: 10px;
+}
+
+.skeletonLineText {
+  width: 95%;
+  height: 80px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+}
+
+.skeletonActions {
+  width: 70%;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--bg-alt) 25%, var(--border) 50%, var(--bg-alt) 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite ease-in-out;
+  margin-top: 20px;
+}
+
+@keyframes loadingSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

@@ -4,12 +4,12 @@ const WishlistContext = createContext();
 
 export const WishlistProvider = ({ children }) => {
   const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem('bame_wishlist');
+    const saved = localStorage.getItem('atlas_wishlist');
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem('bame_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('atlas_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
   const toggleWishlist = (product) => {

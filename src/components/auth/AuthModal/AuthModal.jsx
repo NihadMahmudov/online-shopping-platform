@@ -40,7 +40,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             </button>
 
             <div className={styles.logoArea}>
-              <span className={styles.logo}>BAME<span>.</span></span>
+              <span className={styles.logo}>Atlas<span>Mall</span></span>
             </div>
 
             {/* Tab Switcher */}

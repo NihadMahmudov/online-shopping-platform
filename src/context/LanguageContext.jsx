@@ -5,12 +5,12 @@ const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem('bame_language');
+    const saved = localStorage.getItem('atlas_language');
     return saved ? saved : 'az';
   });
 
   useEffect(() => {
-    localStorage.setItem('bame_language', language);
+    localStorage.setItem('atlas_language', language);
   }, [language]);
 
   const changeLanguage = (lang) => {

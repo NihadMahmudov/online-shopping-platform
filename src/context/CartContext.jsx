@@ -4,7 +4,7 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem('bame_cart');
+    const saved = localStorage.getItem('atlas_cart');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -12,12 +12,12 @@ export const CartProvider = ({ children }) => {
   const [appliedPromo, setAppliedPromo] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('bame_cart', JSON.stringify(cart));
+    localStorage.setItem('atlas_cart', JSON.stringify(cart));
   }, [cart]);
 
   const applyPromoCode = (code) => {
     // Simple mock promo code logic
-    if (code.toUpperCase() === 'BAME10') {
+    if (code.toUpperCase() === 'ATLAS10') {
       setDiscount(0.10); // 10% endirim
       setAppliedPromo(code.toUpperCase());
       return { success: true, message: 'Promo kod tətbiq edildi!' };

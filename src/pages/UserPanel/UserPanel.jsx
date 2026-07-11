@@ -60,7 +60,7 @@ const UserPanel = () => {
           <Home size={20} />
         </Link>
         <div className={styles.logo}>
-          <span>BAME</span><span className={styles.logoDot}>.</span>
+          <span>Atlas</span><span className={styles.logoDot}>Mall</span>
         </div>
         <div className={styles.mobileAvatar} onClick={() => setIsMobileMenuOpen(true)}>
           {user.name.charAt(0).toUpperCase()}
@@ -87,7 +87,7 @@ const UserPanel = () => {
             >
               <div className={styles.drawerHeader}>
                 <div className={styles.logo}>
-                  <span>BAME</span><span className={styles.logoDot}>.</span>
+                  <span>Atlas</span><span className={styles.logoDot}>Mall</span>
                 </div>
                 <button className={styles.closeBtn} onClick={() => setIsMobileMenuOpen(false)}>
                   <X size={20} />
@@ -139,7 +139,7 @@ const UserPanel = () => {
       {/* Desktop Left Sidebar (hidden on mobile via CSS) */}
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
-          <Link to="/"><span>BAME</span><span className={styles.logoDot}>.</span></Link>
+          <Link to="/"><span>Atlas</span><span className={styles.logoDot}>Mall</span></Link>
         </div>
 
         <div className={styles.userInfo}>

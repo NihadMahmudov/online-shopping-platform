@@ -43,7 +43,7 @@ const ProductShowcase = () => {
             MƏHSULLARIMIZ
           </div>
           <h2 className={styles.title}>Populyar Məhsullar</h2>
-          <p className={styles.subtitle}>Bame Gift Shop tərəfindən sizin üçün xüsusi seçilmiş premium məhsullar</p>
+          <p className={styles.subtitle}>AtlasMall tərəfindən sizin üçün xüsusi seçilmiş premium məhsullar</p>
         </div>
 
         {/* Category Filters */}

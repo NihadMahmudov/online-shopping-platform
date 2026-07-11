@@ -11,7 +11,7 @@ import styles from './Navbar.module.css';
 const Navbar = () => {
   const { cartItemCount } = useCart();
   const { wishlist } = useWishlist();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isSuperAdmin, isVendor } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { language, changeLanguage, t } = useLanguage();
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ const Navbar = () => {
 
           {/* Logo */}
           <div className={styles.logo}>
-            <Link to="/">BAME<span>.</span></Link>
+            <Link to="/">Atlas<span>Mall</span></Link>
           </div>
 
           {/* Desktop Nav Links */}
@@ -89,9 +89,9 @@ const Navbar = () => {
                 onChange={(e) => changeLanguage(e.target.value)}
                 className={styles.langSelect}
               >
-                <option value="az">AZ</option>
-                <option value="en">EN</option>
-                <option value="ru">RU</option>
+                <option value="az">🇦🇿 AZ</option>
+                <option value="en">🇬🇧 EN</option>
+                <option value="ru">🇷🇺 RU</option>
               </select>
             </div>
 
@@ -104,8 +104,13 @@ const Navbar = () => {
             {user ? (
               <div className={styles.userMenu}>
                 <span className={styles.userName}>{user.name}</span>
-                {isAdmin && (
+                {isSuperAdmin && (
                   <Link to="/dashboard" className={styles.adminBtn} title={t('navbar.adminPanel')}>
+                    <Settings size={20} />
+                  </Link>
+                )}
+                {isVendor && (
+                  <Link to="/store-dashboard" className={styles.adminBtn} title="Mağaza Paneli">
                     <Settings size={20} />
                   </Link>
                 )}
@@ -131,7 +136,7 @@ const Navbar = () => {
       {/* Mobile Side Drawer */}
       <aside className={`${styles.mobileDrawer} ${isDrawerOpen ? styles.drawerOpen : ''}`}>
         <div className={styles.drawerHeader}>
-          <div className={styles.drawerLogo}>BAME<span>.</span></div>
+          <div className={styles.drawerLogo}>Atlas<span>Mall</span></div>
           <button className={styles.drawerClose} onClick={closeDrawer}>
             <X size={20} />
           </button>
@@ -162,9 +167,9 @@ const Navbar = () => {
               onChange={(e) => { changeLanguage(e.target.value); closeDrawer(); }}
               style={{ padding: '5px', borderRadius: '5px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
             >
-              <option value="az">AZ</option>
-              <option value="en">EN</option>
-              <option value="ru">RU</option>
+              <option value="az">🇦🇿 AZ</option>
+              <option value="en">🇬🇧 EN</option>
+              <option value="ru">🇷🇺 RU</option>
             </select>
           </div>
 
@@ -190,9 +195,14 @@ const Navbar = () => {
                   <span>{user.email}</span>
                 </div>
               </div>
-              {isAdmin && (
+              {isSuperAdmin && (
                 <Link to="/dashboard" onClick={closeDrawer} className={styles.drawerLoginBtn}>
                   <Settings size={18} /> {t('navbar.adminPanel')}
+                </Link>
+              )}
+              {isVendor && (
+                <Link to="/store-dashboard" onClick={closeDrawer} className={styles.drawerLoginBtn}>
+                  <Settings size={18} /> Mağaza Paneli
                 </Link>
               )}
               <button className={styles.drawerLogout} onClick={handleLogout}>

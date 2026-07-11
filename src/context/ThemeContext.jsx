@@ -4,7 +4,7 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('bame_theme');
+    const saved = localStorage.getItem('atlas_theme');
     return saved === 'dark';
   });
 
@@ -12,10 +12,10 @@ export const ThemeProvider = ({ children }) => {
     const root = window.document.documentElement;
     if (isDarkMode) {
       root.setAttribute('data-theme', 'dark');
-      localStorage.setItem('bame_theme', 'dark');
+      localStorage.setItem('atlas_theme', 'dark');
     } else {
       root.removeAttribute('data-theme');
-      localStorage.setItem('bame_theme', 'light');
+      localStorage.setItem('atlas_theme', 'light');
     }
   }, [isDarkMode]);
 

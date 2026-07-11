@@ -51,7 +51,7 @@ const Cart = ({ inPanel = false }) => {
       <div className={styles.emptyCart}>
         <div className={styles.successAnimation}>
           <h2>Təbriklər! 🎉</h2>
-          <p>Sifarişiniz Bame Adminə göndərildi.</p>
+          <p>Sifarişiniz AtlasMall sisteminə göndərildi.</p>
           <p>Təsdiqləndikdən sonra "Sifarişlərim" bölməsindən izləyə bilərsiniz.</p>
           <button 
             className={styles.ordersBtn}
@@ -117,7 +117,7 @@ const Cart = ({ inPanel = false }) => {
             <div className={styles.promoInputWrapper}>
               <input 
                 type="text" 
-                placeholder="Promo kod (Məs: BAME10)" 
+                placeholder="Promo kod (Məs: ATLAS10)" 
                 value={promoInput}
                 onChange={(e) => setPromoInput(e.target.value)}
                 disabled={!!appliedPromo}

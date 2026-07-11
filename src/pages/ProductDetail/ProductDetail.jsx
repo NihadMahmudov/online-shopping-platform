@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Heart, ShoppingCart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
@@ -20,6 +20,7 @@ const ProductDetail = () => {
   const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [commentForm, setCommentForm] = useState({ name: '', rating: 5, text: '' });
@@ -74,16 +75,41 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
-    const foundProduct = products.find(p => p.id === parseInt(id));
-    if (foundProduct) {
-      setProduct(foundProduct);
-      
-      const saved = localStorage.getItem('bame_recent');
-      let ids = saved ? JSON.parse(saved) : [];
-      ids = [foundProduct.id, ...ids.filter(i => i !== foundProduct.id)].slice(0, 10);
-      localStorage.setItem('bame_recent', JSON.stringify(ids));
-    }
+    setLoading(true);
+    const timer = setTimeout(() => {
+      const foundProduct = products.find(p => p.id === parseInt(id));
+      if (foundProduct) {
+        setProduct(foundProduct);
+        
+        const saved = localStorage.getItem('atlas_recent');
+        let ids = saved ? JSON.parse(saved) : [];
+        ids = [foundProduct.id, ...ids.filter(i => i !== foundProduct.id)].slice(0, 10);
+        localStorage.setItem('atlas_recent', JSON.stringify(ids));
+      } else {
+        setProduct(null);
+      }
+      setLoading(false);
+    }, 450); // Sleek transition delay
+    return () => clearTimeout(timer);
   }, [id, products]);
+
+  if (loading) {
+    return (
+      <div className={`container ${styles.page}`}>
+        <div className={styles.skeletonGrid}>
+          <div className={styles.skeletonImage} />
+          <div className={styles.skeletonInfo}>
+            <div className={styles.skeletonLineShort} />
+            <div className={styles.skeletonLineLong} />
+            <div className={styles.skeletonLineMedium} />
+            <div className={styles.skeletonLinePrice} />
+            <div className={styles.skeletonLineText} />
+            <div className={styles.skeletonActions} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -102,7 +128,12 @@ const ProductDetail = () => {
 
   return (
     <>
-      <div className={`container ${styles.page}`}>
+      <motion.div 
+        className={`container ${styles.page}`}
+        initial={{ opacity: 0, y: 15, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.32, ease: "easeOut" }}
+      >
         <button className={styles.backBtn} onClick={() => navigate(-1)}>
           <ArrowLeft size={20} /> Geri Qayıt
         </button>
@@ -116,7 +147,13 @@ const ProductDetail = () => {
           </div>
 
           <div className={styles.infoSection}>
-            <p className={styles.category}>{categoryLabel}</p>
+            <div className={styles.metaRow}>
+              <span className={styles.category}>{categoryLabel}</span>
+              <span className={styles.metaSeparator}>•</span>
+              <Link to={`/store/${product.storeId}`} className={styles.sellerLink}>
+                Satıcı: <strong>{product.storeName || 'AtlasMall'}</strong>
+              </Link>
+            </div>
             <h1 className={styles.title}>{product.name}</h1>
 
             <div className={styles.ratingRow}>
@@ -134,7 +171,7 @@ const ProductDetail = () => {
             </div>
 
             <p className={styles.description}>
-              {product.description || "Bu məhsul Bame Gift Shop tərəfindən xüsusi olaraq seçilmişdir."}
+              {product.description || "Bu məhsul AtlasMall tərəfindən xüsusi olaraq seçilmişdir."}
             </p>
 
             <div className={styles.actions}>
@@ -185,7 +222,7 @@ const ProductDetail = () => {
                 <div className={styles.starSelector}>
                   {[1, 2, 3, 4, 5].map(num => (
                     <button key={num} type="button" onClick={() => setCommentForm({...commentForm, rating: num})}>
-                      <Star size={24} fill={commentForm.rating >= num ? "var(--primary)" : "none"} />
+                      <Star size={24} fill={commentForm.rating >= num ? "var(--primary)" : "none"} color={commentForm.rating >= num ? "var(--primary)" : "var(--border)"} />
                     </button>
                   ))}
                 </div>
@@ -226,8 +263,8 @@ const ProductDetail = () => {
           </div>
         )}
 
-        <RecentlyViewed />
-      </div>
+        <RecentlyViewed noContainer={true} />
+      </motion.div>
 
       <AuthModal
         isOpen={authModal.open}

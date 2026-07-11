@@ -15,7 +15,7 @@ const LiveChat = () => {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.headerInfo}>
-              <h4>Bame Dəstək</h4>
+              <h4>AtlasMall Dəstək</h4>
               <p>Adətən bir neçə dəqiqəyə cavab veririk</p>
             </div>
             <button className={styles.closeBtn} onClick={toggleChat}>
