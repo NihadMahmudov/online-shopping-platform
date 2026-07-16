@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       storeId,
       storeName,
       storeCategory: category || 'Geyim & Moda',
-      status: 'approved',     // auto-approved for immediate display and usability
+      status: 'pending',     // must be approved by superadmin before accessing dashboard
       createdAt: new Date().toISOString()
     };
     const updated = [...users, newVendor];

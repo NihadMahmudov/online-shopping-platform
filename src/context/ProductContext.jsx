@@ -87,24 +87,16 @@ export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
     try {
       const saved = localStorage.getItem('atlas_products');
-      let loadedProducts = demoProducts;
-      
       if (saved) {
         const parsed = JSON.parse(saved);
-        console.log('✅ Loaded products from localStorage:', parsed.length);
-        loadedProducts = parsed.length > 0 ? parsed : demoProducts;
-      } else {
-        console.log('✅ No localStorage data, using demo products:', demoProducts.length);
-        loadedProducts = demoProducts;
+        if (parsed && parsed.length > 0) {
+          // Merge: ensure demoProducts are always included as foundation
+          const savedIds = new Set(parsed.map(p => p.id));
+          const missingDemos = demoProducts.filter(p => !savedIds.has(p.id));
+          return [...missingDemos, ...parsed];
+        }
       }
-
-      // Ensure we always have products
-      if (!loadedProducts || loadedProducts.length === 0) {
-        console.warn('⚠️ No products found, forcing demo products');
-        loadedProducts = demoProducts;
-      }
-
-      return loadedProducts;
+      return demoProducts;
     } catch (error) {
       console.error('❌ Error loading products:', error);
       return demoProducts;

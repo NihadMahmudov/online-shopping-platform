@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Store, Users, ShoppingBag, LogOut,
   TrendingUp, CheckCircle, XCircle, Trash2, ShieldAlert,
-  Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft
+  Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft, Tag, PlusCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +11,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import styles from './Dashboard.module.css';
 
-const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Analitika'];
+const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Analitika'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,12 +20,14 @@ const Dashboard = () => {
     deleteUser, suspendUser, approveVendor, rejectVendor 
   } = useAuth();
   
-  const { products } = useProducts();
+  const { products, categories, addCategory, deleteCategory } = useProducts();
   const { orders, updateOrderStatus, getTotalRevenue, getRevenueByStore } = useOrders();
 
   const [activeTab, setActiveTab] = useState('Mağazalar');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [newCatLabel, setNewCatLabel] = useState('');
+  const [catSuccess, setCatSuccess] = useState(false);
 
   // Redirect if not superadmin
   useEffect(() => {
@@ -62,8 +64,17 @@ const Dashboard = () => {
     { label: 'Ümumi Mağazalar', value: vendors.length, icon: <Store size={22} />, color: '#D4AF37' },
     { label: 'Qeydiyyatlı Müştərilər', value: customers.length, icon: <Users size={22} />, color: '#2A9D8F' },
     { label: 'Cari Məhsullar', value: products.length, icon: <ShoppingBag size={22} />, color: '#E63946' },
-    { label: 'Platforma Gəliri', value: `${totalPlatformRevenue} AZN`, icon: <TrendingUp size={22} />, color: '#4361ee' },
+    { label: 'Platform Gəliri', value: `${totalPlatformRevenue} AZN`, icon: <TrendingUp size={22} />, color: '#4361ee' },
   ];
+
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatLabel.trim()) return;
+    addCategory(newCatLabel.trim());
+    setNewCatLabel('');
+    setCatSuccess(true);
+    setTimeout(() => setCatSuccess(false), 2000);
+  };
 
   return (
     <div className={styles.page}>
@@ -124,6 +135,7 @@ const Dashboard = () => {
                     {tab === 'Mağazalar' ? <Store size={18} /> : 
                      tab === 'İstifadəçilər' ? <Users size={18} /> : 
                      tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
+                     tab === 'Kateqoriyalar' ? <Tag size={18} /> :
                      <TrendingUp size={18} />}
                     {tab}
                   </button>
@@ -167,6 +179,7 @@ const Dashboard = () => {
               {tab === 'Mağazalar' ? <Store size={18} /> : 
                tab === 'İstifadəçilər' ? <Users size={18} /> : 
                tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
+               tab === 'Kateqoriyalar' ? <Tag size={18} /> :
                <TrendingUp size={18} />}
               {tab}
             </button>
@@ -206,7 +219,7 @@ const Dashboard = () => {
         </div>
 
         {/* Search Bar */}
-        {activeTab !== 'Analitika' && (
+        {activeTab !== 'Analitika' && activeTab !== 'Kateqoriyalar' && (
           <div className={styles.searchContainer}>
             <input 
               type="text" 
@@ -440,6 +453,86 @@ const Dashboard = () => {
                           </div>
                         </div>
                       ))
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── CATEGORIES TAB (superadmin only) ── */}
+            {activeTab === 'Kateqoriyalar' && (
+              <motion.div
+                key="categories"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className={styles.sectionHeader}>
+                  <h2>Məhsul Kateqoriyaları</h2>
+                  <p style={{ color: '#888', fontSize: '0.9rem', marginTop: '4px' }}>Platforma kateqoriyalarını idarə edin. Mağazalar yalnız bu kateqoriyalar üzrə məhsul əlavə edə bilərlər.</p>
+                </div>
+
+                {catSuccess && (
+                  <div style={{ background: 'rgba(42, 157, 143, 0.12)', border: '1px solid rgba(42,157,143,0.3)', color: '#2a9d8f', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', fontWeight: 600 }}>
+                    ✅ Kateqoriya uğurla əlavə edildi!
+                  </div>
+                )}
+
+                <div className={styles.tableCard} style={{ padding: '24px', marginBottom: '24px' }}>
+                  <h3 style={{ color: '#fff', marginBottom: '16px', fontSize: '1rem' }}>Yeni Kateqoriya Əlavə Et</h3>
+                  <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={newCatLabel}
+                      onChange={(e) => setNewCatLabel(e.target.value)}
+                      placeholder="Kateqoriya adı (məs: Elektronika, Geyim...)"
+                      className={styles.searchBar}
+                      style={{ flex: 1, margin: 0 }}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className={styles.approveBtn}
+                      style={{ whiteSpace: 'nowrap', padding: '10px 20px' }}
+                    >
+                      <PlusCircle size={16} /> Əlavə Et
+                    </button>
+                  </form>
+                </div>
+
+                <div className={styles.tableCard}>
+                  <div className={styles.table}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontWeight: 700, color: '#888', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <span>Kateqoriya Adı</span>
+                      <span>Məhsul Sayı</span>
+                      <span>Əməliyyat</span>
+                    </div>
+                    {categories.filter(c => c.id !== 'all').length === 0 ? (
+                      <div className={styles.noData}>Kateqoriya tapılmadı. Yeni kateqoriya əlavə edin.</div>
+                    ) : (
+                      categories.filter(c => c.id !== 'all').map(cat => {
+                        const productCount = products.filter(p => p.category === cat.id).length;
+                        return (
+                          <div key={cat.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '14px 24px', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.95rem', transition: 'background 0.2s' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4AF37' }}>
+                                <Tag size={16} />
+                              </div>
+                              <strong style={{ color: '#fff' }}>{cat.label}</strong>
+                            </div>
+                            <span className={styles.catTag}>{productCount} məhsul</span>
+                            <div>
+                              <button
+                                className={styles.rejectBtn}
+                                onClick={() => deleteCategory(cat.id)}
+                                title="Sil"
+                              >
+                                <Trash2 size={14} /> Sil
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>

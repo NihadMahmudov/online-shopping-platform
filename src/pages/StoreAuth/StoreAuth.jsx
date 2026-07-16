@@ -300,7 +300,6 @@ const StoreAuth = () => {
               </motion.form>
             )}
 
-            {/* ── SUCCESS / PENDING ── */}
             {mode === 'register' && step === 3 && (
               <motion.div key="success" className={styles.pendingBox}
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -309,14 +308,14 @@ const StoreAuth = () => {
                 <h2>Müraciətiniz Qəbul Edildi!</h2>
                 <p>
                   <strong>{form.storeName}</strong> mağazanız üçün müraciətiniz qeydə alındı.
-                  Komandamız 24-48 saat ərzində yoxlayıb sizinlə əlaqə saxlayacaq.
+                  Admin təsdiq verdikdən sonra mağaza panelinizdən istifadə edə bilərsiniz.
                 </p>
                 <div className={styles.pendingNote}>
-                  <span>🔔</span>
-                  İcazə verildikdən sonra mağaza dashbordunuza daxil ola bilərsiniz.
+                  <span>⏳</span>
+                  Superadmin icazəsi verildikdən sonra məhsul əlavə edib sata bilərsiniz.
                 </div>
                 <button className={styles.submitBtn} onClick={() => navigate('/store-dashboard')}>
-                  Dashborda Keç →
+                  Status Yoxla →
                 </button>
               </motion.div>
             )}

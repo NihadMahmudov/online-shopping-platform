@@ -10,19 +10,12 @@ const ProductShowcase = () => {
   const { products = [], categories = [] } = useProducts() || {};
   const [activeCategory, setActiveCategory] = useState('all');
 
-  console.log('🔍 ProductShowcase Debug:', {
-    totalProducts: products?.length,
-    totalCategories: categories?.length,
-    activeCategory,
-    products: products?.slice(0, 3)
-  });
 
   // Filter products by active category. We display a maximum of 8 products on the home page.
   const filteredProducts = useMemo(() => {
     const list = activeCategory === 'all'
       ? products
       : products.filter(p => p.category === activeCategory);
-    console.log('🔍 Filtered products:', list?.length);
     return list.slice(0, 8);
   }, [activeCategory, products]);
 

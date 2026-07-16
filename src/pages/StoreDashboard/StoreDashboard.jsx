@@ -14,16 +14,15 @@ import { useOrders } from '../../context/OrderContext';
 import { useStore } from '../../context/StoreContext';
 import styles from './StoreDashboard.module.css';
 
-const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Sifarişlər', 'Analitika', 'Rəylər', 'Kateqoriya & Flaş', 'Mağaza Parametrləri'];
+const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Sifarişlər', 'Analitika', 'Rəylər', 'Flaş Satış', 'Mağaza Parametrləri'];
 
 const StoreDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { 
     products, addProduct, deleteProduct, 
-    categories, addCategory, deleteCategory, updateCategoryImage,
-    badges, addBadge, deleteBadge,
-    collections, addCollection, deleteCollection,
+    categories,
+    collections,
     flashSale, updateFlashSale,
     deleteComment
   } = useProducts();
@@ -106,30 +105,10 @@ const StoreDashboard = () => {
     setTimeout(() => setSuccess(false), 2000);
   };
 
-  // Campaigns & Categories States
-  const [newCatLabel, setNewCatLabel] = useState('');
-  const [newCollLabel, setNewCollLabel] = useState('');
+  // Flash Sale States
   const [flashTarget, setFlashTarget] = useState(
     flashSale?.targetDate ? new Date(flashSale.targetDate).toISOString().substring(0, 16) : ''
   );
-
-  const handleAddCategorySubmit = (e) => {
-    e.preventDefault();
-    if (!newCatLabel) return;
-    addCategory(newCatLabel);
-    setNewCatLabel('');
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 1500);
-  };
-
-  const handleAddCollectionSubmit = (e) => {
-    e.preventDefault();
-    if (!newCollLabel) return;
-    addCollection(newCollLabel);
-    setNewCollLabel('');
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 1500);
-  };
 
   const handleFlashProductToggle = (productId) => {
     const currentIds = flashSale.productIds || [];
@@ -154,7 +133,7 @@ const StoreDashboard = () => {
       case 'Sifarişlər': return <ShoppingBag size={18} />;
       case 'Analitika': return <TrendingUp size={18} />;
       case 'Rəylər': return <MessageSquare size={18} />;
-      case 'Kateqoriya & Flaş': return <Tag size={18} />;
+      case 'Flaş Satış': return <Zap size={18} />;
       case 'Mağaza Parametrləri': return <Settings size={18} />;
       default: return <Package size={18} />;
     }
@@ -749,120 +728,66 @@ const StoreDashboard = () => {
                   )}
                 </div>
               </motion.div>
-            ) : activeTab === 'Kateqoriya & Flaş' ? (
+            ) : activeTab === 'Flaş Satış' ? (
               <motion.div
-                key="campaigns"
+                key="flash"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                <h2>Platforma Ayarları & Kampaniyalar</h2>
-                <p>Kateqoriyaları və flaş satış kampaniyalarını idarə edin.</p>
+                <div className={styles.sectionHeader}>
+                  <h2>Flaş Satış Kampaniyası ⚡</h2>
+                  <p>Kampaniyanın bitmə vaxtını təyin edin və məhsulları seçin.</p>
+                </div>
 
                 {success && (
-                  <div className={styles.successMsg} style={{ background: 'rgba(42, 157, 143, 0.15)', color: '#2a9d8f', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+                  <div className={styles.successMsg} style={{ marginBottom: '16px' }}>
                     ✅ Əməliyyat uğurla yerinə yetirildi!
                   </div>
                 )}
 
                 <div className={styles.campaignsGrid}>
-                  {/* Left Column: Categories and Collections */}
-                  <div>
-                    <div className={styles.settingsBox}>
-                      <h3>Kateqoriyalar</h3>
-                      <form onSubmit={handleAddCategorySubmit} className={styles.campaignsForm}>
+                  <div className={styles.settingsBox}>
+                    <h3>Bitmə Vaxtını Təyin Et</h3>
+                    <form onSubmit={handleSaveFlashTime} className={styles.campaignsForm} style={{ flexDirection: 'column', gap: '8px' }}>
+                      <div className={styles.settingsFormGroup} style={{ width: '100%', marginBottom: 0 }}>
+                        <label>Kampaniya Bitmə Vaxtı</label>
                         <input 
-                          type="text" 
-                          value={newCatLabel} 
-                          onChange={(e) => setNewCatLabel(e.target.value)} 
-                          placeholder="Yeni kateqoriya adı..." 
+                          type="datetime-local" 
+                          value={flashTarget} 
+                          onChange={(e) => setFlashTarget(e.target.value)} 
                           className={styles.settingsInput}
                           required
                         />
-                        <button type="submit" className={styles.settingsSubmitBtn} style={{ width: 'auto', padding: '0 20px' }}>Əlavə Et</button>
-                      </form>
-                      <div className={styles.campaignsList}>
-                        {categories.filter(c => c.id !== 'all').map(c => (
-                          <div key={c.id} className={styles.campaignsListItem}>
-                            <span>{c.label} ({products.filter(p => p.category === c.id).length} məhsul)</span>
-                            <button type="button" onClick={() => deleteCategory(c.id)} className={styles.deleteItemBtn}>
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ))}
                       </div>
-                    </div>
-
-                    <div className={styles.settingsBox}>
-                      <h3>Kolleksiyalar (Etiketlər)</h3>
-                      <form onSubmit={handleAddCollectionSubmit} className={styles.campaignsForm}>
-                        <input 
-                          type="text" 
-                          value={newCollLabel} 
-                          onChange={(e) => setNewCollLabel(e.target.value)} 
-                          placeholder="Yeni kolleksiya adı..." 
-                          className={styles.settingsInput}
-                          required
-                        />
-                        <button type="submit" className={styles.settingsSubmitBtn} style={{ width: 'auto', padding: '0 20px' }}>Əlavə Et</button>
-                      </form>
-                      <div className={styles.campaignsList}>
-                        {collections.map(coll => (
-                          <div key={coll.id} className={styles.campaignsListItem}>
-                            <span>{coll.label}</span>
-                            <button type="button" onClick={() => deleteCollection(coll.id)} className={styles.deleteItemBtn}>
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                      <button type="submit" className={styles.settingsSubmitBtn} style={{ marginTop: '8px' }}>Vaxtı Yadda Saxla</button>
+                    </form>
                   </div>
 
-                  {/* Right Column: Flash Sale Manager */}
-                  <div>
-                    <div className={styles.settingsBox}>
-                      <h3>Flaş Satış Kampaniyası</h3>
-                      <p style={{ fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '16px' }}>Kampaniyanın bitmə vaxtını təyin edin və məhsulları seçin.</p>
-                      
-                      <form onSubmit={handleSaveFlashTime} className={styles.campaignsForm} style={{ flexDirection: 'column', gap: '8px' }}>
-                        <div className={styles.settingsFormGroup} style={{ width: '100%', marginBottom: 0 }}>
-                          <label>Bitmə Vaxtı</label>
-                          <input 
-                            type="datetime-local" 
-                            value={flashTarget} 
-                            onChange={(e) => setFlashTarget(e.target.value)} 
-                            className={styles.settingsInput}
-                            required
-                          />
-                        </div>
-                        <button type="submit" className={styles.settingsSubmitBtn} style={{ marginTop: '8px' }}>Vaxtı Yadda Saxla</button>
-                      </form>
-
-                      <h4 style={{ fontSize: '0.9rem', color: '#fff', marginTop: '24px', marginBottom: '8px' }}>Kampaniyaya Məhsul Əlavə Et</h4>
-                      <div className={styles.flashProductsList}>
-                        {storeProducts.length === 0 ? (
-                          <div style={{ fontSize: '0.85rem', color: '#a0a0a0', textAlign: 'center', padding: '16px' }}>Məhsul tapılmadı.</div>
-                        ) : (
-                          storeProducts.map(p => {
-                            const isInFlash = (flashSale?.productIds || []).includes(p.id);
-                            return (
-                              <div key={p.id} className={styles.flashProductItem}>
-                                <input 
-                                  type="checkbox" 
-                                  checked={isInFlash} 
-                                  onChange={() => handleFlashProductToggle(p.id)}
-                                />
-                                <img src={p.img} alt={p.name} />
-                                <div className={styles.flashProductItemInfo}>
-                                  <h4>{p.name}</h4>
-                                  <span>{p.price} AZN</span>
-                                </div>
+                  <div className={styles.settingsBox}>
+                    <h3>Kampaniyaya Məhsul Əlavə Et</h3>
+                    <div className={styles.flashProductsList}>
+                      {storeProducts.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '16px', opacity: 0.6 }}>Məhsul tapılmadı. Əvvəlcə məhsul əlavə edin.</div>
+                      ) : (
+                        storeProducts.map(p => {
+                          const isInFlash = (flashSale?.productIds || []).includes(p.id);
+                          return (
+                            <div key={p.id} className={styles.flashProductItem}>
+                              <input 
+                                type="checkbox" 
+                                checked={isInFlash} 
+                                onChange={() => handleFlashProductToggle(p.id)}
+                              />
+                              <img src={p.img} alt={p.name} />
+                              <div className={styles.flashProductItemInfo}>
+                                <h4>{p.name}</h4>
+                                <span>{p.price} AZN</span>
                               </div>
-                            );
-                          })
-                        )}
-                      </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>
