@@ -723,5 +723,40 @@
 }
 
 .inPanel .shopContainer {
-  padding: 12px 0;
+  padding: 24px 32px;
+}
+
+.inPanel .sidebar {
+  top: 24px !important;
+}
+
+.inPanel .grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 767px) {
+  .inPanel .shopContainer {
+    padding: 16px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .inPanel .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inPanel .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .inPanel .grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 24px;
+  }
 }

@@ -282,7 +282,13 @@
 
 /* ─── inPanel ─── */
 .inPanel {
-  padding: 16px;
+  padding: 24px 32px;
+}
+
+@media (max-width: 767px) {
+  .inPanel {
+    padding: 16px 12px;
+  }
 }
 
 /* ─── Tablet+ ─── */

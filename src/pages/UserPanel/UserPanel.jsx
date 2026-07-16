@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight } from 'lucide-react';
+import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -12,6 +12,7 @@ import Cart from '../Cart/Cart';
 import Wishlist from '../Wishlist/Wishlist';
 import Orders from '../Orders/Orders';
 import Categories from '../Categories/Categories';
+import AdminPanel from './AdminPanel';
 import styles from './UserPanel.module.css';
 
 const UserPanel = () => {
@@ -59,7 +60,7 @@ const UserPanel = () => {
     };
   });
 
-  const TABS = [
+  const baseTabs = [
     { id: 'kataloq', label: 'Kataloq', icon: <ShoppingBag size={20} />, count: null },
     { id: 'categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} />, count: null },
     { id: 'stores', label: 'Mağazalar', icon: <Store size={20} />, count: null },
@@ -67,6 +68,10 @@ const UserPanel = () => {
     { id: 'cart', label: 'Səbət', icon: <ShoppingCart size={20} />, count: cartItemCount },
     { id: 'orders', label: 'Sifarişlər', icon: <Package size={20} />, count: null }
   ];
+
+  const TABS = user?.role === 'superadmin'
+    ? [...baseTabs, { id: 'admin', label: 'Admin Panel', icon: <Shield size={20} />, count: null }]
+    : baseTabs;
 
   useEffect(() => {
     if (!user) {
@@ -259,13 +264,14 @@ const UserPanel = () => {
             {activeTab === 'wishlist' && <Wishlist inPanel={true} />}
             {activeTab === 'cart' && <Cart inPanel={true} />}
             {activeTab === 'orders' && <Orders inPanel={true} />}
+            {activeTab === 'admin' && <AdminPanel />}
           </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Tab Bar */}
       <nav className={styles.mobileBottomBar}>
-        {TABS.filter(tab => tab.id !== 'stores').map(tab => (
+        {TABS.filter(tab => tab.id !== 'stores' && tab.id !== 'admin').map(tab => (
           <button
             key={tab.id}
             className={`${styles.bottomTabItem} ${activeTab === tab.id ? styles.bottomTabActive : ''}`}

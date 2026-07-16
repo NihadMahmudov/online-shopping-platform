@@ -117,7 +117,7 @@ const Shop = ({ inPanel = false }) => {
             <span>Bütün Məhsullar</span>
             <span className={styles.itemCount}>{products?.length || 0}</span>
           </button>
-          {categories?.filter(c => c.id !== 'all').map(cat => (
+          {categories?.filter(c => c.id !== 'all' && !c.storeId).map(cat => (
             <button 
               key={cat.id}
               className={`${styles.categoryFilterBtn} ${activeCategory === cat.id ? styles.activeCategoryBtn : ''}`}

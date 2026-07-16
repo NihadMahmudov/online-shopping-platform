@@ -312,7 +312,7 @@
   display: none;
 }
 
-.adminBtn, .logoutBtn {
+.adminBtn {
   background: var(--bg-alt);
   border: 1px solid var(--border);
   color: var(--secondary);
@@ -324,6 +324,26 @@
   height: 38px;
   border-radius: 50%;
   transition: all 0.25s ease;
+}
+
+.logoutBtn {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--secondary);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  transition: all 0.25s ease;
+}
+
+@media (min-width: 768px) {
+  .logoutBtn {
+    display: flex;
+  }
 }
 
 .adminBtn:hover {
@@ -653,4 +673,15 @@
 .drawerLangName {
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 1.35rem !important;
+    letter-spacing: 1.5px !important;
+  }
+  .langDropdownTrigger {
+    padding: 5px 8px !important;
+    gap: 4px !important;
+  }
 }

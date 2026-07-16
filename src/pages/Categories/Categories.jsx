@@ -57,7 +57,7 @@ const Categories = ({ inPanel = false }) => {
             animate="show"
             className={styles.categoryGrid}
           >
-            {categories.filter(c => c.id !== 'all').map(cat => (
+            {categories.filter(c => c.id !== 'all' && !c.storeId).map(cat => (
               <motion.div 
                 key={cat.id} 
                 variants={itemVariants}

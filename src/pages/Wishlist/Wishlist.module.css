@@ -25,7 +25,16 @@
   gap: 2rem;
 }
 
-.inPanel { padding: 2rem; width: 100%; }
+.inPanel {
+  padding: 24px 32px;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .inPanel {
+    padding: 16px 12px;
+  }
+}
 
 .lockIcon, .emptyIcon {
   font-size: 3.5rem;

@@ -132,6 +132,76 @@ export const ProductProvider = ({ children }) => {
     ];
   });
 
+  const [showcaseCards, setShowcaseCards] = useState(() => {
+    const saved = localStorage.getItem('atlas_showcase_cards');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'main',
+        title: 'Yeni Mövsüm',
+        subtitle: 'Kolleksiyanı kəşf et',
+        img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+        link: '/shop',
+        type: 'main'
+      },
+      {
+        id: 'decor',
+        title: 'Dekor',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=decor',
+        type: 'right'
+      },
+      {
+        id: 'jewelry',
+        title: 'Zərgərlik',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=jewelry',
+        type: 'right'
+      },
+      {
+        id: 'accessories',
+        title: 'Aksesuar',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cf4?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=accessories',
+        type: 'right'
+      },
+      {
+        id: 'candles',
+        title: 'Şamlar',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=candles',
+        type: 'right'
+      },
+      {
+        id: 'shoes',
+        title: 'Ayaqqabı',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=shoes',
+        type: 'bottom'
+      },
+      {
+        id: 'sets',
+        title: 'Hədiyyə Dəstləri',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?category=sets',
+        type: 'bottom'
+      },
+      {
+        id: 'collections',
+        title: 'Kolleksiyalar',
+        subtitle: 'Kəşf et',
+        img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600',
+        link: '/shop?collection=trend',
+        type: 'bottom'
+      }
+    ];
+  });
+
   useEffect(() => {
     localStorage.setItem('atlas_products', JSON.stringify(products));
     localStorage.setItem('atlas_categories', JSON.stringify(categories));
@@ -139,7 +209,8 @@ export const ProductProvider = ({ children }) => {
     localStorage.setItem('atlas_collections', JSON.stringify(collections));
     localStorage.setItem('atlas_flash_sale', JSON.stringify(flashSale));
     localStorage.setItem('atlas_stories', JSON.stringify(stories));
-  }, [products, categories, badges, collections, flashSale, stories]);
+    localStorage.setItem('atlas_showcase_cards', JSON.stringify(showcaseCards));
+  }, [products, categories, badges, collections, flashSale, stories, showcaseCards]);
 
   // ── Products ────────────────────────────────────────────
   const addProduct = (product, storeId = null, storeName = null) => {
@@ -167,9 +238,18 @@ export const ProductProvider = ({ children }) => {
   const getProductsByStore = (storeId) => products.filter(p => p.storeId === storeId);
 
   // ── Categories ──────────────────────────────────────────
-  const addCategory = (label) => {
-    const newCat = { id: label.toLowerCase().replace(/\s+/g, '-'), label, img: '' };
-    setCategories(prev => [...prev, newCat]);
+  const addCategory = (label, storeId = null) => {
+    const cleanLabel = label.trim();
+    const generatedId = storeId 
+      ? `${storeId}_${cleanLabel.toLowerCase().replace(/\s+/g, '-')}` 
+      : cleanLabel.toLowerCase().replace(/\s+/g, '-');
+    
+    // Check if category already exists
+    const newCat = { id: generatedId, label: cleanLabel, img: '', storeId };
+    setCategories(prev => {
+      if (prev.some(c => c.id === generatedId)) return prev;
+      return [...prev, newCat];
+    });
   };
 
   const deleteCategory = (id) => setCategories(prev => prev.filter(c => c.id !== id));
@@ -213,6 +293,11 @@ export const ProductProvider = ({ children }) => {
   const addStory = (img, label) => setStories(prev => [{ id: Date.now(), img, label }, ...prev]);
   const deleteStory = (id) => setStories(prev => prev.filter(s => s.id !== id));
 
+  // ── Showcase Cards ──────────────────────────────────────
+  const updateShowcaseCard = (id, data) => {
+    setShowcaseCards(prev => prev.map(card => card.id === id ? { ...card, ...data } : card));
+  };
+
   return (
     <ProductContext.Provider value={{
       products, addProduct, deleteProduct, updateProduct, getProductsByStore,
@@ -221,7 +306,8 @@ export const ProductProvider = ({ children }) => {
       collections, addCollection, deleteCollection,
       flashSale, updateFlashSale,
       addComment, deleteComment,
-      stories, addStory, deleteStory
+      stories, addStory, deleteStory,
+      showcaseCards, updateShowcaseCard
     }}>
       {children}
     </ProductContext.Provider>

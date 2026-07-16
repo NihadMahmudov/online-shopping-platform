@@ -10,12 +10,29 @@ import styles from './StorePage.module.css';
 const StorePage = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { products, categories } = useProducts();
   const { getStoreProfile } = useStore();
+
+  const [selectedStoreCategory, setSelectedStoreCategory] = useState('all');
+  const [prevStoreId, setPrevStoreId] = useState(storeId);
+
+  if (storeId !== prevStoreId) {
+    setPrevStoreId(storeId);
+    setSelectedStoreCategory('all');
+  }
 
   const storeProducts = React.useMemo(() => {
     return products.filter(p => p.storeId === storeId);
   }, [products, storeId]);
+
+  const storeCategories = React.useMemo(() => {
+    return categories.filter(c => c.storeId === storeId);
+  }, [categories, storeId]);
+
+  const filteredProducts = React.useMemo(() => {
+    if (selectedStoreCategory === 'all') return storeProducts;
+    return storeProducts.filter(p => p.storeCategory === selectedStoreCategory);
+  }, [storeProducts, selectedStoreCategory]);
 
   const storeProfile = React.useMemo(() => {
     return getStoreProfile(storeId);
@@ -100,15 +117,59 @@ const StorePage = () => {
       {/* Store Products */}
       <div className={styles.productsSection}>
         <h2 className={styles.sectionTitle}>Mağazanın Məhsulları</h2>
+
+        {/* Store Custom Categories Filter */}
+        {storeProducts.length > 0 && storeCategories.length > 0 && (
+          <motion.div 
+            className={styles.categoryFilterContainer}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <motion.button 
+              className={`${styles.filterBtn} ${selectedStoreCategory === 'all' ? styles.filterBtnActive : ''} ${storeProducts.length === 0 ? styles.emptyCategory : ''}`}
+              onClick={() => setSelectedStoreCategory('all')}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className={styles.categoryLabelText}>Hamısı</span>
+              <span className={styles.countBadge}>{storeProducts.length}</span>
+            </motion.button>
+            {storeCategories.map(cat => {
+              const count = storeProducts.filter(p => p.storeCategory === cat.id).length;
+              const isActive = selectedStoreCategory === cat.id;
+              return (
+                <motion.button 
+                  key={cat.id}
+                  className={`${styles.filterBtn} ${isActive ? styles.filterBtnActive : ''} ${count === 0 ? styles.emptyCategory : ''}`}
+                  onClick={() => setSelectedStoreCategory(cat.id)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  title={cat.label}
+                >
+                  <span className={styles.categoryLabelText}>{cat.label}</span>
+                  <span className={styles.countBadge}>{count}</span>
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        )}
+
         {storeProducts.length === 0 ? (
           <div className={styles.noProducts}>
             <Store size={48} />
             <h3>Mağazada məhsul tapılmadı</h3>
             <p>Bu mağaza hələ ki məhsul əlavə etməyib.</p>
           </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className={styles.noProducts}>
+            <Store size={48} />
+            <h3>Bu kateqoriyada məhsul yoxdur</h3>
+            <p>Seçdiyiniz kateqoriyada hələ ki məhsul yerləşdirilməyib.</p>
+          </div>
         ) : (
           <div className={styles.productGrid}>
-            {storeProducts.map(product => (
+            {filteredProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

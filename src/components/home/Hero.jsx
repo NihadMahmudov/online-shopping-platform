@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useProducts } from '../../context/ProductContext';
 import styles from './Hero.module.css';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const { showcaseCards } = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchSubmit = (e) => {
@@ -15,9 +17,16 @@ const Hero = () => {
     }
   };
 
-  const handleTagClick = (storeId) => {
-    navigate(`/store/${storeId}`);
+  const mainCard = showcaseCards?.find(c => c.type === 'main') || {
+    id: 'main',
+    title: 'Yeni Mövsüm',
+    subtitle: 'Kolleksiyanı kəşf et',
+    img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800',
+    link: '/shop'
   };
+
+  const rightCards = showcaseCards?.filter(c => c.type === 'right') || [];
+  const bottomCards = showcaseCards?.filter(c => c.type === 'bottom') || [];
 
   return (
     <section className={styles.heroSection}>
@@ -67,73 +76,87 @@ const Hero = () => {
 
         {/* Visual Showcase Category Grid */}
         <div className={styles.showcaseGrid}>
-          {/* Large Left Card - Yeni Mövsüm */}
+          {/* Large Left Card - Dynamic */}
           <motion.div 
             className={`${styles.gridCard} ${styles.largeCard}`}
-            onClick={() => navigate('/shop')}
+            onClick={() => navigate(mainCard.link || '/shop')}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
             whileHover={{ y: -5 }}
           >
             <img 
-              src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=800" 
-              alt="Yeni Mövsüm" 
+              src={mainCard.img} 
+              alt={mainCard.title} 
               className={styles.cardImage}
             />
             <div className={styles.cardOverlay}>
               <div className={styles.cardContent}>
-                <h3>Yeni Mövsüm</h3>
-                <span className={styles.cardLink}>Kolleksiyanı kəşf et <ArrowRight size={14} className={styles.arrowIcon} /></span>
+                <h3>{mainCard.title}</h3>
+                <span className={styles.cardLink}>
+                  {mainCard.subtitle || 'Kolleksiyanı kəşf et'} <ArrowRight size={14} className={styles.arrowIcon} />
+                </span>
               </div>
             </div>
           </motion.div>
 
-          {/* Right Column (Stacked Cards) */}
+          {/* Right Column (Dynamic Grid Cards) */}
           <div className={styles.rightColumn}>
-            {/* Top Right Card - Ayaqqabı */}
-            <motion.div 
-              className={`${styles.gridCard} ${styles.smallCard}`}
-              onClick={() => navigate('/shop?category=decor')}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.5 }}
-              whileHover={{ y: -5 }}
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=600" 
-                alt="Ayaqqabı" 
-                className={styles.cardImage}
-              />
-              <div className={styles.cardOverlay}>
-                <div className={styles.cardContent}>
-                  <h3>Ayaqqabı</h3>
+            {rightCards.map((card, idx) => (
+              <motion.div 
+                key={card.id}
+                className={`${styles.gridCard} ${styles.smallCard}`}
+                onClick={() => navigate(card.link || '/shop')}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 + (idx * 0.05) }}
+                whileHover={{ y: -5 }}
+              >
+                <img 
+                  src={card.img} 
+                  alt={card.title} 
+                  className={styles.cardImage}
+                />
+                <div className={styles.cardOverlay}>
+                  <div className={styles.cardContent}>
+                    <h3>{card.title}</h3>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-
-            {/* Bottom Right Card - Aksesuarlar */}
-            <motion.div 
-              className={`${styles.gridCard} ${styles.smallCard}`}
-              onClick={() => navigate('/shop?category=accessories')}
-              initial={{ opacity: 0, x: 30, y: 15 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-              whileHover={{ y: -5 }}
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=600" 
-                alt="Aksesuarlar" 
-                className={styles.cardImage}
-              />
-              <div className={styles.cardOverlay}>
-                <div className={styles.cardContent}>
-                  <h3>Aksesuarlar</h3>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            ))}
           </div>
         </div>
+
+        {/* Dynamic Bottom Row Showcase Grid */}
+        {bottomCards.length > 0 && (
+          <div className={styles.bottomRowGrid}>
+            {bottomCards.map((card, idx) => (
+              <motion.div 
+                key={card.id}
+                className={`${styles.gridCard} ${styles.bottomCard}`}
+                onClick={() => navigate(card.link || '/shop')}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 + (idx * 0.08) }}
+                whileHover={{ y: -5 }}
+              >
+                <img 
+                  src={card.img} 
+                  alt={card.title} 
+                  className={styles.cardImage}
+                />
+                <div className={styles.cardOverlay}>
+                  <div className={styles.cardContent}>
+                    <h3>{card.title}</h3>
+                    <span className={styles.cardLink}>
+                      {card.subtitle || 'Kəşf et'} <ArrowRight size={14} className={styles.arrowIcon} />
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

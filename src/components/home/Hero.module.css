@@ -189,10 +189,19 @@
 
 .rightColumn {
   display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
   height: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .rightColumn {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    gap: 12px;
+  }
 }
 
 .smallCard {
@@ -264,4 +273,28 @@
 
 .gridCard:hover .arrowIcon {
   transform: translateX(4px);
+}
+
+.bottomRowGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .bottomRowGrid {
+    grid-template-columns: repeat(3, 1fr);
+    height: 240px;
+  }
+}
+
+.bottomCard {
+  height: 180px;
+}
+
+@media (min-width: 768px) {
+  .bottomCard {
+    height: 100%;
+  }
 }

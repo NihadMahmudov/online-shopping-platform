@@ -15,9 +15,19 @@ const SplashScreen = ({ onFinish }) => {
 
   // Memoize random particle coordinates to keep render pure
   const particles = React.useMemo(() => {
-    return [...Array(8)].map((_, i) => ({
-      top: `${10 + Math.random() * 80}%`,
-      left: `${5 + Math.random() * 90}%`,
+    const coords = [
+      { top: '15%', left: '10%' },
+      { top: '35%', left: '85%' },
+      { top: '75%', left: '20%' },
+      { top: '50%', left: '75%' },
+      { top: '80%', left: '50%' },
+      { top: '25%', left: '60%' },
+      { top: '65%', left: '15%' },
+      { top: '45%', left: '30%' }
+    ];
+    return coords.map((c, i) => ({
+      top: c.top,
+      left: c.left,
       animationDelay: `${i * 0.15}s`,
       size: `${4 + (i % 3) * 3}px`
     }));

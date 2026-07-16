@@ -171,16 +171,27 @@
   font-size: 1.1rem;
 }
 
+.userDetails {
+  min-width: 0;
+  flex: 1;
+}
+
 .userDetails h3 {
   font-size: 0.95rem;
   color: var(--text);
   font-family: var(--font-sans);
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .userDetails p {
   font-size: 0.78rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Drawer Nav ─── */

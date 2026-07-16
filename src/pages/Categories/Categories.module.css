@@ -232,7 +232,13 @@
 }
 
 .inPanel .mainLayout {
-  padding: 20px 0;
+  padding: 24px 32px;
+}
+
+@media (max-width: 767px) {
+  .inPanel .mainLayout {
+    padding: 16px 12px;
+  }
 }
 
 .inPanel .catCard {

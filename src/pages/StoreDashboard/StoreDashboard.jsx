@@ -14,14 +14,14 @@ import { useOrders } from '../../context/OrderContext';
 import { useStore } from '../../context/StoreContext';
 import styles from './StoreDashboard.module.css';
 
-const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Sifarişlər', 'Analitika', 'Rəylər', 'Flaş Satış', 'Mağaza Parametrləri'];
+const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Analitika', 'Rəylər', 'Flaş Satış', 'Mağaza Parametrləri'];
 
 const StoreDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { 
     products, addProduct, deleteProduct, 
-    categories,
+    categories, addCategory, deleteCategory,
     badges,
     collections,
     flashSale, updateFlashSale,
@@ -34,11 +34,24 @@ const StoreDashboard = () => {
   const [activeTab, setActiveTab] = useState('Məhsullarım');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [form, setForm] = useState({
-    name: '', price: '', oldPrice: '', category: 'decor',
+    name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '',
     img: '', description: '', badge: '', collections: []
   });
   
   const [success, setSuccess] = useState(false);
+
+  // Store-specific Category States
+  const [newStoreCatLabel, setNewStoreCatLabel] = useState('');
+  const [storeCatSuccess, setStoreCatSuccess] = useState(false);
+
+  const handleAddStoreCategory = (e) => {
+    e.preventDefault();
+    if (!newStoreCatLabel.trim()) return;
+    addCategory(newStoreCatLabel.trim(), user.storeId);
+    setNewStoreCatLabel('');
+    setStoreCatSuccess(true);
+    setTimeout(() => setStoreCatSuccess(false), 2000);
+  };
 
   // Settings States
   const [settingsForm, setSettingsForm] = useState(() => {
@@ -131,6 +144,7 @@ const StoreDashboard = () => {
     switch (tab) {
       case 'Məhsullarım': return <Package size={18} />;
       case 'Məhsul Əlavə Et': return <PlusCircle size={18} />;
+      case 'Mağaza Kateqoriyaları': return <Tag size={18} />;
       case 'Sifarişlər': return <ShoppingBag size={18} />;
       case 'Analitika': return <TrendingUp size={18} />;
       case 'Rəylər': return <MessageSquare size={18} />;
@@ -186,13 +200,14 @@ const StoreDashboard = () => {
       price: Number(form.price),
       oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
       category: form.category,
+      storeCategory: form.storeCategory || null,
       img: form.img,
       description: form.description,
       badge: form.badge,
       collections: form.collections
     }, user.storeId, user.storeName);
     
-    setForm({ name: '', price: '', oldPrice: '', category: 'decor', img: '', description: '', badge: '', collections: [] });
+    setForm({ name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '', img: '', description: '', badge: '', collections: [] });
     setSuccess(true);
     setTimeout(() => { setSuccess(false); setActiveTab('Məhsullarım'); }, 1500);
   };
@@ -529,11 +544,24 @@ const StoreDashboard = () => {
                     <div className={styles.formSectionBox}>
                       <h3 className={styles.boxTitle}>Kateqoriya və Etiket</h3>
                       <div className={styles.formGroup}>
-                        <label>Kateqoriya *</label>
+                        <label>Platforma Kateqoriyası (Superadmin) *</label>
                         <div className={styles.inputWrapper}>
                           <LayoutDashboard size={18} className={styles.inputIcon} />
                           <select name="category" value={form.category} onChange={handleChange}>
-                            {categories.filter(c => c.id !== 'all').map(c => (
+                            {categories.filter(c => c.id !== 'all' && !c.storeId).map(c => (
+                              <option key={c.id} value={c.id}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label>Öz Mağaza Kateqoriyanız</label>
+                        <div className={styles.inputWrapper}>
+                          <Tag size={18} className={styles.inputIcon} />
+                          <select name="storeCategory" value={form.storeCategory} onChange={handleChange}>
+                            <option value="">Heç biri / Yoxdur</option>
+                            {categories.filter(c => c.storeId === user.storeId).map(c => (
                               <option key={c.id} value={c.id}>{c.label}</option>
                             ))}
                           </select>
@@ -582,6 +610,69 @@ const StoreDashboard = () => {
                     <PlusCircle size={20} /> Məhsul Əlavə Et
                   </button>
                 </form>
+              </motion.div>
+            ) : activeTab === 'Mağaza Kateqoriyaları' ? (
+              <motion.div
+                key="store-categories"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={styles.premiumForm}
+                style={{ padding: '24px', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '24px' }}
+              >
+                <div>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>Öz Mağaza Kateqoriyalarınız</h2>
+                  <p style={{ fontSize: '0.9rem', color: '#64748B' }}>Mağazanız üçün xüsusi kateqoriyalar yaradın. Bu kateqoriyalar yalnız müştərilər sizin mağaza səhifənizə daxil olduqda görünəcək.</p>
+                </div>
+
+                <form onSubmit={handleAddStoreCategory} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', maxWidth: '500px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Kateqoriya Adı *</label>
+                    <input 
+                      type="text" 
+                      value={newStoreCatLabel} 
+                      onChange={(e) => setNewStoreCatLabel(e.target.value)} 
+                      placeholder="məs. Əl işi Şamlar" 
+                      required 
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                  <button type="submit" style={{ padding: '10px 20px', background: '#D4AF37', color: '#FFFFFF', fontWeight: 600, border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
+                    <PlusCircle size={16} /> Əlavə Et
+                  </button>
+                </form>
+
+                {storeCatSuccess && (
+                  <div style={{ color: '#15803D', background: '#DCFCE7', padding: '10px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, maxWidth: '500px' }}>
+                    ✅ Kateqoriya uğurla əlavə edildi!
+                  </div>
+                )}
+
+                <div style={{ marginTop: '12px' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#1E293B', marginBottom: '12px' }}>Aktiv Mağaza Kateqoriyaları</h3>
+                  
+                  {categories.filter(c => c.storeId === user.storeId).length === 0 ? (
+                    <div style={{ color: '#64748B', fontSize: '0.9rem', padding: '16px', border: '1px dashed #CBD5E1', borderRadius: '8px', textAlign: 'center' }}>
+                      Heç bir xüsusi kateqoriya yaradılmayıb. İlk kateqoriyanızı yuxarıdan əlavə edin.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+                      {categories.filter(c => c.storeId === user.storeId).map(cat => (
+                        <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+                          <span style={{ fontWeight: 500, color: '#0F172A', fontSize: '0.95rem' }}>{cat.label}</span>
+                          <button 
+                            type="button"
+                            onClick={() => deleteCategory(cat.id)}
+                            style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Sil"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ) : activeTab === 'Sifarişlər' ? (
               <motion.div

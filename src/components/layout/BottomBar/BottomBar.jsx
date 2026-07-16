@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Compass, ShoppingBag, User, Heart } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
@@ -12,8 +12,9 @@ const BottomBar = () => {
   const { wishlist } = useWishlist();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const location = useLocation();
 
-  if (!user || user.role === 'admin') {
+  if (!user || user.role === 'admin' || location.pathname === '/') {
     return null;
   }
 

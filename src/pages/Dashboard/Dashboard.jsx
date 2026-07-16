@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Store, Users, ShoppingBag, LogOut,
   TrendingUp, CheckCircle, XCircle, Trash2, ShieldAlert,
-  Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft, Tag, PlusCircle
+  Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft, Tag, PlusCircle,
+  Camera, ImagePlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +12,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import styles from './Dashboard.module.css';
 
-const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Analitika'];
+const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Ana Səhifə Vitrini', 'Analitika'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,7 +21,15 @@ const Dashboard = () => {
     deleteUser, suspendUser, approveVendor, rejectVendor 
   } = useAuth();
   
-  const { products, categories, addCategory, deleteCategory } = useProducts();
+  const { 
+    products, 
+    categories, 
+    addCategory, 
+    deleteCategory, 
+    updateCategoryImage, 
+    showcaseCards, 
+    updateShowcaseCard 
+  } = useProducts();
   const { orders, updateOrderStatus, getTotalRevenue, getRevenueByStore } = useOrders();
 
   const [activeTab, setActiveTab] = useState('Mağazalar');
@@ -28,6 +37,19 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newCatLabel, setNewCatLabel] = useState('');
   const [catSuccess, setCatSuccess] = useState(false);
+
+  const handleCategoryImageUpload = (e, catId) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateCategoryImage(catId, reader.result);
+        setCatSuccess(true);
+        setTimeout(() => setCatSuccess(false), 2000);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Redirect if not superadmin
   useEffect(() => {
@@ -136,6 +158,7 @@ const Dashboard = () => {
                      tab === 'İstifadəçilər' ? <Users size={18} /> : 
                      tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                      tab === 'Kateqoriyalar' ? <Tag size={18} /> :
+                     tab === 'Ana Səhifə Vitrini' ? <LayoutDashboard size={18} /> :
                      <TrendingUp size={18} />}
                     {tab}
                   </button>
@@ -180,6 +203,7 @@ const Dashboard = () => {
                tab === 'İstifadəçilər' ? <Users size={18} /> : 
                tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                tab === 'Kateqoriyalar' ? <Tag size={18} /> :
+               tab === 'Ana Səhifə Vitrini' ? <LayoutDashboard size={18} /> :
                <TrendingUp size={18} />}
               {tab}
             </button>
@@ -479,7 +503,7 @@ const Dashboard = () => {
                 )}
 
                 <div className={styles.tableCard} style={{ padding: '24px', marginBottom: '24px' }}>
-                  <h3 style={{ color: '#fff', marginBottom: '16px', fontSize: '1rem' }}>Yeni Kateqoriya Əlavə Et</h3>
+                  <h3 style={{ color: '#1E293B', marginBottom: '16px', fontSize: '1rem' }}>Yeni Kateqoriya Əlavə Et</h3>
                   <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <input
                       type="text"
@@ -507,18 +531,31 @@ const Dashboard = () => {
                       <span>Məhsul Sayı</span>
                       <span>Əməliyyat</span>
                     </div>
-                    {categories.filter(c => c.id !== 'all').length === 0 ? (
+                    {categories.filter(c => c.id !== 'all' && !c.storeId).length === 0 ? (
                       <div className={styles.noData}>Kateqoriya tapılmadı. Yeni kateqoriya əlavə edin.</div>
                     ) : (
-                      categories.filter(c => c.id !== 'all').map(cat => {
+                      categories.filter(c => c.id !== 'all' && !c.storeId).map(cat => {
                         const productCount = products.filter(p => p.category === cat.id).length;
                         return (
                           <div key={cat.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '14px 24px', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.95rem', transition: 'background 0.2s' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4AF37' }}>
-                                <Tag size={16} />
+                              <div className={styles.catImageWrapper}>
+                                {cat.img ? (
+                                  <img src={cat.img} alt={cat.label} className={styles.catImage} />
+                                ) : (
+                                  <Tag size={16} style={{ color: '#D4AF37' }} />
+                                )}
+                                <label className={styles.catImageUploadOverlay} title="Şəkli Dəyişdir">
+                                  <Camera size={14} />
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={(e) => handleCategoryImageUpload(e, cat.id)} 
+                                    style={{ display: 'none' }} 
+                                  />
+                                </label>
                               </div>
-                              <strong style={{ color: '#fff' }}>{cat.label}</strong>
+                              <strong style={{ color: '#1E293B' }}>{cat.label}</strong>
                             </div>
                             <span className={styles.catTag}>{productCount} məhsul</span>
                             <div>
@@ -535,6 +572,91 @@ const Dashboard = () => {
                       })
                     )}
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── LANDING PAGE SHOWCASE TAB ── */}
+            {activeTab === 'Ana Səhifə Vitrini' && (
+              <motion.div
+                key="showcase"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className={styles.sectionHeader}>
+                  <h2 style={{ color: '#0F172A', fontWeight: 700, fontSize: '1.5rem' }}>Ana Səhifə Vitrin Kartlarının İdarəedilməsi</h2>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '4px' }}>Ana Səhifədə (Landing Page) yerləşən bütün reklam və dizayn kartlarının şəkillərini, başlıqlarını, düymə mətnlərini və keçid linklərini buradan canlı tənzimləyin.</p>
+                </div>
+
+                <div className={styles.showcaseGrid}>
+                  {showcaseCards?.map((card) => (
+                    <div key={card.id} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                      <div className={styles.showcaseCardImgContainer}>
+                        <img src={card.img} alt={card.title} />
+                        <label className={styles.showcaseCardUploadOverlay} title="Şəkli Dəyişdir">
+                          <Camera size={18} />
+                          <span>Şəkli Dəyişdir</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  updateShowcaseCard(card.id, { img: reader.result });
+                                  setCatSuccess(true);
+                                  setTimeout(() => setCatSuccess(false), 2000);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }} 
+                            style={{ display: 'none' }} 
+                          />
+                        </label>
+                      </div>
+                      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '4px 8px', borderRadius: '4px', background: card.type === 'main' ? '#EEF2FF' : card.type === 'right' ? '#ECFDF5' : '#FDF2F8', color: card.type === 'main' ? '#4F46E5' : card.type === 'right' ? '#059669' : '#DB2777', textTransform: 'uppercase' }}>
+                            {card.type === 'main' ? 'Sol Böyük Kart' : card.type === 'right' ? 'Sağ Panel Kartı' : 'Aşağı Panel Kartı'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>Başlıq</label>
+                          <input 
+                            type="text" 
+                            value={card.title} 
+                            onChange={(e) => updateShowcaseCard(card.id, { title: e.target.value })}
+                            style={{ width: '100%', padding: '8px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.85rem' }}
+                          />
+                        </div>
+
+                        {card.type !== 'right' && (
+                          <div>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>Alt Başlıq / Düymə</label>
+                            <input 
+                              type="text" 
+                              value={card.subtitle || ''} 
+                              onChange={(e) => updateShowcaseCard(card.id, { subtitle: e.target.value })}
+                              style={{ width: '100%', padding: '8px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.85rem' }}
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>Keçid Linki</label>
+                          <input 
+                            type="text" 
+                            value={card.link} 
+                            onChange={(e) => updateShowcaseCard(card.id, { link: e.target.value })}
+                            style={{ width: '100%', padding: '8px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
