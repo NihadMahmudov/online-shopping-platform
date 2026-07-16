@@ -1,0 +1,8 @@
+{
+  "name": "BAME Giftshop",
+  "description": "A high-fidelity multi-vendor online giftshop and shopping platform featuring live chat, countdown timers, product showcases, and a gift finder.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

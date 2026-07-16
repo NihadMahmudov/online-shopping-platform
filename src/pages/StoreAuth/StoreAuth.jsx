@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Store, Eye, EyeOff, ArrowLeft, Phone, Tag, User, CheckCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -13,8 +13,20 @@ const STORE_CATEGORIES = [
 
 const StoreAuth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, registerVendor } = useAuth();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(() => {
+    return location.state?.mode || 'login';
+  });
+
+  const [prevMode, setPrevMode] = useState(location.state?.mode);
+
+  if (location.state?.mode !== prevMode) {
+    setPrevMode(location.state?.mode);
+    if (location.state?.mode) {
+      setMode(location.state.mode);
+    }
+  }
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

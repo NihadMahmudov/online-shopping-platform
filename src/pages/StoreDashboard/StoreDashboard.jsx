@@ -41,19 +41,39 @@ const StoreDashboard = () => {
   const [success, setSuccess] = useState(false);
 
   // Settings States
-  const [settingsForm, setSettingsForm] = useState({
-    storeName: '',
-    description: '',
-    banner: '',
-    logo: '',
-    phone: '',
-    email: '',
-    address: ''
+  const [settingsForm, setSettingsForm] = useState(() => {
+    if (user?.storeId) {
+      const prof = storeProfiles ? storeProfiles.find(p => p.storeId === user.storeId) || {} : {};
+      return {
+        storeName: prof.storeName || user.storeName || '',
+        description: prof.description || '',
+        banner: prof.banner || '',
+        logo: prof.logo || '',
+        phone: prof.phone || '',
+        email: prof.email || user.email || '',
+        address: prof.address || ''
+      };
+    }
+    return {
+      storeName: '',
+      description: '',
+      banner: '',
+      logo: '',
+      phone: '',
+      email: '',
+      address: ''
+    };
   });
 
-  useEffect(() => {
+  const [prevStoreId, setPrevStoreId] = useState(user?.storeId);
+  const [prevProfilesHash, setPrevProfilesHash] = useState(() => JSON.stringify(storeProfiles));
+
+  const currentProfilesHash = JSON.stringify(storeProfiles);
+  if (user?.storeId !== prevStoreId || currentProfilesHash !== prevProfilesHash) {
+    setPrevStoreId(user?.storeId);
+    setPrevProfilesHash(currentProfilesHash);
     if (user?.storeId) {
-      const prof = getStoreProfile(user.storeId);
+      const prof = storeProfiles ? storeProfiles.find(p => p.storeId === user.storeId) || {} : {};
       setSettingsForm({
         storeName: prof.storeName || user.storeName || '',
         description: prof.description || '',
@@ -64,7 +84,7 @@ const StoreDashboard = () => {
         address: prof.address || ''
       });
     }
-  }, [user, storeProfiles]);
+  }
 
   const handleSettingsChange = e => setSettingsForm({ ...settingsForm, [e.target.name]: e.target.value });
 

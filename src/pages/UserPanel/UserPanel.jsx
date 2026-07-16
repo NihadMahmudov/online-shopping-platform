@@ -22,11 +22,14 @@ const UserPanel = () => {
     return location.state?.activeTab || 'kataloq';
   });
 
-  useEffect(() => {
+  const [prevActiveTab, setPrevActiveTab] = useState(location.state?.activeTab);
+
+  if (location.state?.activeTab !== prevActiveTab) {
+    setPrevActiveTab(location.state?.activeTab);
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
-  }, [location.state]);
+  }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const TABS = [

@@ -5,18 +5,17 @@ import styles from './RecentlyViewed.module.css';
 
 const RecentlyViewed = ({ noContainer = false }) => {
   const { products } = useProducts();
-  const [recentProducts, setRecentProducts] = useState([]);
 
-  useEffect(() => {
+  const recentProducts = React.useMemo(() => {
     const saved = localStorage.getItem('atlas_recent');
     if (saved) {
       const ids = JSON.parse(saved);
-      const filtered = ids
+      return ids
         .map(id => products.find(p => p.id === id))
         .filter(p => p !== undefined)
         .slice(0, 8);
-      setRecentProducts(filtered);
     }
+    return [];
   }, [products]);
 
   if (recentProducts.length === 0) return null;

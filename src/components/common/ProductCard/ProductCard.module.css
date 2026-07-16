@@ -12,12 +12,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  cursor: pointer;
 }
 
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+@media (min-width: 768px) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 /* ─── Image ─── */
@@ -29,15 +30,24 @@
   flex-shrink: 0;
 }
 
+.imageWrapper a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .imageWrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
+  cursor: pointer;
 }
 
-.card:hover .imageWrapper img {
-  transform: scale(1.04);
+@media (min-width: 768px) {
+  .card:hover .imageWrapper img {
+    transform: scale(1.04);
+  }
 }
 
 /* ─── Top Badge (Bestseller / Yeni) ─── */
@@ -101,11 +111,15 @@
   transform: translateY(6px);
   transition: all 0.25s ease;
   z-index: 3;
+  pointer-events: none;
 }
 
-.card:hover .quickAdd {
-  opacity: 1;
-  transform: translateY(0);
+@media (min-width: 768px) {
+  .card:hover .quickAdd {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
 }
 
 .quickAddBtn {
@@ -170,6 +184,12 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 2.2em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.name:hover {
+  color: var(--primary);
 }
 
 .storeLink {

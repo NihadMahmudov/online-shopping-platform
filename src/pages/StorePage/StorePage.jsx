@@ -13,21 +13,17 @@ const StorePage = () => {
   const { products } = useProducts();
   const { getStoreProfile } = useStore();
 
-  const [storeProducts, setStoreProducts] = useState([]);
-  const [storeProfile, setStoreProfile] = useState({});
+  const storeProducts = React.useMemo(() => {
+    return products.filter(p => p.storeId === storeId);
+  }, [products, storeId]);
+
+  const storeProfile = React.useMemo(() => {
+    return getStoreProfile(storeId);
+  }, [storeId, getStoreProfile]);
 
   useEffect(() => {
-    // Filter products by this storeId
-    const filtered = products.filter(p => p.storeId === storeId);
-    setStoreProducts(filtered);
-
-    // Fetch store profile data
-    const profile = getStoreProfile(storeId);
-    setStoreProfile(profile);
-
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [storeId, products, getStoreProfile]);
+  }, [storeId]);
 
   // Determine store name (from products or profile or default)
   const storeName = storeProfile.storeName || (storeProducts[0]?.storeName) || 'AtlasMall Mağazası';

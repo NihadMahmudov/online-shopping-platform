@@ -22,7 +22,13 @@ export const AuthProvider = ({ children }) => {
     if (saved) return JSON.parse(saved);
     const initial = [
       DEFAULT_SUPERADMIN,
-      { name: 'Qonaq İstifadəçi', email: 'qonaq@atlasmall.az', password: 'qonaq123', role: 'user', createdAt: new Date().toISOString(), status: 'active' }
+      { name: 'Qonaq İstifadəçi', email: 'qonaq@atlasmall.az', password: 'qonaq123', role: 'user', createdAt: new Date().toISOString(), status: 'active' },
+      { name: 'Vogue Art', email: 'vogue@bame.az', password: 'vogue', role: 'vendor', storeId: 'vogue_art', storeName: 'Vogue Art', storeCategory: 'Premium', phone: '+994 50 111 22 33', status: 'approved', createdAt: new Date().toISOString() },
+      { name: 'Modernist', email: 'modernist@bame.az', password: 'modernist', role: 'vendor', storeId: 'modernist', storeName: 'Modernist', storeCategory: 'Müasir', phone: '+994 51 222 33 44', status: 'approved', createdAt: new Date().toISOString() },
+      { name: 'Zərif Atelye', email: 'zarif@bame.az', password: 'zarif', role: 'vendor', storeId: 'zarif_atelye', storeName: 'Zərif Atelye', storeCategory: 'Əl işi', phone: '+994 55 333 44 55', status: 'approved', createdAt: new Date().toISOString() },
+      { name: 'Style Lab', email: 'style@bame.az', password: 'style', role: 'vendor', storeId: 'style_lab', storeName: 'Style Lab', storeCategory: 'Dəb', phone: '+994 70 444 55 66', status: 'approved', createdAt: new Date().toISOString() },
+      { name: 'Baku Closet', email: 'closet@bame.az', password: 'closet', role: 'vendor', storeId: 'baku_closet', storeName: 'Baku Closet', storeCategory: 'Vintage', phone: '+994 99 555 66 77', status: 'approved', createdAt: new Date().toISOString() },
+      { name: 'Silk Way', email: 'silk@bame.az', password: 'silk', role: 'vendor', storeId: 'silk_way', storeName: 'Silk Way', storeCategory: 'İpək', phone: '+994 12 400 90 90', status: 'approved', createdAt: new Date().toISOString() }
     ];
     localStorage.setItem('atlas_users_db', JSON.stringify(initial));
     return initial;
@@ -67,8 +73,8 @@ export const AuthProvider = ({ children }) => {
       role: 'vendor',
       storeId,
       storeName,
-      storeCategory: category || 'Ümumi',
-      status: 'pending',     // pending | approved | suspended
+      storeCategory: category || 'Geyim & Moda',
+      status: 'approved',     // auto-approved for immediate display and usability
       createdAt: new Date().toISOString()
     };
     const updated = [...users, newVendor];

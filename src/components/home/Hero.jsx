@@ -1,74 +1,167 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useLanguage } from '../../context/LanguageContext';
+import { Search, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Hero.module.css';
 
 const Hero = () => {
-  const { user } = useAuth();
-  const { t } = useLanguage();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleDiscover = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!user) {
-      navigate('/login');
-    } else {
-      navigate('/panel');
+    if (searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const handleTagClick = (storeId) => {
+    navigate(`/store/${storeId}`);
+  };
+
+  const tags = [
+    { id: 'vogue_art', label: 'VOGUE ART' },
+    { id: 'modernist', label: 'MODERNIST' },
+    { id: 'zarif_atelye', label: 'ZƏRİF' },
+    { id: 'style_lab', label: 'STYLE LAB' },
+    { id: 'baku_closet', label: 'BAKU CLOSET' },
+    { id: 'silk_way', label: 'SILK WAY' }
+  ];
+
   return (
-    <section className={styles.hero}>
-      <div className={styles.heroOverlay}></div>
-      <div className={`container ${styles.heroContainer}`}>
-        <motion.div 
-          className={styles.content}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.span 
-            className={styles.subtitle}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {t('hero.subtitle')}
-          </motion.span>
+    <section className={styles.heroSection}>
+      <div className="container">
+        {/* Search & Header Panel */}
+        <div className={styles.searchHeaderPanel}>
           <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            className={styles.title}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {t('hero.title1')} <br /> {t('hero.title2')} <span>{t('hero.titleHighlight')}</span>
+            Şəhərin bütün butikləri <br />
+            <span className={styles.italicGold}>tək bir ünvanda.</span>
           </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
+
+          <motion.p 
+            className={styles.subtitle}
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            {t('hero.desc')}
+            Bakının ən seçkin geyim mağazalarını kəşf edin. <br />
+            Mağaza-mağaza gəzmədən trendləri izləyin və yerli brendləri dəstəkləyin.
           </motion.p>
+
+          {/* Elegant Search Bar */}
+          <motion.form 
+            onSubmit={handleSearchSubmit}
+            className={styles.searchForm}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <input 
+              type="text" 
+              placeholder="Mağaza və ya məhsul axtar..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+            <button type="submit" className={styles.searchBtn} aria-label="Axtar">
+              <Search size={20} />
+            </button>
+          </motion.form>
+
+          {/* Boutique Tags */}
           <motion.div 
-            className={styles.actions}
+            className={styles.tagsContainer}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <button onClick={handleDiscover} className={styles.primaryBtn}>
-              {t('hero.discoverBtn')} <ArrowRight size={18} />
-            </button>
-            <button className={styles.secondaryBtn}>
-              {t('hero.aboutBtn')}
-            </button>
+            {tags.map((tag) => (
+              <button 
+                key={tag.id}
+                type="button" 
+                onClick={() => handleTagClick(tag.id)}
+                className={styles.tagBtn}
+              >
+                {tag.label}
+              </button>
+            ))}
           </motion.div>
-        </motion.div>
-      </div>
-      
-      <div className={styles.scrollIndicator}>
-        <div className={styles.mouse}></div>
+        </div>
+
+        {/* Visual Showcase Category Grid */}
+        <div className={styles.showcaseGrid}>
+          {/* Large Left Card - Yeni Mövsüm */}
+          <motion.div 
+            className={`${styles.gridCard} ${styles.largeCard}`}
+            onClick={() => navigate('/shop')}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            whileHover={{ y: -5 }}
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=800" 
+              alt="Yeni Mövsüm" 
+              className={styles.cardImage}
+            />
+            <div className={styles.cardOverlay}>
+              <div className={styles.cardContent}>
+                <h3>Yeni Mövsüm</h3>
+                <span className={styles.cardLink}>Kolleksiyanı kəşf et <ArrowRight size={14} className={styles.arrowIcon} /></span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right Column (Stacked Cards) */}
+          <div className={styles.rightColumn}>
+            {/* Top Right Card - Ayaqqabı */}
+            <motion.div 
+              className={`${styles.gridCard} ${styles.smallCard}`}
+              onClick={() => navigate('/shop?category=decor')}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              whileHover={{ y: -5 }}
+            >
+              <img 
+                src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=600" 
+                alt="Ayaqqabı" 
+                className={styles.cardImage}
+              />
+              <div className={styles.cardOverlay}>
+                <div className={styles.cardContent}>
+                  <h3>Ayaqqabı</h3>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bottom Right Card - Aksesuarlar */}
+            <motion.div 
+              className={`${styles.gridCard} ${styles.smallCard}`}
+              onClick={() => navigate('/shop?category=accessories')}
+              initial={{ opacity: 0, x: 30, y: 15 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+              whileHover={{ y: -5 }}
+            >
+              <img 
+                src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=600" 
+                alt="Aksesuarlar" 
+                className={styles.cardImage}
+              />
+              <div className={styles.cardOverlay}>
+                <div className={styles.cardContent}>
+                  <h3>Aksesuarlar</h3>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );

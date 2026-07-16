@@ -1,0 +1,330 @@
+
+> bame-giftshop@0.0.0 lint
+> eslint .
+
+
+/app/applet/src/App.jsx
+  1:8   error  'React' is defined but never used      no-unused-vars
+  1:27  error  'useEffect' is defined but never used  no-unused-vars
+
+/app/applet/src/components/auth/AuthModal/AuthModal.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/common/AuthModal/AuthModal.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/common/CountdownTimer/CountdownTimer.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/common/LiveChat/LiveChat.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/common/ProductCard/ProductCard.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/common/SplashScreen/SplashScreen.jsx
+   1:8   error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  64:24  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  62 |       {[...Array(8)].map((_, i) => (
+  63 |         <div key={i} className={styles.particle} style={{
+> 64 |           top: `${10 + Math.random() * 80}%`,
+     |                        ^^^^^^^^^^^^^ Cannot call impure function
+  65 |           left: `${5 + Math.random() * 90}%`,
+  66 |           animationDelay: `${i * 0.15}s`,
+  67 |           width: `${4 + (i % 3) * 3}px`,       react-hooks/purity
+  65:24  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  63 |         <div key={i} className={styles.particle} style={{
+  64 |           top: `${10 + Math.random() * 80}%`,
+> 65 |           left: `${5 + Math.random() * 90}%`,
+     |                        ^^^^^^^^^^^^^ Cannot call impure function
+  66 |           animationDelay: `${i * 0.15}s`,
+  67 |           width: `${4 + (i % 3) * 3}px`,
+  68 |           height: `${4 + (i % 3) * 3}px`,  react-hooks/purity
+
+/app/applet/src/components/home/FeatureBar.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/home/FlashSale.jsx
+  1:8   error  'React' is defined but never used       no-unused-vars
+  2:10  error  'motion' is defined but never used      no-unused-vars
+  3:15  error  'ArrowRight' is defined but never used  no-unused-vars
+  4:10  error  'Link' is defined but never used        no-unused-vars
+
+/app/applet/src/components/home/GiftFinder.jsx
+  1:8   error  'React' is defined but never used  no-unused-vars
+  3:19  error  'Check' is defined but never used  no-unused-vars
+
+/app/applet/src/components/home/Hero.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/home/ProductShowcase.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/home/RecentlyViewed.jsx
+   1:8  error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  18:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  16 |         .filter(p => p !== undefined)
+  17 |         .slice(0, 8);
+> 18 |       setRecentProducts(filtered);
+     |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |     }
+  20 |   }, [products]);
+  21 |  react-hooks/set-state-in-effect
+
+/app/applet/src/components/layout/BottomBar/BottomBar.jsx
+  1:8   error  'React' is defined but never used        no-unused-vars
+  2:19  error  'useNavigate' is defined but never used  no-unused-vars
+
+/app/applet/src/components/layout/Footer/Footer.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/layout/Layout/Layout.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/layout/Navbar/Navbar.jsx
+   1:8   error  'React' is defined but never used                   no-unused-vars
+   3:10  error  'ShoppingBag' is defined but never used             no-unused-vars
+   3:38  error  'Heart' is defined but never used                   no-unused-vars
+   3:80  error  'Compass' is defined but never used                 no-unused-vars
+  12:11  error  'cartItemCount' is assigned a value but never used  no-unused-vars
+  13:11  error  'wishlist' is assigned a value but never used       no-unused-vars
+
+/app/applet/src/components/social/ProductFeed/ProductCard.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/social/ProductFeed/ProductFeed.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/components/social/StoryBar/StoryBar.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/context/AuthContext.jsx
+    1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  149:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/CartContext.jsx
+   1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  88:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/LanguageContext.jsx
+   1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  40:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/OrderContext.jsx
+   1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  64:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/ProductContext.jsx
+    1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  232:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/StoreContext.jsx
+    1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  115:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/ThemeContext.jsx
+   1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  31:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/context/WishlistContext.jsx
+   1:8   error  'React' is defined but never used                                                                                               no-unused-vars
+  36:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/app/applet/src/pages/About/About.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/Auth/Auth.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/Cart/Cart.jsx
+    1:8   error  'React' is defined but never used    no-unused-vars
+  187:19  error  'success' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/Categories/Categories.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/Contact/Contact.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/Dashboard/Dashboard.jsx
+    1:8   error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+    4:3   error  'LayoutDashboard' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+    5:45  error  'ShieldAlert' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+    6:3   error  'Clock' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+    6:10  error  'Calendar' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  352:58  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  350 |                           </div>
+  351 |                           <span>{c.email}</span>
+> 352 |                           <span>{new Date(c.createdAt || Date.now()).toLocaleDateString('az-AZ')}</span>
+      |                                                          ^^^^^^^^^^ Cannot call impure function
+  353 |                           <span>
+  354 |                             <span className={c.status === 'suspended' ? 'badge-suspended' : 'badge-approved'}>
+  355 |                               {c.status === 'suspended' ? 'Dondurulub' : 'Aktiv'}  react-hooks/purity
+
+/app/applet/src/pages/Home/Home.jsx
+   1:8    error  'React' is defined but never used          no-unused-vars
+   3:23   error  'Link' is defined but never used           no-unused-vars
+   4:73   error  'Plus' is defined but never used           no-unused-vars
+   4:99   error  'UserPlus' is defined but never used       no-unused-vars
+   4:109  error  'UploadCloud' is defined but never used    no-unused-vars
+  16:11   error  'user' is assigned a value but never used  no-unused-vars
+
+/app/applet/src/pages/Orders/Orders.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+/app/applet/src/pages/ProductDetail/ProductDetail.jsx
+   1:8  error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  78:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  76 |
+  77 |   useEffect(() => {
+> 78 |     setLoading(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  79 |     const timer = setTimeout(() => {
+  80 |       const foundProduct = products.find(p => p.id === parseInt(id));
+  81 |       if (foundProduct) {  react-hooks/set-state-in-effect
+
+/app/applet/src/pages/Shop/Shop.jsx
+   1:8   error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   2:10  error  'Link' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   3:10  error  'Heart' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   3:17  error  'Star' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   3:23  error  'ShoppingCart' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+   6:10  error  'useCart' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+   7:10  error  'useWishlist' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+  33:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  31 |
+  32 |   useEffect(() => {
+> 33 |     setActiveCategory(categoryFromUrl);
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |     setSearchQuery(searchFromUrl);
+  35 |   }, [categoryFromUrl, searchFromUrl]);
+  36 |  react-hooks/set-state-in-effect
+
+/app/applet/src/pages/StoreAuth/StoreAuth.jsx
+   1:8  error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  22:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |   useEffect(() => {
+  21 |     if (location.state?.mode) {
+> 22 |       setMode(location.state.mode);
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  23 |     }
+  24 |   }, [location.state]);
+  25 |   const [showPassword, setShowPassword] = useState(false);  react-hooks/set-state-in-effect
+
+/app/applet/src/pages/StoreDashboard/StoreDashboard.jsx
+    1:8   error    'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+    6:3   error    'ShoppingCart' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+    6:17  error    'Zap' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+    6:22  error    'Calendar' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+    7:3   error    'Phone' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+    7:10  error    'MapPin' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+    7:18  error    'User' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+    7:24  error    'Users' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+    7:53  error    'Check' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+    7:60  error    'Truck' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+    8:3   error    'ChevronDown' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+    8:16  error    'ChevronUp' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+    8:27  error    'Mail' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+    8:33  error    'Search' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   24:46  error    'updateCategoryImage' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   25:13  error    'addBadge' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+   25:23  error    'deleteBadge' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+   31:11  error    'orders' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+   57:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  55 |     if (user?.storeId) {
+  56 |       const prof = getStoreProfile(user.storeId);
+> 57 |       setSettingsForm({
+     |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |         storeName: prof.storeName || user.storeName || '',
+  59 |         description: prof.description || '',
+  60 |         banner: prof.banner || '',  react-hooks/set-state-in-effect
+   67:6   warning  React Hook useEffect has a missing dependency: 'getStoreProfile'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  201:9   error    'storeProductIds' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+
+/app/applet/src/pages/StorePage/StorePage.jsx
+   1:8  error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  22:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |     // Filter products by this storeId
+  21 |     const filtered = products.filter(p => p.storeId === storeId);
+> 22 |     setStoreProducts(filtered);
+     |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  23 |
+  24 |     // Fetch store profile data
+  25 |     const profile = getStoreProfile(storeId);  react-hooks/set-state-in-effect
+
+/app/applet/src/pages/UserPanel/UserPanel.jsx
+   1:8   error  'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+   3:46  error  'UserIcon' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+   3:85  error  'Menu' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  27:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  25 |   useEffect(() => {
+  26 |     if (location.state?.activeTab) {
+> 27 |       setActiveTab(location.state.activeTab);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  28 |     }
+  29 |   }, [location.state]);
+  30 |   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  react-hooks/set-state-in-effect
+
+/app/applet/src/pages/Wishlist/Wishlist.jsx
+  1:8  error  'React' is defined but never used  no-unused-vars
+
+✖ 109 problems (108 errors, 1 warning)
+

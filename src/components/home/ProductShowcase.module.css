@@ -4,8 +4,14 @@
 ═══════════════════════════════════════════════════ */
 
 .section {
-  padding: 40px 0;
+  padding: 32px 0;
   background: var(--white);
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: 40px 0;
+  }
 }
 
 [data-theme='dark'] .section {
@@ -14,7 +20,15 @@
 
 .header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    margin-bottom: 32px;
+    padding: 0;
+  }
 }
 
 .badge {
@@ -61,10 +75,20 @@
 .filtersWrapper {
   overflow-x: auto;
   padding-bottom: 12px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   display: flex;
   justify-content: center;
   scrollbar-width: none; /* Firefox */
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 768px) {
+  .filtersWrapper {
+    margin-bottom: 30px;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 .filtersWrapper::-webkit-scrollbar {
@@ -85,15 +109,22 @@
   position: relative;
   background: transparent;
   border: none;
-  padding: 10px 22px;
+  padding: 8px 16px;
   border-radius: 50px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
   outline: none;
   font-family: inherit;
   transition: color 0.3s;
+}
+
+@media (min-width: 768px) {
+  .filterBtn {
+    padding: 10px 22px;
+    font-size: 0.85rem;
+  }
 }
 
 .filterBtn:hover {
@@ -134,20 +165,28 @@
 
 /* --- Action Button --- */
 .footerAction {
-  margin-top: 40px;
+  margin-top: 32px;
   display: flex;
   justify-content: center;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .footerAction {
+    margin-top: 40px;
+    padding: 0;
+  }
 }
 
 .shopMoreBtn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: linear-gradient(135deg, #1A1A1A, #2D2D2D);
   color: #fff;
-  padding: 15px 36px;
+  padding: 12px 28px;
   border-radius: 14px;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-decoration: none;
   border: none;
@@ -155,6 +194,14 @@
   font-family: inherit;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  .shopMoreBtn {
+    gap: 10px;
+    padding: 15px 36px;
+    font-size: 0.95rem;
+  }
 }
 
 .shopMoreBtn:hover {

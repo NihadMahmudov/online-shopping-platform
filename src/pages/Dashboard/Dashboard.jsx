@@ -349,7 +349,7 @@ const Dashboard = () => {
                             <strong>{c.name}</strong>
                           </div>
                           <span>{c.email}</span>
-                          <span>{new Date(c.createdAt || Date.now()).toLocaleDateString('az-AZ')}</span>
+                          <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('az-AZ') : 'Qeydiyyat tarixi yoxdur'}</span>
                           <span>
                             <span className={c.status === 'suspended' ? 'badge-suspended' : 'badge-approved'}>
                               {c.status === 'suspended' ? 'Dondurulub' : 'Aktiv'}

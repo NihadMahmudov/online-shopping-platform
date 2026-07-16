@@ -10,11 +10,19 @@ const ProductShowcase = () => {
   const { products, categories } = useProducts();
   const [activeCategory, setActiveCategory] = useState('all');
 
+  console.log('🔍 ProductShowcase Debug:', {
+    totalProducts: products?.length,
+    totalCategories: categories?.length,
+    activeCategory,
+    products: products?.slice(0, 3)
+  });
+
   // Filter products by active category. We display a maximum of 8 products on the home page.
   const filteredProducts = useMemo(() => {
     const list = activeCategory === 'all'
       ? products
       : products.filter(p => p.category === activeCategory);
+    console.log('🔍 Filtered products:', list?.length);
     return list.slice(0, 8);
   }, [activeCategory, products]);
 
@@ -69,27 +77,37 @@ const ProductShowcase = () => {
         </div>
 
         {/* Product Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className={styles.grid}
-          key={activeCategory}
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map(product => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                layout
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        {filteredProducts.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px',
+            color: 'var(--text-muted)'
+          }}>
+            <p>Bu kateqoriyada məhsul tapılmadı</p>
+          </div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className={styles.grid}
+            key={activeCategory}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProducts.map(product => (
+                <motion.div
+                  key={product.id}
+                  variants={itemVariants}
+                  layout
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* View All Button */}
         <div className={styles.footerAction}>

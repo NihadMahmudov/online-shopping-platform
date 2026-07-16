@@ -74,8 +74,13 @@ const ProductDetail = () => {
     setTimeout(() => setShowCommentSuccess(false), 3000);
   };
 
-  useEffect(() => {
+  const [prevId, setPrevId] = useState(id);
+  if (id !== prevId) {
+    setPrevId(id);
     setLoading(true);
+  }
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       const foundProduct = products.find(p => p.id === parseInt(id));
       if (foundProduct) {

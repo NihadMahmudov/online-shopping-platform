@@ -13,6 +13,16 @@ const SplashScreen = ({ onFinish }) => {
     };
   }, [onFinish]);
 
+  // Memoize random particle coordinates to keep render pure
+  const particles = React.useMemo(() => {
+    return [...Array(8)].map((_, i) => ({
+      top: `${10 + Math.random() * 80}%`,
+      left: `${5 + Math.random() * 90}%`,
+      animationDelay: `${i * 0.15}s`,
+      size: `${4 + (i % 3) * 3}px`
+    }));
+  }, []);
+
   return (
     <div className={`${styles.splash} ${phase === 'exit' ? styles.exit : ''}`}>
       <div className={styles.content}>
@@ -59,13 +69,13 @@ const SplashScreen = ({ onFinish }) => {
       </div>
 
       {/* Particle dots */}
-      {[...Array(8)].map((_, i) => (
+      {particles.map((p, i) => (
         <div key={i} className={styles.particle} style={{
-          top: `${10 + Math.random() * 80}%`,
-          left: `${5 + Math.random() * 90}%`,
-          animationDelay: `${i * 0.15}s`,
-          width: `${4 + (i % 3) * 3}px`,
-          height: `${4 + (i % 3) * 3}px`,
+          top: p.top,
+          left: p.left,
+          animationDelay: p.animationDelay,
+          width: p.size,
+          height: p.size,
         }} />
       ))}
     </div>

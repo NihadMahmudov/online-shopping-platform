@@ -3,13 +3,112 @@ import { products as initialProducts } from '../data/products';
 
 const ProductContext = createContext();
 
+const boutiqueStores = [
+  { id: 'vogue_art', name: 'Vogue Art' },
+  { id: 'modernist', name: 'Modernist' },
+  { id: 'zarif_atelye', name: 'Zərif Atelye' },
+  { id: 'style_lab', name: 'Style Lab' },
+  { id: 'baku_closet', name: 'Baku Closet' },
+  { id: 'silk_way', name: 'Silk Way' }
+];
+
+const trendingBoutiqueProducts = [
+  {
+    id: 101,
+    name: 'İpək Köynək',
+    category: 'accessories',
+    price: 120,
+    oldPrice: 160,
+    rating: 4.9,
+    reviews: 42,
+    img: 'https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?auto=format&fit=crop&q=80&w=600',
+    badge: 'Yeni',
+    collections: ['flash', 'trend'],
+    storeId: 'silk_way',
+    storeName: 'Silk Way'
+  },
+  {
+    id: 102,
+    name: 'Klassik Şalvar',
+    category: 'accessories',
+    price: 85,
+    oldPrice: 110,
+    rating: 4.8,
+    reviews: 29,
+    img: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=600',
+    badge: 'Yeni',
+    collections: ['trend'],
+    storeId: 'vogue_art',
+    storeName: 'Vogue Art'
+  },
+  {
+    id: 103,
+    name: 'Dəri Çanta',
+    category: 'accessories',
+    price: 245,
+    oldPrice: 295,
+    rating: 5.0,
+    reviews: 58,
+    img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=600',
+    badge: 'Yeni',
+    collections: ['trend'],
+    storeId: 'baku_closet',
+    storeName: 'Baku Closet'
+  },
+  {
+    id: 104,
+    name: 'Yun Jaket',
+    category: 'accessories',
+    price: 155,
+    oldPrice: 195,
+    rating: 4.7,
+    reviews: 18,
+    img: 'https://images.unsplash.com/photo-1517256064527-09c53b2d0ec6?auto=format&fit=crop&q=80&w=600',
+    badge: 'Yeni',
+    collections: ['trend'],
+    storeId: 'modernist',
+    storeName: 'Modernist'
+  }
+];
+
+const mappedInitial = initialProducts.map((p, index) => {
+  const store = boutiqueStores[index % boutiqueStores.length];
+  return {
+    ...p,
+    storeId: store.id,
+    storeName: store.name
+  };
+});
+
 // Add storeId='bame_demo' to initial demo products so they still show up
-const demoProducts = initialProducts.map(p => ({ ...p, storeId: 'bame_demo', storeName: 'Bame GiftShop' }));
+const demoProducts = [...trendingBoutiqueProducts, ...mappedInitial];
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('atlas_products');
-    return saved ? JSON.parse(saved) : demoProducts;
+    try {
+      const saved = localStorage.getItem('atlas_products');
+      let loadedProducts = demoProducts;
+      
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('✅ Loaded products from localStorage:', parsed.length);
+        loadedProducts = parsed.length > 0 ? parsed : demoProducts;
+      } else {
+        console.log('✅ No localStorage data, using demo products:', demoProducts.length);
+        loadedProducts = demoProducts;
+      }
+
+      // Ensure we always have products
+      if (!loadedProducts || loadedProducts.length === 0) {
+        console.warn('⚠️ No products found, forcing demo products');
+        loadedProducts = demoProducts;
+      }
+
+      return loadedProducts;
+    } catch (error) {
+      console.error('❌ Error loading products:', error);
+      return demoProducts;
+    }
   });
 
   const [categories, setCategories] = useState(() => {
