@@ -22,6 +22,7 @@ const StoreDashboard = () => {
   const { 
     products, addProduct, deleteProduct, 
     categories,
+    badges,
     collections,
     flashSale, updateFlashSale,
     deleteComment
@@ -42,7 +43,7 @@ const StoreDashboard = () => {
   // Settings States
   const [settingsForm, setSettingsForm] = useState(() => {
     if (user?.storeId) {
-      const prof = storeProfiles ? storeProfiles.find(p => p.storeId === user.storeId) || {} : {};
+      const prof = getStoreProfile(user.storeId) || {};
       return {
         storeName: prof.storeName || user.storeName || '',
         description: prof.description || '',
@@ -72,7 +73,7 @@ const StoreDashboard = () => {
     setPrevStoreId(user?.storeId);
     setPrevProfilesHash(currentProfilesHash);
     if (user?.storeId) {
-      const prof = storeProfiles ? storeProfiles.find(p => p.storeId === user.storeId) || {} : {};
+      const prof = getStoreProfile(user.storeId) || {};
       setSettingsForm({
         storeName: prof.storeName || user.storeName || '',
         description: prof.description || '',

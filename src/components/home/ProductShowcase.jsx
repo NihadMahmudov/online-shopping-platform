@@ -10,7 +10,6 @@ const ProductShowcase = () => {
   const { products = [], categories = [] } = useProducts() || {};
   const [activeCategory, setActiveCategory] = useState('all');
 
-
   // Filter products by active category. We display a maximum of 8 products on the home page.
   const filteredProducts = useMemo(() => {
     const list = activeCategory === 'all'
@@ -79,27 +78,13 @@ const ProductShowcase = () => {
             <p>Bu kateqoriyada məhsul tapılmadı</p>
           </div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className={styles.grid}
-            key={activeCategory}
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map(product => (
-                <motion.div
-                  key={product.id}
-                  variants={itemVariants}
-                  layout
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className={styles.grid}>
+            {filteredProducts.map(product => (
+              <div key={product.id}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         )}
 
         {/* View All Button */}

@@ -157,6 +157,7 @@
   grid-template-columns: 1fr;
   gap: 24px;
   margin-top: 40px;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
@@ -173,6 +174,7 @@
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  width: 100%;
 }
 
 .largeCard {
@@ -190,6 +192,7 @@
   grid-template-rows: 1fr 1fr;
   gap: 24px;
   height: 100%;
+  overflow: hidden;
 }
 
 .smallCard {

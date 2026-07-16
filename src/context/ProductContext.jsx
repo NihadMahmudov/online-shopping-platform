@@ -82,25 +82,10 @@ const mappedInitial = initialProducts.map((p, index) => {
 
 // Add storeId='bame_demo' to initial demo products so they still show up
 const demoProducts = [...trendingBoutiqueProducts, ...mappedInitial];
-
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('atlas_products');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0) {
-          // Merge: ensure demoProducts are always included as foundation
-          const savedIds = new Set(parsed.map(p => p.id));
-          const missingDemos = demoProducts.filter(p => !savedIds.has(p.id));
-          return [...missingDemos, ...parsed];
-        }
-      }
-      return demoProducts;
-    } catch (error) {
-      console.error('❌ Error loading products:', error);
-      return demoProducts;
-    }
+    // Always start with demoProducts
+    return demoProducts;
   });
 
   const [categories, setCategories] = useState(() => {
