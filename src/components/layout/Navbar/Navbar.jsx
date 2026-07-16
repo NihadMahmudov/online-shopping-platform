@@ -178,13 +178,19 @@ const Navbar = () => {
                     <Settings size={20} />
                   </Link>
                 )}
+                {!isSuperAdmin && !isVendor && (
+                  <Link to="/panel" className={styles.adminBtn} title="İstifadəçi Paneli">
+                    <User size={20} />
+                  </Link>
+                )}
                 <button onClick={handleLogout} className={styles.logoutBtn} title={t('navbar.logout')}>
                   <LogOut size={20} />
                 </button>
               </div>
             ) : (
-              <Link to="/login" className={styles.loginBtn}>
-                <User size={16} /> {t('navbar.login')}
+              <Link to="/login" className={styles.loginBtn} title={t('navbar.login')}>
+                <User size={18} />
+                <span className={styles.loginText}>{t('navbar.login')}</span>
               </Link>
             )}
           </div>

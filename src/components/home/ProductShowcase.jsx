@@ -7,7 +7,7 @@ import ProductCard from '../common/ProductCard/ProductCard';
 import styles from './ProductShowcase.module.css';
 
 const ProductShowcase = () => {
-  const { products, categories } = useProducts();
+  const { products = [], categories = [] } = useProducts() || {};
   const [activeCategory, setActiveCategory] = useState('all');
 
   console.log('🔍 ProductShowcase Debug:', {

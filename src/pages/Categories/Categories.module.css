@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════════
-   CATEGORIES PAGE — Mobile-First
-   Sidebar (left) + Content grid
-   Sidebar collapses on mobile to a top tab strip
+   CATEGORIES PAGE — Redesigned Premium Style
+   No sidebar menu, enlarged categories grid
 ═══════════════════════════════════════════════════ */
 
 .pageContainer {
@@ -16,11 +15,12 @@
 /* ─── Search Header ─── */
 .searchHeader {
   background: var(--white);
-  padding: 10px 16px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: var(--shadow-sm);
 }
 
 .searchBox {
@@ -28,8 +28,18 @@
   align-items: center;
   background: var(--bg-alt);
   border-radius: 50px;
-  padding: 9px 14px;
-  gap: 8px;
+  padding: 10px 18px;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  transition: var(--transition-fast);
+}
+
+.searchBox:focus-within {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
 }
 
 .searchIcon {
@@ -41,7 +51,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: var(--text);
   outline: none;
   font-family: inherit;
@@ -55,89 +65,78 @@
 .mainLayout {
   display: flex;
   flex: 1;
-  overflow: hidden;
-  min-height: 0;
+  padding: 30px var(--page-padding-mobile);
 }
 
-/* ─── Sidebar (mobile: narrow fixed width) ─── */
-.sidebar {
-  width: 80px;
-  background: var(--white);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.sidebar::-webkit-scrollbar {
-  display: none;
-}
-
-.sidebarItem {
-  padding: 12px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  line-height: 1.2;
-  font-family: inherit;
-}
-
-.tabIcon {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: var(--bg-alt);
-  color: var(--text-muted);
-  transition: all 0.25s ease;
-  flex-shrink: 0;
-}
-
-.sidebarItem.active {
-  color: var(--primary);
-}
-
-.sidebarItem.active .tabIcon {
-  background: rgba(212, 175, 55, 0.12);
-  color: var(--primary);
-}
-
-.tabLabel {
-  display: block;
-  max-width: 68px;
-  word-break: break-word;
-  line-height: 1.2;
+@media (min-width: 768px) {
+  .mainLayout {
+    padding: 50px var(--page-padding-tablet);
+  }
 }
 
 /* ─── Content Area ─── */
 .content {
   flex: 1;
-  background: var(--white);
-  padding: 14px;
-  overflow-y: auto;
-  min-width: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ─── Page Header ─── */
+.pageHeader {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+@media (min-width: 768px) {
+  .pageHeader {
+    margin-bottom: 48px;
+  }
+}
+
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 12px;
+}
+
+.pageSubtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
 }
 
 /* ─── Category Grid ─── */
-/* Mobile: 3 columns, fluid */
+/* Mobile: 2 columns, fluid for larger visual display */
 .categoryGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 550px) {
+  .categoryGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .categoryGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .categoryGrid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px;
+  }
 }
 
 .catCard {
@@ -145,7 +144,19 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  gap: 6px;
+  gap: 12px;
+  background: var(--white);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.catCard:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: 0 12px 24px rgba(212, 175, 55, 0.12), var(--shadow-md);
 }
 
 .catImageWrapper {
@@ -153,241 +164,77 @@
   width: 100%;
   aspect-ratio: 1;
   background: var(--bg-alt);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: all 0.25s ease;
+  border: 1px solid var(--border);
+  transition: border-color 0.25s ease;
 }
 
 .catCard:hover .catImageWrapper {
   border-color: var(--primary);
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.15);
-  transform: translateY(-2px);
 }
 
 .catImageWrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.catCard:hover img {
+  transform: scale(1.08);
 }
 
 .cubeBadge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -4px;
+  right: -4px;
   background: var(--primary);
   color: var(--secondary);
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 2px solid var(--white);
   z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .cubeBadge {
+  border-color: #161616;
 }
 
 .catName {
-  font-size: 0.7rem;
-  color: var(--text);
+  font-size: 0.95rem;
+  color: var(--secondary);
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   max-width: 100%;
   word-wrap: break-word;
+  transition: color 0.25s ease;
 }
 
-/* ─── Coming Soon ─── */
-.comingSoon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  text-align: center;
-  color: var(--text-muted);
+.catCard:hover .catName {
+  color: var(--primary-dark);
 }
 
-.placeholderIcon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-
-/* ─── Special Products Grid ─── */
-.specialProductsGrid {
-  padding: 0;
-}
-
-.tabHeader {
-  margin-bottom: 16px;
-}
-
-.tabHeader h2 {
-  font-size: 1.2rem;
-  color: var(--secondary);
-  margin-bottom: 4px;
-}
-
-.tabHeader p {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-/* Product Mini Card */
-.productMiniCard {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.productMiniCard:hover {
-  border-color: var(--primary);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
-
-.miniImgWrapper {
-  position: relative;
-  aspect-ratio: 1;
-  background: var(--bg-alt);
-}
-
-.miniImgWrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.miniBadge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: var(--primary);
-  color: var(--secondary);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 700;
-}
-
-.miniInfo {
-  padding: 10px;
-}
-
-.miniInfo h4 {
-  font-size: 0.8rem;
-  color: var(--text);
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--font-sans);
-  font-weight: 500;
-}
-
-.miniPrice {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.currentPrice {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--secondary);
-}
-
-.oldPrice {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-decoration: line-through;
-}
-
-/* inPanel modifier */
+/* inPanel modifier for User Dashboard placement */
 .inPanel {
   min-height: auto;
 }
 
 .inPanel .mainLayout {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border);
+  padding: 20px 0;
+}
+
+.inPanel .catCard {
   background: var(--white);
-}
-
-/* ─── Tablet & Desktop ─── */
-@media (min-width: 480px) {
-  .sidebar {
-    width: 110px;
-  }
-
-  .sidebarItem {
-    font-size: 0.7rem;
-    padding: 14px 10px;
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px 12px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-}
-
-@media (min-width: 768px) {
-  .sidebar {
-    width: 130px;
-  }
-
-  .content {
-    padding: 20px;
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px 16px;
-  }
-
-  .catName {
-    font-size: 0.78rem;
-  }
-
-  .grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .sidebar {
-    width: 140px;
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  .grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }

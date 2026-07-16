@@ -19,15 +19,6 @@ const Hero = () => {
     navigate(`/store/${storeId}`);
   };
 
-  const tags = [
-    { id: 'vogue_art', label: 'VOGUE ART' },
-    { id: 'modernist', label: 'MODERNIST' },
-    { id: 'zarif_atelye', label: 'ZƏRİF' },
-    { id: 'style_lab', label: 'STYLE LAB' },
-    { id: 'baku_closet', label: 'BAKU CLOSET' },
-    { id: 'silk_way', label: 'SILK WAY' }
-  ];
-
   return (
     <section className={styles.heroSection}>
       <div className="container">
@@ -72,25 +63,6 @@ const Hero = () => {
               <Search size={20} />
             </button>
           </motion.form>
-
-          {/* Boutique Tags */}
-          <motion.div 
-            className={styles.tagsContainer}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            {tags.map((tag) => (
-              <button 
-                key={tag.id}
-                type="button" 
-                onClick={() => handleTagClick(tag.id)}
-                className={styles.tagBtn}
-              >
-                {tag.label}
-              </button>
-            ))}
-          </motion.div>
         </div>
 
         {/* Visual Showcase Category Grid */}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home } from 'lucide-react';
+import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useStore } from '../../context/StoreContext';
+import { useProducts } from '../../context/ProductContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Shop from '../Shop/Shop';
 import Cart from '../Cart/Cart';
@@ -13,9 +15,11 @@ import Categories from '../Categories/Categories';
 import styles from './UserPanel.module.css';
 
 const UserPanel = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, users } = useAuth();
   const { cartItemCount } = useCart();
   const { wishlist } = useWishlist();
+  const { getStoreProfile } = useStore();
+  const { products } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(() => {
@@ -32,9 +36,33 @@ const UserPanel = () => {
   }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Compute boutiques list
+  const vendorsList = users.filter(u => u.role === 'vendor');
+  const boutiques = vendorsList.map(v => {
+    const profile = getStoreProfile(v.storeId) || {};
+    const storeProductCount = products.filter(p => p.storeId === v.storeId).length;
+    let badge = 'BUTİK';
+    if (v.storeId === 'vogue_art') badge = 'YENİ';
+    else if (v.storeId === 'modernist') badge = 'POPULYAR';
+    else if (v.storeId === 'zarif_atelye') badge = 'ƏL İŞİ';
+    else if (v.storeId === 'style_lab') badge = 'PREMİUM';
+    else if (v.storeId === 'baku_closet') badge = 'TREND';
+    else if (v.storeId === 'silk_way') badge = 'KLASSİK';
+    else if (v.storeCategory) badge = v.storeCategory.toUpperCase();
+
+    return {
+      id: v.storeId,
+      name: v.storeName || v.name,
+      location: profile.address || 'Bakı, Nizami küçəsi',
+      badge: badge,
+      count: `${storeProductCount} məhsul`,
+    };
+  });
+
   const TABS = [
-    { id: 'kataloq', label: 'Kataloq', icon: <Store size={20} />, count: null },
+    { id: 'kataloq', label: 'Kataloq', icon: <ShoppingBag size={20} />, count: null },
     { id: 'categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} />, count: null },
+    { id: 'stores', label: 'Mağazalar', icon: <Store size={20} />, count: null },
     { id: 'wishlist', label: 'Sevimlilər', icon: <Heart size={20} />, count: wishlist.length },
     { id: 'cart', label: 'Səbət', icon: <ShoppingCart size={20} />, count: cartItemCount },
     { id: 'orders', label: 'Sifarişlər', icon: <Package size={20} />, count: null }
@@ -186,8 +214,48 @@ const UserPanel = () => {
             transition={{ duration: 0.2 }}
             className={styles.tabWrapper}
           >
-            {activeTab === 'kataloq' && <Shop inPanel={true} />}
+             {activeTab === 'kataloq' && <Shop inPanel={true} />}
             {activeTab === 'categories' && <Categories inPanel={true} />}
+            {activeTab === 'stores' && (
+              <div className={styles.storesTab}>
+                <div className={styles.tabHeader}>
+                  <h2>Mağazalar</h2>
+                  <p>AtlasMall platformasında fəaliyyət göstərən bütün premium butiklər</p>
+                </div>
+                <div className={styles.storesGrid}>
+                  {boutiques.map(store => (
+                    <div 
+                      key={store.id} 
+                      className={styles.storeCard}
+                      onClick={() => navigate(`/store/${store.id}`)}
+                    >
+                      <div className={styles.storeCardHeader}>
+                        <div className={styles.storeAvatar}>
+                          {store.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className={styles.storeName}>{store.name}</h3>
+                          <span className={styles.storeBadge}>{store.badge}</span>
+                        </div>
+                      </div>
+                      <div className={styles.storeDetails}>
+                        <div className={styles.storeDetailItem}>
+                          <MapPin size={14} className={styles.storeDetailIcon} />
+                          <span>{store.location}</span>
+                        </div>
+                        <div className={styles.storeDetailItem}>
+                          <Store size={14} className={styles.storeDetailIcon} />
+                          <span>{store.count}</span>
+                        </div>
+                      </div>
+                      <button className={styles.storeActionBtn}>
+                        Mağazaya bax <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeTab === 'wishlist' && <Wishlist inPanel={true} />}
             {activeTab === 'cart' && <Cart inPanel={true} />}
             {activeTab === 'orders' && <Orders inPanel={true} />}
@@ -197,7 +265,7 @@ const UserPanel = () => {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className={styles.mobileBottomBar}>
-        {TABS.map(tab => (
+        {TABS.filter(tab => tab.id !== 'stores').map(tab => (
           <button
             key={tab.id}
             className={`${styles.bottomTabItem} ${activeTab === tab.id ? styles.bottomTabActive : ''}`}

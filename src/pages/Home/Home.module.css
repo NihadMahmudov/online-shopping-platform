@@ -124,9 +124,11 @@
 /* ─── Manifest Section (Dark Backdrop) ─── */
 .manifestSection {
   padding: 60px 20px;
-  background-color: #121212;
-  color: #ffffff;
+  background-color: var(--bg-alt);
+  color: var(--secondary);
   text-align: center;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 @media (min-width: 768px) {
@@ -156,7 +158,7 @@
   font-weight: 300;
   line-height: 1.4;
   margin-bottom: 30px;
-  color: #f3f3f3;
+  color: var(--secondary);
 }
 
 .manifestText span {
@@ -168,7 +170,7 @@
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 0.88rem;
-  color: #888888;
+  color: var(--text-muted);
   letter-spacing: 1px;
 }
 
@@ -186,20 +188,32 @@
 
 .boutiquesGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 10px 4px 20px;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 768px) {
-  .boutiquesGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.boutiquesGrid::-webkit-scrollbar {
+  height: 6px;
 }
 
-@media (min-width: 1024px) {
-  .boutiquesGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.boutiquesGrid::-webkit-scrollbar-track {
+  background: var(--bg-alt);
+  border-radius: var(--radius-full);
+}
+
+.boutiquesGrid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.boutiquesGrid::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }
 
 .boutiqueCard {
@@ -213,12 +227,15 @@
   transition: var(--transition);
   min-height: 160px;
   cursor: pointer;
+  width: 280px;
+  scroll-snap-align: start;
 }
 
 @media (min-width: 768px) {
   .boutiqueCard {
     padding: 28px;
     min-height: 180px;
+    width: 340px;
   }
 }
 
@@ -481,10 +498,11 @@
 }
 
 .ctaCard {
-  background-color: #121212;
-  border-radius: var(--radius-md);
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 40px 24px;
-  color: #ffffff;
+  color: var(--secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -492,6 +510,7 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 768px) {
@@ -526,7 +545,7 @@
   font-family: var(--font-serif);
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 400;
-  color: #ffffff;
+  color: var(--secondary);
   margin-bottom: 14px;
 }
 
@@ -537,14 +556,14 @@
 
 .ctaDesc {
   font-size: 0.95rem;
-  color: #888888;
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
 .ctaBtn {
   margin-top: 30px;
-  background-color: #ffffff;
-  color: #121212;
+  background-color: var(--secondary);
+  color: var(--white);
   padding: 16px 36px;
   font-size: 0.9rem;
   font-weight: 700;
@@ -554,6 +573,7 @@
   gap: 10px;
   transition: var(--transition);
   flex-shrink: 0;
+  border: 1.5px solid var(--secondary);
 }
 
 @media (min-width: 992px) {
@@ -564,8 +584,10 @@
 
 .ctaBtn:hover {
   background-color: var(--primary);
-  color: #ffffff;
+  border-color: var(--primary);
+  color: var(--white);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
 }
 
 /* ─── Vendor Onboarding & Pricing Section ─── */
