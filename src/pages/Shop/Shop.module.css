@@ -223,50 +223,23 @@
 }
 
 .sidebar {
-  display: none; /* hidden on mobile, opened as drawer */
+  display: none;
 }
 
 @media (min-width: 1024px) {
-  .shopLayout {
-    display: flex;
-    gap: 30px;
-    align-items: flex-start;
-  }
-
-  .sidebar {
-    display: block;
-    width: 270px;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 24px;
-    box-shadow: var(--shadow-sm);
-    position: sticky;
-    top: 90px;
-    flex-shrink: 0;
-    z-index: 10;
-  }
-
   .mainContent {
-    flex: 1;
+    width: 100%;
   }
 
   .grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
   }
 }
 
 @media (min-width: 1400px) {
   .grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 24px;
   }
 }

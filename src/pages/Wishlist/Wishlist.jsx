@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
 import ProductCard from '../../components/common/ProductCard/ProductCard';
@@ -8,6 +10,7 @@ import styles from './Wishlist.module.css';
 const Wishlist = ({ inPanel = false }) => {
   const { wishlist } = useWishlist();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(!user);
 
   // If not logged in, show AuthModal immediately
@@ -43,6 +46,29 @@ const Wishlist = ({ inPanel = false }) => {
 
   return (
     <div className={`${inPanel ? '' : 'container'} ${styles.wishlistContainer} ${inPanel ? styles.inPanel : ''}`}>
+      {!inPanel && (
+        <button 
+          onClick={() => navigate(-1)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'none',
+            border: 'none',
+            color: '#D4AF37',
+            cursor: 'pointer',
+            padding: '8px 0',
+            marginBottom: '15px',
+            fontSize: '15px',
+            fontWeight: 500,
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={(e) => e.target.style.color = '#B4932F'}
+          onMouseLeave={(e) => e.target.style.color = '#D4AF37'}
+        >
+          <ArrowLeft size={18} /> Geri Qayıt
+        </button>
+      )}
       <h1 className={styles.title}>Bəyəndiklərim</h1>
 
       <div className={styles.grid}>

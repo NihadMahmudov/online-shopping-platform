@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Store, Users, ShoppingBag, LogOut,
   TrendingUp, CheckCircle, XCircle, Trash2, ShieldAlert,
   Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft, Tag, PlusCircle,
-  Camera, ImagePlus
+  Camera, ImagePlus, Award, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -12,7 +12,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import styles from './Dashboard.module.css';
 
-const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Ana Səhifə Vitrini', 'Analitika'];
+const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Kolleksiya və Etiketlər', 'Ana Səhifə Vitrini', 'Analitika'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,7 +28,13 @@ const Dashboard = () => {
     deleteCategory, 
     updateCategoryImage, 
     showcaseCards, 
-    updateShowcaseCard 
+    updateShowcaseCard,
+    badges,
+    addBadge,
+    deleteBadge,
+    collections,
+    addCollection,
+    deleteCollection
   } = useProducts();
   const { orders, updateOrderStatus, getTotalRevenue, getRevenueByStore } = useOrders();
 
@@ -37,6 +43,31 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newCatLabel, setNewCatLabel] = useState('');
   const [catSuccess, setCatSuccess] = useState(false);
+
+  const [newBadgeLabel, setNewBadgeLabel] = useState('');
+  const [newCollectionLabel, setNewCollectionLabel] = useState('');
+  const [badgeSuccess, setBadgeSuccess] = useState(false);
+  const [collectionSuccess, setCollectionSuccess] = useState(false);
+
+  const handleAddBadge = (e) => {
+    e.preventDefault();
+    if (newBadgeLabel.trim()) {
+      addBadge(newBadgeLabel.trim());
+      setNewBadgeLabel('');
+      setBadgeSuccess(true);
+      setTimeout(() => setBadgeSuccess(false), 2000);
+    }
+  };
+
+  const handleAddCollection = (e) => {
+    e.preventDefault();
+    if (newCollectionLabel.trim()) {
+      addCollection(newCollectionLabel.trim());
+      setNewCollectionLabel('');
+      setCollectionSuccess(true);
+      setTimeout(() => setCollectionSuccess(false), 2000);
+    }
+  };
 
   const handleCategoryImageUpload = (e, catId) => {
     const file = e.target.files[0];
@@ -158,6 +189,7 @@ const Dashboard = () => {
                      tab === 'İstifadəçilər' ? <Users size={18} /> : 
                      tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                      tab === 'Kateqoriyalar' ? <Tag size={18} /> :
+                     tab === 'Kolleksiya və Etiketlər' ? <Award size={18} /> :
                      tab === 'Ana Səhifə Vitrini' ? <LayoutDashboard size={18} /> :
                      <TrendingUp size={18} />}
                     {tab}
@@ -203,6 +235,7 @@ const Dashboard = () => {
                tab === 'İstifadəçilər' ? <Users size={18} /> : 
                tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                tab === 'Kateqoriyalar' ? <Tag size={18} /> :
+               tab === 'Kolleksiya və Etiketlər' ? <Award size={18} /> :
                tab === 'Ana Səhifə Vitrini' ? <LayoutDashboard size={18} /> :
                <TrendingUp size={18} />}
               {tab}
@@ -271,7 +304,8 @@ const Dashboard = () => {
                   <h2>Mağazalar Siyahısı ({filteredVendors.length})</h2>
                 </div>
 
-                <div className={styles.tableCard}>
+                {/* Desktop Table */}
+                <div className={`${styles.tableCard} ${styles.desktopOnly}`}>
                   <div className={styles.table}>
                     <div className={styles.tableHeaderStores}>
                       <span>Mağaza Adı</span>
@@ -296,52 +330,45 @@ const Dashboard = () => {
                             <span className={styles.catTag}>{v.storeCategory || 'Hədiyyə'}</span>
                             <span>{storeProductCount} ədəd</span>
                             <span>
-                              <span className={
-                                v.status === 'approved' ? 'badge-approved' : 
-                                v.status === 'pending' ? 'badge-pending' : 
-                                'badge-suspended'
-                              }>
-                                {v.status === 'approved' ? 'Aktiv' : 
-                                 v.status === 'pending' ? 'Gözləmədə' : 
+                              <span className={`${styles.statusBadge} ${
+                                v.status === 'approved' ? styles.statusApproved :
+                                v.status === 'pending' ? styles.statusPending :
+                                v.status === 'rejected' ? styles.statusRejected :
+                                styles.statusSuspended
+                              }`}>
+                                {v.status === 'approved' && <CheckCircle size={14} className={styles.badgeIcon} />}
+                                {v.status === 'pending' && <Clock size={14} className={styles.badgeIcon} />}
+                                {v.status === 'suspended' && <UserX size={14} className={styles.badgeIcon} />}
+                                {v.status === 'rejected' && <XCircle size={14} className={styles.badgeIcon} />}
+                                {v.status === 'approved' ? 'Aktiv' :
+                                 v.status === 'pending' ? 'Gözləmədə' :
                                  v.status === 'rejected' ? 'Rədd edilib' : 'Dondurulub'}
                               </span>
                             </span>
                             <div className={styles.storeActions}>
                               {v.status === 'pending' && (
                                 <>
-                                  <button 
-                                    className={styles.approveBtn} 
-                                    onClick={() => approveVendor(v.email)}
-                                    title="Təsdiqlə"
-                                  >
+                                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                    className={styles.approveBtn} onClick={() => approveVendor(v.email)}>
                                     <CheckCircle size={16} /> Təsdiqlə
-                                  </button>
-                                  <button 
-                                    className={styles.rejectBtn} 
-                                    onClick={() => rejectVendor(v.email)}
-                                    title="Rədd et"
-                                  >
+                                  </motion.button>
+                                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                    className={styles.rejectBtn} onClick={() => rejectVendor(v.email)}>
                                     <XCircle size={16} /> Rədd Et
-                                  </button>
+                                  </motion.button>
                                 </>
                               )}
                               {v.status === 'approved' && (
-                                <button 
-                                  className={styles.suspendBtn} 
-                                  onClick={() => suspendUser(v.email)}
-                                  title="Dondur"
-                                >
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                  className={styles.suspendBtn} onClick={() => suspendUser(v.email)}>
                                   <UserX size={16} /> Hesabı Dondur
-                                </button>
+                                </motion.button>
                               )}
                               {v.status === 'suspended' && (
-                                <button 
-                                  className={styles.activateBtn} 
-                                  onClick={() => suspendUser(v.email)}
-                                  title="Aktivləşdir"
-                                >
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                  className={styles.activateBtn} onClick={() => suspendUser(v.email)}>
                                   <UserCheck size={16} /> Aktivləşdir
-                                </button>
+                                </motion.button>
                               )}
                             </div>
                           </div>
@@ -350,29 +377,107 @@ const Dashboard = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Mobile Cards */}
+                <div className={styles.mobileCards}>
+                  {filteredVendors.length === 0 ? (
+                    <div className={styles.noData}>Heç bir mağaza tapılmadı.</div>
+                  ) : (
+                    filteredVendors.map(v => {
+                      const storeProductCount = products.filter(p => p.storeId === v.storeId).length;
+                      const statusColor = v.status === 'approved' ? '#059669' : v.status === 'pending' ? '#D97706' : v.status === 'rejected' ? '#6B7280' : '#DC2626';
+                      return (
+                        <div key={v.email} className={styles.premiumCard}>
+                          <div className={styles.premiumCardAccent} style={{ background: `linear-gradient(90deg, ${statusColor}22, transparent)`, borderLeft: `3px solid ${statusColor}` }} />
+                          <div className={styles.premiumCardTop}>
+                            <div className={styles.premiumAvatar} style={{ background: `linear-gradient(135deg, ${statusColor}30, ${statusColor}15)`, color: statusColor, border: `1.5px solid ${statusColor}40` }}>
+                              {v.storeName?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className={styles.premiumCardInfo}>
+                              <h3>{v.storeName}</h3>
+                              <p>{v.phone || v.email}</p>
+                            </div>
+                            <span className={`${styles.statusBadge} ${
+                              v.status === 'approved' ? styles.statusApproved :
+                              v.status === 'pending' ? styles.statusPending :
+                              v.status === 'rejected' ? styles.statusRejected :
+                              styles.statusSuspended
+                            }`}>
+                              {v.status === 'approved' && <CheckCircle size={12} />}
+                              {v.status === 'pending' && <Clock size={12} />}
+                              {v.status === 'suspended' && <UserX size={12} />}
+                              {v.status === 'rejected' && <XCircle size={12} />}
+                              {v.status === 'approved' ? 'Aktiv' : v.status === 'pending' ? 'Gözləmə' : v.status === 'rejected' ? 'Rədd' : 'Dondu'}
+                            </span>
+                          </div>
+                          <div className={styles.premiumCardChips}>
+                            <div className={styles.chip}>
+                              <span className={styles.chipIcon}>📧</span>
+                              <span>{v.email}</span>
+                            </div>
+                            <div className={styles.chipRow}>
+                              <div className={styles.chip}>
+                                <span className={styles.chipIcon}>🏷️</span>
+                                <span>{v.storeCategory || 'Hədiyyə'}</span>
+                              </div>
+                              <div className={styles.chip}>
+                                <span className={styles.chipIcon}>📦</span>
+                                <span>{storeProductCount} məhsul</span>
+                              </div>
+                            </div>
+                          </div>
+                          {(v.status === 'pending' || v.status === 'approved' || v.status === 'suspended') && (
+                            <div className={styles.premiumCardActions}>
+                              {v.status === 'pending' && (
+                                <>
+                                  <motion.button whileTap={{ scale: 0.97 }}
+                                    className={styles.actionBtnGreen}
+                                    onClick={() => approveVendor(v.email)}>
+                                    <CheckCircle size={15} /> Təsdiqlə
+                                  </motion.button>
+                                  <motion.button whileTap={{ scale: 0.97 }}
+                                    className={styles.actionBtnRed}
+                                    onClick={() => rejectVendor(v.email)}>
+                                    <XCircle size={15} /> Rədd Et
+                                  </motion.button>
+                                </>
+                              )}
+                              {v.status === 'approved' && (
+                                <motion.button whileTap={{ scale: 0.97 }}
+                                  className={styles.actionBtnOrange}
+                                  onClick={() => suspendUser(v.email)}>
+                                  <UserX size={15} /> Dondur
+                                </motion.button>
+                              )}
+                              {v.status === 'suspended' && (
+                                <motion.button whileTap={{ scale: 0.97 }}
+                                  className={styles.actionBtnGreen}
+                                  onClick={() => suspendUser(v.email)}>
+                                  <UserCheck size={15} /> Aktivləşdir
+                                </motion.button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </motion.div>
             )}
 
             {/* ── CUSTOMERS TAB ── */}
             {activeTab === 'İstifadəçilər' && (
-              <motion.div
-                key="customers"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-              >
+              <motion.div key="customers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className={styles.sectionHeader}>
                   <h2>Müştərilər Siyahısı ({filteredCustomers.length})</h2>
                 </div>
 
-                <div className={styles.tableCard}>
+                {/* Desktop Table */}
+                <div className={`${styles.tableCard} ${styles.desktopOnly}`}>
                   <div className={styles.table}>
                     <div className={styles.tableHeaderCustomers}>
-                      <span>Müştəri</span>
-                      <span>E-poçt</span>
-                      <span>Qeydiyyat Tarixi</span>
-                      <span>Status</span>
-                      <span>Əməliyyat</span>
+                      <span>Müştəri</span><span>E-poçt</span><span>Qeydiyyat Tarixi</span><span>Status</span><span>Əməliyyat</span>
                     </div>
                     {filteredCustomers.length === 0 ? (
                       <div className={styles.noData}>Müştəri tapılmadı.</div>
@@ -380,63 +485,91 @@ const Dashboard = () => {
                       filteredCustomers.map(c => (
                         <div key={c.email} className={styles.tableRowCustomers}>
                           <div className={styles.customerCell}>
-                            <div className={styles.custAvatar}>
-                              {c.name?.charAt(0).toUpperCase()}
-                            </div>
+                            <div className={styles.custAvatar}>{c.name?.charAt(0).toUpperCase()}</div>
                             <strong>{c.name}</strong>
                           </div>
                           <span>{c.email}</span>
-                          <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('az-AZ') : 'Qeydiyyat tarixi yoxdur'}</span>
+                          <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('az-AZ') : 'Tarix yoxdur'}</span>
                           <span>
-                            <span className={c.status === 'suspended' ? 'badge-suspended' : 'badge-approved'}>
+                            <span className={`${styles.statusBadge} ${c.status === 'suspended' ? styles.statusSuspended : styles.statusApproved}`}>
+                              {c.status === 'suspended' ? <UserX size={14} className={styles.badgeIcon} /> : <CheckCircle size={14} className={styles.badgeIcon} />}
                               {c.status === 'suspended' ? 'Dondurulub' : 'Aktiv'}
                             </span>
                           </span>
                           <div className={styles.customerActions}>
-                            <button 
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                               className={c.status === 'suspended' ? styles.activateBtnIcon : styles.suspendBtnIcon}
-                              onClick={() => suspendUser(c.email)}
-                              title={c.status === 'suspended' ? 'Aktivləşdir' : 'Dondur'}
-                            >
+                              onClick={() => suspendUser(c.email)}>
                               {c.status === 'suspended' ? <UserCheck size={16} /> : <UserX size={16} />}
-                            </button>
-                            <button 
-                              className={styles.deleteBtn}
-                              onClick={() => deleteUser(c.email)}
-                              title="Hesabı Sil"
-                            >
+                            </motion.button>
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                              className={styles.deleteBtn} onClick={() => deleteUser(c.email)}>
                               <Trash2 size={16} />
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       ))
                     )}
                   </div>
                 </div>
+
+                {/* Mobile Cards */}
+                <div className={styles.mobileCards}>
+                  {filteredCustomers.length === 0 ? (
+                    <div className={styles.noData}>Müştəri tapılmadı.</div>
+                  ) : (
+                    filteredCustomers.map(c => (
+                      <div key={c.email} className={styles.premiumCard}>
+                        <div className={styles.premiumCardTop}>
+                          <div className={styles.premiumAvatar} style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08))', color: '#9A7D0A', border: '1.5px solid rgba(212,175,55,0.3)' }}>
+                            {c.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div className={styles.premiumCardInfo}>
+                            <h3>{c.name}</h3>
+                            <p>{c.email}</p>
+                          </div>
+                          <span className={`${styles.statusBadge} ${c.status === 'suspended' ? styles.statusSuspended : styles.statusApproved}`}>
+                            {c.status === 'suspended' ? <UserX size={12} /> : <CheckCircle size={12} />}
+                            {c.status === 'suspended' ? 'Dondu' : 'Aktiv'}
+                          </span>
+                        </div>
+                        <div className={styles.premiumCardChips}>
+                          <div className={styles.chip}>
+                            <span className={styles.chipIcon}>📅</span>
+                            <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('az-AZ') : 'Tarix yoxdur'}</span>
+                          </div>
+                        </div>
+                        <div className={styles.premiumCardActions}>
+                          <motion.button whileTap={{ scale: 0.97 }}
+                            className={c.status === 'suspended' ? styles.actionBtnGreen : styles.actionBtnOrange}
+                            onClick={() => suspendUser(c.email)}>
+                            {c.status === 'suspended' ? <><UserCheck size={15} /> Aktivləşdir</> : <><UserX size={15} /> Dondur</>}
+                          </motion.button>
+                          <motion.button whileTap={{ scale: 0.97 }}
+                            className={styles.actionBtnGhost}
+                            onClick={() => deleteUser(c.email)}>
+                            <Trash2 size={15} /> Sil
+                          </motion.button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </motion.div>
             )}
 
             {/* ── ORDERS TAB ── */}
             {activeTab === 'Sifarişlər' && (
-              <motion.div
-                key="orders"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-              >
+              <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className={styles.sectionHeader}>
                   <h2>Bütün Platforma Sifarişləri ({filteredOrders.length})</h2>
                 </div>
 
-                <div className={styles.tableCard}>
+                {/* Desktop Table */}
+                <div className={`${styles.tableCard} ${styles.desktopOnly}`}>
                   <div className={styles.table}>
                     <div className={styles.tableHeaderOrders}>
-                      <span>Sifariş İD</span>
-                      <span>Müştəri</span>
-                      <span>Tarix</span>
-                      <span>Məbləğ</span>
-                      <span>Status</span>
-                      <span>İdarəetmə</span>
+                      <span>Sifariş İD</span><span>Müştəri</span><span>Tarix</span><span>Məbləğ</span><span>Status</span><span>İdarəetmə</span>
                     </div>
                     {filteredOrders.length === 0 ? (
                       <div className={styles.noData}>Sifariş tapılmadı.</div>
@@ -451,23 +584,12 @@ const Dashboard = () => {
                           <span>{new Date(o.createdAt).toLocaleDateString('az-AZ')}</span>
                           <span className={styles.priceCell}>{o.total} AZN</span>
                           <span>
-                            <span className={
-                              o.status === 'delivered' ? 'badge-approved' : 
-                              o.status === 'pending' ? 'badge-pending' : 
-                              o.status === 'cancelled' ? 'badge-suspended' : 'badge-rejected'
-                            }>
-                              {o.status === 'pending' ? 'Gözləmədə' : 
-                               o.status === 'approved' ? 'Təsdiqləndi' : 
-                               o.status === 'shipped' ? 'Yoldadır' : 
-                               o.status === 'delivered' ? 'Çatdırıldı' : 'Ləğv edilib'}
+                            <span className={o.status === 'delivered' ? 'badge-approved' : o.status === 'pending' ? 'badge-pending' : o.status === 'cancelled' ? 'badge-suspended' : 'badge-rejected'}>
+                              {o.status === 'pending' ? 'Gözləmədə' : o.status === 'approved' ? 'Təsdiqləndi' : o.status === 'shipped' ? 'Yoldadır' : o.status === 'delivered' ? 'Çatdırıldı' : 'Ləğv edilib'}
                             </span>
                           </span>
                           <div>
-                            <select 
-                              value={o.status} 
-                              onChange={(e) => updateOrderStatus(o.id, e.target.value)}
-                              className={styles.statusSelect}
-                            >
+                            <select value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)} className={styles.statusSelect}>
                               <option value="pending">Gözləmədə</option>
                               <option value="approved">Təsdiqləndi</option>
                               <option value="shipped">Yoldadır</option>
@@ -479,6 +601,49 @@ const Dashboard = () => {
                       ))
                     )}
                   </div>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className={styles.mobileCards}>
+                  {filteredOrders.length === 0 ? (
+                    <div className={styles.noData}>Sifariş tapılmadı.</div>
+                  ) : (
+                    filteredOrders.map(o => (
+                      <div key={o.id} className={styles.premiumCard}>
+                        <div className={styles.premiumCardTop}>
+                          <div className={styles.premiumAvatar} style={{ background: 'linear-gradient(135deg, rgba(67,97,238,0.15), rgba(67,97,238,0.05))', color: '#4361ee', border: '1.5px solid rgba(67,97,238,0.25)', fontSize: '0.7rem', fontFamily: 'monospace' }}>
+                            #{o.id?.slice(-3)}
+                          </div>
+                          <div className={styles.premiumCardInfo}>
+                            <h3>{o.customerName}</h3>
+                            <p>{o.email}</p>
+                          </div>
+                          <span className={styles.orderPriceTag}>{o.total} AZN</span>
+                        </div>
+                        <div className={styles.premiumCardChips}>
+                          <div className={styles.chipRow}>
+                            <div className={styles.chip}>
+                              <span className={styles.chipIcon}>📅</span>
+                              <span>{new Date(o.createdAt).toLocaleDateString('az-AZ')}</span>
+                            </div>
+                            <div className={styles.chip}>
+                              <span className={styles.chipIcon}>📦</span>
+                              <span>{o.status === 'pending' ? 'Gözləmə' : o.status === 'approved' ? 'Təsdiq' : o.status === 'shipped' ? 'Yolda' : o.status === 'delivered' ? 'Çatdı' : 'Ləğv'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className={styles.premiumCardActions}>
+                          <select value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)} className={styles.mobileSelect}>
+                            <option value="pending">Gözləmədə</option>
+                            <option value="approved">Təsdiqləndi</option>
+                            <option value="shipped">Yoldadır</option>
+                            <option value="delivered">Çatdırıldı</option>
+                            <option value="cancelled">Ləğv et</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             )}
@@ -571,6 +736,161 @@ const Dashboard = () => {
                         );
                       })
                     )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── COLLECTIONS & BADGES MANAGEMENT ── */}
+            {activeTab === 'Kolleksiya və Etiketlər' && (
+              <motion.div
+                key="collections-badges"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className={styles.sectionHeader}>
+                  <h2 style={{ color: '#0F172A', fontWeight: 700, fontSize: '1.5rem' }}>Kolleksiyalar və Etiketlər</h2>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '4px' }}>
+                    Platformadakı məhsulların qruplaşdırılmasını (Kolleksiyalar) və vizual etiketləri (Yeni, Bestseller, Endirim...) idarə edin.
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+                  {/* --- Collections Box --- */}
+                  <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '24px', height: 'fit-content', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', marginBottom: '12px', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Sparkles size={18} style={{ color: '#D4AF37' }} />
+                      Məhsul Kolleksiyaları
+                    </h3>
+                    <p style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '16px', lineHeight: '1.5' }}>
+                      Kolleksiyalar məhsulları ana səhifə, brend vitrinləri və xüsusi filtr tablarında qruplaşdırmaq üçün istifadə olunur (məs. Flaş, Bestseller, Endirimli).
+                    </p>
+
+                    {collectionSuccess && (
+                      <div style={{ background: 'rgba(42, 157, 143, 0.12)', border: '1px solid rgba(42,157,143,0.3)', color: '#2a9d8f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.88rem', fontWeight: 600 }}>
+                        ✅ Kolleksiya uğurla əlavə edildi!
+                      </div>
+                    )}
+
+                    <form onSubmit={handleAddCollection} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                      <input
+                        type="text"
+                        value={newCollectionLabel}
+                        onChange={(e) => setNewCollectionLabel(e.target.value)}
+                        placeholder="Kolleksiya adı (məs: Trend, Yeni Sezon...)"
+                        className={styles.searchBar}
+                        style={{ flex: 1, margin: 0, padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '0.9rem', background: '#F8FAFC', outline: 'none' }}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className={styles.approveBtn}
+                        style={{ padding: '10px 16px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', background: '#D4AF37', color: '#1a1a1a', border: 'none', cursor: 'pointer' }}
+                      >
+                        <PlusCircle size={16} /> Əlavə Et
+                      </button>
+                    </form>
+
+                    <div style={{ border: '1px solid #F1F5F9', borderRadius: '10px', overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '12px 16px', background: '#F8FAFC', fontWeight: 700, color: '#8492a6', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0' }}>
+                        <span>Kolleksiya Adı</span>
+                        <span>Məhsul Sayı</span>
+                        <span style={{ textAlign: 'right' }}>Sil</span>
+                      </div>
+                      {collections.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>Heç bir kolleksiya yoxdur.</div>
+                      ) : (
+                        collections.map(coll => {
+                          const productCount = products.filter(p => p.collections?.includes(coll.id)).length;
+                          return (
+                            <div key={coll.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #F1F5F9', fontSize: '0.9rem' }}>
+                              <strong style={{ color: '#1E293B', fontWeight: 600 }}>{coll.label}</strong>
+                              <span style={{ color: '#64748B' }}>{productCount} məhsul</span>
+                              <div style={{ textAlign: 'right' }}>
+                                <button
+                                  type="button"
+                                  className={styles.rejectBtn}
+                                  onClick={() => deleteCollection(coll.id)}
+                                  style={{ padding: '6px', borderRadius: '6px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                                  title="Kolleksiyanı Sil"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* --- Badges Box --- */}
+                  <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '24px', height: 'fit-content', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', marginBottom: '12px', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Award size={18} style={{ color: '#D4AF37' }} />
+                      Məhsul Etiketləri (Badges)
+                    </h3>
+                    <p style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '16px', lineHeight: '1.5' }}>
+                      Etiketlər məhsul kartlarının künclərində kiçik vizual nişanlar olaraq görünür (məs. Yeni, Bestseller, Endirim, Limitli).
+                    </p>
+
+                    {badgeSuccess && (
+                      <div style={{ background: 'rgba(42, 157, 143, 0.12)', border: '1px solid rgba(42,157,143,0.3)', color: '#2a9d8f', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.88rem', fontWeight: 600 }}>
+                        ✅ Etiket uğurla əlavə edildi!
+                      </div>
+                    )}
+
+                    <form onSubmit={handleAddBadge} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                      <input
+                        type="text"
+                        value={newBadgeLabel}
+                        onChange={(e) => setNewBadgeLabel(e.target.value)}
+                        placeholder="Etiket adı (məs: Populyar, Eksklüziv...)"
+                        className={styles.searchBar}
+                        style={{ flex: 1, margin: 0, padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '0.9rem', background: '#F8FAFC', outline: 'none' }}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className={styles.approveBtn}
+                        style={{ padding: '10px 16px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', background: '#D4AF37', color: '#1a1a1a', border: 'none', cursor: 'pointer' }}
+                      >
+                        <PlusCircle size={16} /> Əlavə Et
+                      </button>
+                    </form>
+
+                    <div style={{ border: '1px solid #F1F5F9', borderRadius: '10px', overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '12px 16px', background: '#F8FAFC', fontWeight: 700, color: '#8492a6', fontSize: '0.8rem', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0' }}>
+                        <span>Etiket Adı</span>
+                        <span>Məhsul Sayı</span>
+                        <span style={{ textAlign: 'right' }}>Sil</span>
+                      </div>
+                      {badges.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>Heç bir etiket yoxdur.</div>
+                      ) : (
+                        badges.map(badge => {
+                          const productCount = products.filter(p => p.badge === badge).length;
+                          return (
+                            <div key={badge} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '12px 16px', alignItems: 'center', borderBottom: '1px solid #F1F5F9', fontSize: '0.9rem' }}>
+                              <strong style={{ color: '#1E293B', fontWeight: 600 }}>{badge}</strong>
+                              <span style={{ color: '#64748B' }}>{productCount} məhsul</span>
+                              <div style={{ textAlign: 'right' }}>
+                                <button
+                                  type="button"
+                                  className={styles.rejectBtn}
+                                  onClick={() => deleteBadge(badge)}
+                                  style={{ padding: '6px', borderRadius: '6px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                                  title="Etiketi Sil"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>

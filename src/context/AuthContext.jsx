@@ -12,14 +12,22 @@ const DEFAULT_SUPERADMIN = {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('atlas_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('atlas_users_db');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Migration: If any vendor has status 'active' (due to previous bug), convert to 'approved'
+        return parsed.map(u => {
+          if (u.role === 'vendor' && u.status === 'active') {
+            return { ...u, status: 'approved' };
+          }
+          return u;
+        });
+      } catch (e) {
+        console.error("Failed to parse users db", e);
+      }
+    }
     const initial = [
       DEFAULT_SUPERADMIN,
       { name: 'Qonaq İstifadəçi', email: 'qonaq@atlasmall.az', password: 'qonaq123', role: 'user', createdAt: new Date().toISOString(), status: 'active' },
@@ -32,6 +40,32 @@ export const AuthProvider = ({ children }) => {
     ];
     localStorage.setItem('atlas_users_db', JSON.stringify(initial));
     return initial;
+  });
+
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('atlas_user');
+    if (!saved) return null;
+    let parsed = JSON.parse(saved);
+    if (parsed && parsed.role === 'vendor' && parsed.status === 'active') {
+      parsed.status = 'approved';
+    }
+    // Retrieve fresher record from users database if exists
+    const savedDb = localStorage.getItem('atlas_users_db');
+    if (savedDb) {
+      try {
+        const dbUsers = JSON.parse(savedDb);
+        const fresh = dbUsers.find(u => u.email === parsed.email);
+        if (fresh) {
+          if (fresh.role === 'vendor' && fresh.status === 'active') {
+            return { ...fresh, status: 'approved' };
+          }
+          return fresh;
+        }
+      } catch (e) {
+        console.error("Error parsing users db:", e);
+      }
+    }
+    return parsed;
   });
 
   useEffect(() => {
@@ -104,8 +138,21 @@ export const AuthProvider = ({ children }) => {
 
   const suspendUser = (email) => {
     if (email === DEFAULT_SUPERADMIN.email) return;
-    const updated = users.map(u => u.email === email ? { ...u, status: u.status === 'suspended' ? 'active' : 'suspended' } : u);
+    const updated = users.map(u => {
+      if (u.email === email) {
+        const isActive = u.status === 'suspended';
+        const nextStatus = isActive ? (u.role === 'vendor' ? 'approved' : 'active') : 'suspended';
+        return { ...u, status: nextStatus };
+      }
+      return u;
+    });
     setUsers(updated);
+    
+    // Also update logged-in session user if they are the one affected
+    if (user?.email === email) {
+      const updatedUser = updated.find(u => u.email === email);
+      setUser(updatedUser);
+    }
   };
 
   const approveVendor = (email) => {

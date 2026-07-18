@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
-import { Trash2, Minus, Plus, MapPin, Phone } from 'lucide-react';
+import { Trash2, Minus, Plus, MapPin, Phone, ArrowLeft } from 'lucide-react';
 import AuthModal from '../../components/common/AuthModal/AuthModal';
 import styles from './Cart.module.css';
 
@@ -75,6 +75,29 @@ const Cart = ({ inPanel = false }) => {
 
   return (
     <div className={`${inPanel ? '' : 'container'} ${styles.cartContainer} ${inPanel ? styles.inPanel : ''}`}>
+      {!inPanel && (
+        <button 
+          onClick={() => navigate(-1)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'none',
+            border: 'none',
+            color: '#D4AF37',
+            cursor: 'pointer',
+            padding: '8px 0',
+            marginBottom: '15px',
+            fontSize: '15px',
+            fontWeight: 500,
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={(e) => e.target.style.color = '#B4932F'}
+          onMouseLeave={(e) => e.target.style.color = '#D4AF37'}
+        >
+          <ArrowLeft size={18} /> Geri Qayıt
+        </button>
+      )}
       <h1 className={styles.title}>Səbət</h1>
       
       <div className={styles.cartContent}>

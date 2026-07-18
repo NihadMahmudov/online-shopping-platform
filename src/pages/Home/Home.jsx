@@ -6,7 +6,6 @@ import { useProducts } from '../../context/ProductContext';
 import { useAuth } from '../../context/AuthContext';
 import { useStore } from '../../context/StoreContext';
 import Hero from '../../components/home/Hero';
-import FlashSale from '../../components/home/FlashSale';
 import ProductShowcase from '../../components/home/ProductShowcase';
 import styles from './Home.module.css';
 
@@ -51,9 +50,6 @@ const Home = () => {
     <div className={styles.homePage}>
       {/* 1. Hero / Search / Visual Categories Grid */}
       <Hero />
-
-      {/* 2. FlashSale Section */}
-      <FlashSale />
 
       {/* Product Showcase - "Bizdə olan məhsullar" section */}
       <ProductShowcase />

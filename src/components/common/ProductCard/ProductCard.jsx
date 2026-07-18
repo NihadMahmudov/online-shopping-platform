@@ -16,8 +16,9 @@ const ProductCard = ({ product }) => {
   const [added, setAdded] = useState(false);
   const [authModal, setAuthModal] = useState({ open: false, message: '', action: null });
 
-  const discountPercent = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+  const hasDiscount = product.oldPrice && Number(product.oldPrice) > Number(product.price);
+  const discountPercent = hasDiscount
+    ? Math.round(((Number(product.oldPrice) - Number(product.price)) / Number(product.oldPrice)) * 100)
     : null;
 
   const requireAuth = (message, action) => {
@@ -129,11 +130,11 @@ const ProductCard = ({ product }) => {
 
           <div className={styles.priceContainer}>
             <div className={styles.priceRow}>
-              {discountPercent && (
+              {hasDiscount && discountPercent > 0 && (
                 <span className={styles.discountBadge}>-{discountPercent}%</span>
               )}
               <span className={styles.price}>{product.price} ₼</span>
-              {product.oldPrice && (
+              {hasDiscount && (
                 <span className={styles.oldPrice}>{product.oldPrice} ₼</span>
               )}
             </div>

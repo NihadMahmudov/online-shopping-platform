@@ -172,7 +172,9 @@ const ProductDetail = () => {
 
             <div className={styles.priceRow}>
               <span className={styles.price}>{product.price} AZN</span>
-              {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice} AZN</span>}
+              {product.oldPrice && Number(product.oldPrice) > Number(product.price) && (
+                <span className={styles.oldPrice}>{product.oldPrice} AZN</span>
+              )}
             </div>
 
             <p className={styles.description}>

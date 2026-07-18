@@ -96,23 +96,6 @@ const StorePage = () => {
         </div>
       </motion.div>
 
-      {/* Store Stats */}
-      <div className={styles.statsBar}>
-        <div className={styles.statBox}>
-          <Package size={20} className={styles.statIcon} />
-          <div>
-            <strong>{storeProducts.length}</strong>
-            <span>Məhsul sayı</span>
-          </div>
-        </div>
-        <div className={styles.statBox}>
-          <Calendar size={20} className={styles.statIcon} />
-          <div>
-            <strong>{new Date().toLocaleDateString('az-AZ', { month: 'long', year: 'numeric' })}</strong>
-            <span>Qeydiyyat</span>
-          </div>
-        </div>
-      </div>
 
       {/* Store Products */}
       <div className={styles.productsSection}>

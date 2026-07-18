@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import styles from './Categories.module.css';
@@ -45,10 +45,33 @@ const Categories = ({ inPanel = false }) => {
         {/* Content Area */}
         <div className={styles.content}>
           {!inPanel && (
-            <div className={styles.pageHeader}>
-              <h1 className={styles.pageTitle}>Kateqoriyalar</h1>
-              <p className={styles.pageSubtitle}>Şəhərimizin seçkin butiklərinin kolleksiyalarını kateqoriyalar üzrə kəşf edin</p>
-            </div>
+            <>
+              <button 
+                onClick={() => navigate(-1)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'none',
+                  border: 'none',
+                  color: '#D4AF37',
+                  cursor: 'pointer',
+                  padding: '8px 0',
+                  marginBottom: '15px',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#B4932F'}
+                onMouseLeave={(e) => e.target.style.color = '#D4AF37'}
+              >
+                <ArrowLeft size={18} /> Geri Qayıt
+              </button>
+              <div className={styles.pageHeader}>
+                <h1 className={styles.pageTitle}>Kateqoriyalar</h1>
+                <p className={styles.pageSubtitle}>Şəhərimizin seçkin butiklərinin kolleksiyalarını kateqoriyalar üzrə kəşf edin</p>
+              </div>
+            </>
           )}
           
           <motion.div 

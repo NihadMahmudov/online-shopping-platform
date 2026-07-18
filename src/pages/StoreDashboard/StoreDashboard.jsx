@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Package, PlusCircle, Trash2,
+  LayoutDashboard, Package, PlusCircle, Trash2, Edit,
   LogOut, Store, TrendingUp, ShoppingBag, Eye, ImagePlus,
   ShoppingCart, Zap, Calendar, CheckCircle, Camera,
   Phone, MapPin, User, Users, Clock, MessageSquare, Check, Truck,
@@ -14,13 +14,13 @@ import { useOrders } from '../../context/OrderContext';
 import { useStore } from '../../context/StoreContext';
 import styles from './StoreDashboard.module.css';
 
-const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Analitika', 'Rəylər', 'Flaş Satış', 'Mağaza Parametrləri'];
+const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Analitika', 'Rəylər', 'Mağaza Parametrləri'];
 
 const StoreDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { 
-    products, addProduct, deleteProduct, 
+    products, addProduct, deleteProduct, updateProduct,
     categories, addCategory, deleteCategory,
     badges,
     collections,
@@ -39,6 +39,74 @@ const StoreDashboard = () => {
   });
   
   const [success, setSuccess] = useState(false);
+
+  // Edit Product States
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '',
+    img: '', description: '', badge: '', collections: []
+  });
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  const startEditing = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name || '',
+      price: product.price !== undefined ? String(product.price) : '',
+      oldPrice: product.oldPrice !== undefined && product.oldPrice !== null ? String(product.oldPrice) : '',
+      category: product.category || 'decor',
+      storeCategory: product.storeCategory || '',
+      img: product.img || '',
+      description: product.description || '',
+      badge: product.badge || '',
+      collections: product.collections || []
+    });
+    setEditSuccess(false);
+  };
+
+  const handleEditChange = e => setEditForm({ ...editForm, [e.target.name]: e.target.value });
+
+  const handleEditCollectionChange = (id) => {
+    setEditForm(prev => ({
+      ...prev,
+      collections: prev.collections.includes(id)
+        ? prev.collections.filter(c => c !== id)
+        : [...prev.collections, id]
+    }));
+  };
+
+  const handleEditImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm({ ...editForm, img: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditSubmit = e => {
+    e.preventDefault();
+    if (!editForm.name || !editForm.price || !editForm.img) return;
+    updateProduct(editingProduct.id, {
+      name: editForm.name,
+      price: Number(editForm.price),
+      oldPrice: editForm.oldPrice ? Number(editForm.oldPrice) : null,
+      category: editForm.category,
+      storeCategory: editForm.storeCategory || null,
+      img: editForm.img,
+      description: editForm.description,
+      badge: editForm.badge,
+      collections: editForm.collections
+    });
+    
+    setEditSuccess(true);
+    setTimeout(() => { 
+      setEditSuccess(false); 
+      setEditingProduct(null); 
+    }, 1200);
+  };
 
   // Store-specific Category States
   const [newStoreCatLabel, setNewStoreCatLabel] = useState('');
@@ -148,7 +216,6 @@ const StoreDashboard = () => {
       case 'Sifarişlər': return <ShoppingBag size={18} />;
       case 'Analitika': return <TrendingUp size={18} />;
       case 'Rəylər': return <MessageSquare size={18} />;
-      case 'Flaş Satış': return <Zap size={18} />;
       case 'Mağaza Parametrləri': return <Settings size={18} />;
       default: return <Package size={18} />;
     }
@@ -223,21 +290,48 @@ const StoreDashboard = () => {
   if (user.status === 'pending') {
     return (
       <div className={styles.statusPage}>
-        <div className={styles.statusBox}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className={styles.statusBox}
+        >
           <div className={styles.statusIconPending}>
             <Clock size={40} />
           </div>
-          <h1>Gözləmədə</h1>
-          <p>Hörmətli <strong>{user.storeName}</strong>, mağazanız hazırda təsdiq mərhələsindədir. Admin icazəsi verildikdən sonra məhsul əlavə edib sata bilərsiniz.</p>
-          <div className={styles.statusActions}>
-            <button className={styles.logoutBtnInline} onClick={() => { logout(); navigate('/'); }}>
-              <LogOut size={16} /> Çıxış Et
-            </button>
-            <button className={styles.homeBtnInline} onClick={() => navigate('/')}>
-              Ana Səhifəyə Get
-            </button>
+          <h1>Təsdiq Gözlənilir</h1>
+          <p>Hörmətli <strong>{user.storeName || user.name}</strong>, mağazanız hazırda AtlasMall administratorları tərəfindən nəzərdən keçirilir. Əməkdaşlığınız üçün təşəkkür edirik!</p>
+          
+          <div className={styles.supportInfo}>
+            <div className={styles.supportRow}>
+              <Mail size={16} />
+              <span>Dəstək poçtu: <strong>support@atlasmall.com</strong></span>
+            </div>
+            <div className={styles.supportRow}>
+              <Phone size={16} />
+              <span>Əlaqə nömrəsi: <strong>+994 12 400 90 90</strong></span>
+            </div>
           </div>
-        </div>
+
+          <div className={styles.statusActions}>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={styles.logoutBtnInline} 
+              onClick={() => { logout(); navigate('/'); }}
+            >
+              <LogOut size={16} /> Çıxış Et
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className={styles.homeBtnInline} 
+              onClick={() => navigate('/')}
+            >
+              Ana Səhifəyə Get
+            </motion.button>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -245,21 +339,48 @@ const StoreDashboard = () => {
   if (user.status === 'suspended') {
     return (
       <div className={styles.statusPage}>
-        <div className={styles.statusBox}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className={styles.statusBox}
+        >
           <div className={styles.statusIconSuspended}>
             <X size={40} />
           </div>
           <h1>Hesabınız Dondurulub</h1>
-          <p>Hörmətli <strong>{user.storeName}</strong>, mağazanız AtlasMall tərəfindən müvəqqəti dondurulmuşdur. Ətraflı məlumat üçün admin@atlasmall.com ilə əlaqə saxlayın.</p>
-          <div className={styles.statusActions}>
-            <button className={styles.logoutBtnInline} onClick={() => { logout(); navigate('/'); }}>
-              <LogOut size={16} /> Çıxış Et
-            </button>
-            <button className={styles.homeBtnInline} onClick={() => navigate('/')}>
-              Ana Səhifəyə Get
-            </button>
+          <p>Hörmətli <strong>{user.storeName || user.name}</strong>, mağazanızın fəaliyyəti AtlasMall platforma qaydalarına uyğun olaraq müvəqqəti dayandırılmışdır.</p>
+          
+          <div className={styles.supportInfo}>
+            <div className={styles.supportRow}>
+              <Mail size={16} />
+              <span>İdarəçi e-poçtu: <strong>admin@atlasmall.com</strong></span>
+            </div>
+            <div className={styles.supportRow}>
+              <Phone size={16} />
+              <span>Qaynar xətt: <strong>+994 12 400 90 90</strong></span>
+            </div>
           </div>
-        </div>
+
+          <div className={styles.statusActions}>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={styles.logoutBtnInline} 
+              onClick={() => { logout(); navigate('/'); }}
+            >
+              <LogOut size={16} /> Çıxış Et
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className={styles.homeBtnInline} 
+              onClick={() => navigate('/')}
+            >
+              Ana Səhifəyə Get
+            </motion.button>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -414,49 +535,263 @@ const StoreDashboard = () => {
         <div className={styles.tabContent}>
           <AnimatePresence mode="wait">
             {activeTab === 'Məhsullarım' ? (
-              <motion.div
-                key="products"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className={styles.sectionHeader}>
-                  <h2>Bütün Məhsullar ({storeProducts.length})</h2>
-                  <button className={styles.addBtn} onClick={() => setActiveTab('Məhsul Əlavə Et')}>
-                    <PlusCircle size={16} /> Yeni Məhsul
-                  </button>
-                </div>
-
-                <div className={styles.tableCard}>
-                  <div className={styles.table}>
-                    <div className={styles.tableHeader}>
-                      <span>Məhsul</span>
-                      <span>Kateqoriya</span>
-                      <span>Qiymət</span>
-                      <span>Reytinq</span>
-                      <span>Əməliyyat</span>
+              editingProduct ? (
+                <motion.div
+                  key="edit-product-form"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={styles.addForm}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div>
+                      <h2>Məhsulu Redaktə Et</h2>
+                      <p>"{editingProduct.name}" məhsulunun məlumatlarını tənzimləyin.</p>
                     </div>
+                    <button 
+                      type="button"
+                      className={styles.addBtn}
+                      onClick={() => setEditingProduct(null)}
+                      style={{ background: '#64748B', color: '#FFF' }}
+                    >
+                      Geri Qayıt
+                    </button>
+                  </div>
+
+                  {editSuccess && (
+                    <div className={styles.successMsg} style={{ marginBottom: '16px' }}>
+                      ✅ Məhsul uğurla yeniləndi!
+                    </div>
+                  )}
+
+                  <form onSubmit={handleEditSubmit} className={styles.premiumForm}>
+                    {/* Left Column: Main Info */}
+                    <div className={styles.formColumn}>
+                      <div className={styles.formSectionBox}>
+                        <h3 className={styles.boxTitle}>Əsas Məlumatlar</h3>
+                        
+                        <div className={styles.formGroup}>
+                          <label>Məhsul Adı *</label>
+                          <div className={styles.inputWrapper}>
+                            <Package size={18} className={styles.inputIcon} />
+                            <input name="name" value={editForm.name} onChange={handleEditChange} placeholder="məs. Zərif Gümüş Sırğalar" required />
+                          </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Məhsulun Təsviri</label>
+                          <textarea 
+                            name="description" 
+                            value={editForm.description} 
+                            onChange={handleEditChange} 
+                            placeholder="Məhsul haqqında ətraflı məlumat..." 
+                            rows="4"
+                            className={styles.premiumTextarea}
+                          />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div className={styles.formGroup}>
+                            <label>Qiymət (AZN) *</label>
+                            <div className={styles.inputWrapper}>
+                              <span className={styles.currencySymbol}>₼</span>
+                              <input name="price" type="number" value={editForm.price} onChange={handleEditChange} placeholder="0.00" required />
+                            </div>
+                          </div>
+                          <div className={styles.formGroup}>
+                            <label>Köhnə Qiymət (AZN)</label>
+                            <div className={styles.inputWrapper}>
+                              <span className={styles.currencySymbol}>₼</span>
+                              <input name="oldPrice" type="number" value={editForm.oldPrice} onChange={handleEditChange} placeholder="0.00" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Meta Info & Media */}
+                    <div className={styles.formColumn}>
+                      <div className={styles.formSectionBox}>
+                        <h3 className={styles.boxTitle}>Kateqoriya və Etiket</h3>
+                        <div className={styles.formGroup}>
+                          <label>Platforma Kateqoriyası (Superadmin) *</label>
+                          <div className={styles.inputWrapper}>
+                            <LayoutDashboard size={18} className={styles.inputIcon} />
+                            <select name="category" value={editForm.category} onChange={handleEditChange}>
+                              {categories.filter(c => c.id !== 'all' && !c.storeId).map(c => (
+                                <option key={c.id} value={c.id}>{c.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Öz Mağaza Kateqoriyanız</label>
+                          <div className={styles.inputWrapper}>
+                            <Tag size={18} className={styles.inputIcon} />
+                            <select name="storeCategory" value={editForm.storeCategory} onChange={handleEditChange}>
+                              <option value="">Heç biri / Yoxdur</option>
+                              {categories.filter(c => c.storeId === user.storeId).map(c => (
+                                <option key={c.id} value={c.id}>{c.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Etiket (Badge)</label>
+                          <div className={styles.inputWrapper}>
+                            <Tag size={18} className={styles.inputIcon} />
+                            <select name="badge" value={editForm.badge} onChange={handleEditChange}>
+                              <option value="">Heç biri</option>
+                              {badges.map(b => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.formSectionBox}>
+                        <h3 className={styles.boxTitle}>Məhsul Şəkli *</h3>
+                        <div className={styles.imageUploadBox}>
+                          <input type="file" accept="image/*" onChange={handleEditImageUpload} />
+                          {editForm.img ? (
+                            <div className={styles.imgPreviewContainer}>
+                              <img src={editForm.img} alt="preview" className={styles.imgPreviewFull} />
+                              <div className={styles.changeImgOverlay}>
+                                <Camera size={24} />
+                                <span>Şəkli Dəyişdir</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className={styles.uploadIconWrapper}>
+                                <ImagePlus size={32} />
+                              </div>
+                              <div className={styles.uploadText}>Şəkil yükləmək üçün klikləyin</div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <button type="submit" className={styles.submitBtn} style={{ width: '100%' }}>
+                        <Check size={20} /> Məlumatları Yenilə
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="products"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className={styles.sectionHeader}>
+                    <h2>Bütün Məhsullar ({storeProducts.length})</h2>
+                  </div>
+
+                  {/* Desktop Table */}
+                  <div className={`${styles.tableCard} ${styles.desktopOnly}`}>
+                    <div className={styles.table}>
+                      <div className={styles.tableHeader}>
+                        <span>Məhsul</span>
+                        <span>Kateqoriya</span>
+                        <span>Qiymət</span>
+                        <span>Reytinq</span>
+                        <span>Əməliyyat</span>
+                      </div>
+                      {storeProducts.length === 0 ? (
+                        <div className={styles.noData}>Məhsul tapılmadı. Yeni məhsul əlavə edin.</div>
+                      ) : (
+                        storeProducts.map(p => (
+                          <div key={p.id} className={styles.tableRow}>
+                            <div className={styles.productCell}>
+                              <img src={p.img} alt={p.name} onError={e => { e.target.src = 'https://placehold.co/48x48/f5f0e8/D4AF37?text=B'; }} />
+                              <span>{p.name}</span>
+                            </div>
+                            <span className={styles.catTag}>{categories.find(c => c.id === p.category)?.label || p.category}</span>
+                            <span className={styles.priceCell}>{p.price} AZN</span>
+                            <span>⭐ {p.rating || 5.0}</span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <button 
+                                className={styles.deleteBtn} 
+                                style={{ color: '#64748B', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                onClick={() => startEditing(p)}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = '#D4AF37'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = '#64748B'; }}
+                                title="Redaktə et"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button className={styles.deleteBtn} onClick={() => deleteProduct(p.id)} title="Sil">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className={styles.mobileCards}>
                     {storeProducts.length === 0 ? (
                       <div className={styles.noData}>Məhsul tapılmadı. Yeni məhsul əlavə edin.</div>
                     ) : (
                       storeProducts.map(p => (
-                        <div key={p.id} className={styles.tableRow}>
-                          <div className={styles.productCell}>
-                            <img src={p.img} alt={p.name} onError={e => { e.target.src = 'https://placehold.co/48x48/f5f0e8/D4AF37?text=B'; }} />
-                            <span>{p.name}</span>
+                        <div key={p.id} className={styles.premiumCard}>
+                          <div className={styles.premiumCardTop}>
+                            <img 
+                              src={p.img} 
+                              alt={p.name} 
+                              onError={e => { e.target.src = 'https://placehold.co/48x48/f5f0e8/D4AF37?text=B'; }} 
+                              style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #E2E8F0', flexShrink: 0 }}
+                            />
+                            <div className={styles.premiumCardInfo}>
+                              <h3>{p.name}</h3>
+                              <p className={styles.priceCell} style={{ fontWeight: 700, color: '#9A7D0A', fontSize: '0.92rem' }}>{p.price} AZN</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                              <button 
+                                className={styles.actionBtnGhost} 
+                                style={{ padding: '8px' }}
+                                onClick={() => startEditing(p)}
+                                title="Redaktə et"
+                              >
+                                <Edit size={14} />
+                              </button>
+                              <button 
+                                className={styles.actionBtnGhost} 
+                                style={{ padding: '8px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.15)' }}
+                                onClick={() => deleteProduct(p.id)} 
+                                title="Sil"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
-                          <span className={styles.catTag}>{categories.find(c => c.id === p.category)?.label || p.category}</span>
-                          <span className={styles.priceCell}>{p.price} AZN</span>
-                          <span>⭐ {p.rating || 5.0}</span>
-                          <button className={styles.deleteBtn} onClick={() => deleteProduct(p.id)}>
-                            <Trash2 size={16} />
-                          </button>
+                          <div className={styles.premiumCardChips}>
+                            <div className={styles.chipRow}>
+                              <div className={styles.chip}>
+                                <span className={styles.chipIcon}>🏷️</span>
+                                <span>{categories.find(c => c.id === p.category)?.label || p.category}</span>
+                              </div>
+                              <div className={styles.chip}>
+                                <span className={styles.chipIcon}>⭐</span>
+                                <span>{p.rating || 5.0} reytinq</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ))
                     )}
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              )
             ) : activeTab === 'Məhsul Əlavə Et' ? (
               <motion.div
                 key="add"
@@ -515,26 +850,6 @@ const StoreDashboard = () => {
                             <input name="oldPrice" type="number" value={form.oldPrice} onChange={handleChange} placeholder="0.00" />
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.formSectionBox}>
-                      <h3 className={styles.boxTitle}>Kolleksiyalar</h3>
-                      <div className={styles.pillsGrid}>
-                        {collections.map(opt => {
-                          const isChecked = form.collections.includes(opt.id);
-                          return (
-                            <button 
-                              type="button"
-                              key={opt.id} 
-                              className={`${styles.collectionPill} ${isChecked ? styles.pillActive : ''}`}
-                              onClick={() => handleCollectionChange(opt.id)}
-                            >
-                              {isChecked ? <CheckCircle size={16} /> : <PlusCircle size={16} />}
-                              <span>{opt.label}</span>
-                            </button>
-                          );
-                        })}
                       </div>
                     </div>
                   </div>
@@ -686,7 +1001,8 @@ const StoreDashboard = () => {
                   <p>Müştərilərin sizin mağazanızdan etdiyi sifarişlər.</p>
                 </div>
 
-                <div className={styles.tableCard}>
+                {/* Desktop Table */}
+                <div className={`${styles.tableCard} ${styles.desktopOnly}`}>
                   <div className={styles.table}>
                     <div className={styles.tableHeader}>
                       <span>Sifariş İD</span>
@@ -737,6 +1053,49 @@ const StoreDashboard = () => {
                       ))
                     )}
                   </div>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className={styles.mobileCards}>
+                  {storeOrders.length === 0 ? (
+                    <div className={styles.noData}>Mağazanıza aid sifariş tapılmadı.</div>
+                  ) : (
+                    storeOrders.map(o => (
+                      <div key={o.id} className={styles.premiumCard}>
+                        <div className={styles.premiumCardTop}>
+                          <div className={styles.premiumAvatar} style={{ background: 'linear-gradient(135deg, rgba(67,97,238,0.15), rgba(67,97,238,0.05))', color: '#4361ee', border: '1.5px solid rgba(67,97,238,0.25)', fontSize: '0.7rem', fontFamily: 'monospace' }}>
+                            #{o.id?.slice(-3)}
+                          </div>
+                          <div className={styles.premiumCardInfo}>
+                            <h3>{o.customerName}</h3>
+                            <p>{o.email}</p>
+                          </div>
+                          <span className={styles.orderPriceTag}>{o.total} AZN</span>
+                        </div>
+                        <div className={styles.premiumCardChips}>
+                          <div className={styles.chipRow}>
+                            <div className={styles.chip}>
+                              <span className={styles.chipIcon}>📅</span>
+                              <span>{new Date(o.createdAt).toLocaleDateString('az-AZ')}</span>
+                            </div>
+                            <div className={styles.chip}>
+                              <span className={styles.chipIcon}>📦</span>
+                              <span>{o.status === 'pending' ? 'Gözləmə' : o.status === 'approved' ? 'Təsdiq' : o.status === 'shipped' ? 'Yolda' : o.status === 'delivered' ? 'Çatdı' : 'Ləğv'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className={styles.premiumCardActions}>
+                          <select value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)} className={styles.mobileSelect}>
+                            <option value="pending">Gözləmədə</option>
+                            <option value="approved">Təsdiqləndi</option>
+                            <option value="shipped">Yoldadır</option>
+                            <option value="delivered">Çatdırıldı</option>
+                            <option value="cancelled">Ləğv et</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             ) : activeTab === 'Analitika' ? (
@@ -818,70 +1177,6 @@ const StoreDashboard = () => {
                       </div>
                     ))
                   )}
-                </div>
-              </motion.div>
-            ) : activeTab === 'Flaş Satış' ? (
-              <motion.div
-                key="flash"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className={styles.sectionHeader}>
-                  <h2>Flaş Satış Kampaniyası ⚡</h2>
-                  <p>Kampaniyanın bitmə vaxtını təyin edin və məhsulları seçin.</p>
-                </div>
-
-                {success && (
-                  <div className={styles.successMsg} style={{ marginBottom: '16px' }}>
-                    ✅ Əməliyyat uğurla yerinə yetirildi!
-                  </div>
-                )}
-
-                <div className={styles.campaignsGrid}>
-                  <div className={styles.settingsBox}>
-                    <h3>Bitmə Vaxtını Təyin Et</h3>
-                    <form onSubmit={handleSaveFlashTime} className={styles.campaignsForm} style={{ flexDirection: 'column', gap: '8px' }}>
-                      <div className={styles.settingsFormGroup} style={{ width: '100%', marginBottom: 0 }}>
-                        <label>Kampaniya Bitmə Vaxtı</label>
-                        <input 
-                          type="datetime-local" 
-                          value={flashTarget} 
-                          onChange={(e) => setFlashTarget(e.target.value)} 
-                          className={styles.settingsInput}
-                          required
-                        />
-                      </div>
-                      <button type="submit" className={styles.settingsSubmitBtn} style={{ marginTop: '8px' }}>Vaxtı Yadda Saxla</button>
-                    </form>
-                  </div>
-
-                  <div className={styles.settingsBox}>
-                    <h3>Kampaniyaya Məhsul Əlavə Et</h3>
-                    <div className={styles.flashProductsList}>
-                      {storeProducts.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '16px', opacity: 0.6 }}>Məhsul tapılmadı. Əvvəlcə məhsul əlavə edin.</div>
-                      ) : (
-                        storeProducts.map(p => {
-                          const isInFlash = (flashSale?.productIds || []).includes(p.id);
-                          return (
-                            <div key={p.id} className={styles.flashProductItem}>
-                              <input 
-                                type="checkbox" 
-                                checked={isInFlash} 
-                                onChange={() => handleFlashProductToggle(p.id)}
-                              />
-                              <img src={p.img} alt={p.name} />
-                              <div className={styles.flashProductItemInfo}>
-                                <h4>{p.name}</h4>
-                                <span>{p.price} AZN</span>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             ) : (

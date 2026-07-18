@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../context/OrderContext';
-import { Package, Clock, CheckCircle, Truck, MapPin } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, MapPin, ArrowLeft } from 'lucide-react';
 import AuthModal from '../../components/common/AuthModal/AuthModal';
 import styles from './Orders.module.css';
 
 const Orders = ({ inPanel = false }) => {
   const { user } = useAuth();
   const { getOrdersByUser } = useOrders();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(!user);
   const userOrders = getOrdersByUser(user?.email);
 
@@ -54,6 +56,29 @@ const Orders = ({ inPanel = false }) => {
 
   return (
     <div className={`${inPanel ? '' : 'container'} ${styles.ordersContainer} ${inPanel ? styles.inPanel : ''}`}>
+      {!inPanel && (
+        <button 
+          onClick={() => navigate(-1)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'none',
+            border: 'none',
+            color: '#D4AF37',
+            cursor: 'pointer',
+            padding: '8px 0',
+            marginBottom: '15px',
+            fontSize: '15px',
+            fontWeight: 500,
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={(e) => e.target.style.color = '#B4932F'}
+          onMouseLeave={(e) => e.target.style.color = '#D4AF37'}
+        >
+          <ArrowLeft size={18} /> Geri Qayıt
+        </button>
+      )}
       <h2 className={styles.pageTitle}>Sifarişlərim</h2>
       
       <div className={styles.ordersList}>

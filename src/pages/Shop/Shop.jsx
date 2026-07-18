@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { SlidersHorizontal, ChevronDown, Search, Star, X, RotateCcw, Sparkles } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { SlidersHorizontal, ChevronDown, Search, Star, X, RotateCcw, Sparkles, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import styles from './Shop.module.css';
@@ -24,6 +24,7 @@ const ratingOptions = [
 const Shop = ({ inPanel = false }) => {
   const { products, categories } = useProducts();
   const location = useLocation();
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const categoryFromUrl = queryParams.get('category') || 'all';
   const searchFromUrl = queryParams.get('search') || '';
@@ -104,110 +105,35 @@ const Shop = ({ inPanel = false }) => {
     setSearchQuery('');
   };
 
-  const renderFilters = () => (
-    <div className={styles.filterContent}>
-      {/* Categories filter */}
-      <div className={styles.filterSection}>
-        <h3 className={styles.filterSectionTitle}>Kateqoriyalar</h3>
-        <div className={styles.categoryList}>
-          <button 
-            className={`${styles.categoryFilterBtn} ${activeCategory === 'all' ? styles.activeCategoryBtn : ''}`}
-            onClick={() => setActiveCategory('all')}
-          >
-            <span>Bütün Məhsullar</span>
-            <span className={styles.itemCount}>{products?.length || 0}</span>
-          </button>
-          {categories?.filter(c => c.id !== 'all' && !c.storeId).map(cat => (
-            <button 
-              key={cat.id}
-              className={`${styles.categoryFilterBtn} ${activeCategory === cat.id ? styles.activeCategoryBtn : ''}`}
-              onClick={() => setActiveCategory(cat.id)}
-            >
-              <span>{cat.label}</span>
-              <span className={styles.itemCount}>{categoryCounts[cat.id] || 0}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price range filter */}
-      <div className={styles.filterSection}>
-        <h3 className={styles.filterSectionTitle}>Qiymət Aralığı</h3>
-        <div className={styles.priceInputsRow}>
-          <div className={styles.priceInputBox}>
-            <span className={styles.priceLabel}>Min</span>
-            <input 
-              type="number" 
-              value={minPrice} 
-              min={0}
-              max={maxPrice}
-              onChange={e => setMinPrice(Math.max(0, Number(e.target.value)))} 
-            />
-          </div>
-          <div className={styles.priceInputBox}>
-            <span className={styles.priceLabel}>Max</span>
-            <input 
-              type="number" 
-              value={maxPrice} 
-              min={minPrice}
-              max={1000}
-              onChange={e => setMaxPrice(Math.max(minPrice, Number(e.target.value)))} 
-            />
-          </div>
-        </div>
-        <input 
-          type="range" 
-          min="0" 
-          max={maxProductPrice > 0 ? maxProductPrice : 200} 
-          value={maxPrice} 
-          onChange={e => setMaxPrice(Number(e.target.value))} 
-          className={styles.priceSlider}
-        />
-        <div className={styles.priceSliderLabels}>
-          <span>0 AZN</span>
-          <span>{maxProductPrice} AZN</span>
-        </div>
-      </div>
-
-      {/* Rating filter */}
-      <div className={styles.filterSection}>
-        <h3 className={styles.filterSectionTitle}>Məhsul Reytinqi</h3>
-        <div className={styles.ratingFilterList}>
-          {ratingOptions.map(opt => (
-            <button
-              key={opt.value}
-              className={`${styles.ratingFilterBtn} ${minRating === opt.value ? styles.activeRatingBtn : ''}`}
-              onClick={() => setMinRating(opt.value)}
-            >
-              <div className={styles.ratingStars}>
-                {[...Array(5)].map((_, idx) => (
-                  <Star 
-                    key={idx} 
-                    size={14} 
-                    fill={idx < Math.ceil(opt.value) && opt.value > 0 ? '#ffb300' : 'none'} 
-                    color={idx < Math.ceil(opt.value) && opt.value > 0 ? '#ffb300' : '#ccc'} 
-                  />
-                ))}
-              </div>
-              <span className={styles.ratingLabel}>{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button className={styles.resetFiltersBtn} onClick={resetFilters}>
-        <RotateCcw size={14} /> Sıfırla
-      </button>
-    </div>
-  );
 
   return (
     <div className={`${styles.shopPage} ${inPanel ? styles.inPanel : ''}`}>
       {/* Page Header */}
       {!inPanel && (
         <div className={styles.pageHeader}>
-          <div className="container">
-            <p className={styles.breadcrumb}>Ana Səhifə / <span>Kolleksiyalar</span></p>
+          <div className="container" style={{ position: 'relative' }}>
+            <button 
+              onClick={() => navigate(-1)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                marginBottom: '10px',
+                fontSize: '14px',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => e.target.style.color = 'var(--primary)'}
+              onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
+            >
+              <ArrowLeft size={16} /> Geri Qayıt
+            </button>
+            <p className={styles.breadcrumb}>
+              <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>Ana Səhifə</Link> / <span>Kolleksiyalar</span>
+            </p>
             <h1>Bizim Kolleksiyalarımız</h1>
             <p className={styles.subtitle}>Hər məqsəd üçün mükəmməl hədiyyəni kəşf edin</p>
           </div>
@@ -216,7 +142,7 @@ const Shop = ({ inPanel = false }) => {
 
       <div className={`${inPanel ? '' : 'container'} ${styles.shopContainer}`}>
         
-        {/* Catalog Header: Search, Filter Toggle, Sort */}
+        {/* Catalog Header: Search, Sort */}
         <div className={styles.toolBar}>
           <div className={styles.searchBox}>
             <Search size={18} className={styles.searchIcon} />
@@ -227,17 +153,6 @@ const Shop = ({ inPanel = false }) => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          <button 
-            className={styles.filterToggleBtn}
-            onClick={() => setIsMobileFiltersOpen(true)}
-          >
-            <SlidersHorizontal size={16} />
-            <span>Filtrlər</span>
-            {(minPrice > 0 || maxPrice < maxProductPrice || minRating > 0 || activeCategory !== 'all') && (
-              <span className={styles.activeFiltersDot} />
-            )}
-          </button>
 
           <div className={styles.sortWrapper}>
             <button
@@ -276,14 +191,9 @@ const Shop = ({ inPanel = false }) => {
           </div>
         </div>
 
-        {/* Responsive Dual Column Layout */}
+        {/* Responsive Layout */}
         <div className={styles.shopLayout}>
           
-          {/* Sticky Sidebar for Desktop */}
-          <aside className={styles.sidebar}>
-            {renderFilters()}
-          </aside>
-
           {/* Core Product Grid */}
           <div className={styles.mainContent}>
             <motion.div layout className={styles.grid}>
@@ -309,46 +219,6 @@ const Shop = ({ inPanel = false }) => {
         </div>
 
       </div>
-
-      {/* Slide-over Mobile Filters Drawer */}
-      <AnimatePresence>
-        {isMobileFiltersOpen && (
-          <>
-            <motion.div 
-              className={styles.backdrop}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMobileFiltersOpen(false)}
-            />
-            <motion.div 
-              className={styles.drawer}
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-            >
-              <div className={styles.drawerHeader}>
-                <h3>Filtrlər</h3>
-                <button className={styles.closeBtn} onClick={() => setIsMobileFiltersOpen(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div className={styles.drawerContent}>
-                {renderFilters()}
-              </div>
-              <div className={styles.drawerFooter}>
-                <button className={styles.drawerResetBtn} onClick={resetFilters}>
-                  Sıfırla
-                </button>
-                <button className={styles.drawerApplyBtn} onClick={() => setIsMobileFiltersOpen(false)}>
-                  Tətbiq Et ({filteredAndSorted.length})
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
