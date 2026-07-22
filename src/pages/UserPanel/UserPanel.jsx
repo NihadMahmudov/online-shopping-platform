@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight, Shield } from 'lucide-react';
+import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight, Shield, Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useStore } from '../../context/StoreContext';
 import { useProducts } from '../../context/ProductContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Shop from '../Shop/Shop';
 import Cart from '../Cart/Cart';
@@ -60,13 +61,18 @@ const UserPanel = () => {
     };
   });
 
+  const { getFilteredNotifications, getUnreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
+  const unreadCount = getUnreadCount(user?.email, user?.storeId, user?.role === 'superadmin');
+  const notificationsList = getFilteredNotifications(user?.email, user?.storeId, user?.role === 'superadmin');
+
   const baseTabs = [
     { id: 'kataloq', label: 'Kataloq', icon: <ShoppingBag size={20} />, count: null },
     { id: 'categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} />, count: null },
     { id: 'stores', label: 'Mağazalar', icon: <Store size={20} />, count: null },
     { id: 'wishlist', label: 'Sevimlilər', icon: <Heart size={20} />, count: wishlist.length },
     { id: 'cart', label: 'Səbət', icon: <ShoppingCart size={20} />, count: cartItemCount },
-    { id: 'orders', label: 'Sifarişlər', icon: <Package size={20} />, count: null }
+    { id: 'orders', label: 'Sifarişlər', icon: <Package size={20} />, count: null },
+    { id: 'notifications', label: 'Bildirişlər', icon: <Bell size={20} />, count: unreadCount }
   ];
 
   const TABS = user?.role === 'superadmin'
@@ -264,6 +270,74 @@ const UserPanel = () => {
             {activeTab === 'wishlist' && <Wishlist inPanel={true} />}
             {activeTab === 'cart' && <Cart inPanel={true} />}
             {activeTab === 'orders' && <Orders inPanel={true} />}
+            {activeTab === 'notifications' && (
+              <div style={{ padding: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--secondary)' }}>Bildirişlər və Mesajlar 🔔</h2>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>SuperAdmin elanları, mağaza bildirişləri və sifariş yenilənmələriniz</p>
+                  </div>
+                  {notificationsList.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button 
+                        onClick={() => markAllAsRead(user?.email, user?.storeId, user?.role === 'superadmin')}
+                        style={{ padding: '8px 14px', background: 'var(--bg-alt)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <CheckCheck size={16} /> Hamısını Oxunmuş Et
+                      </button>
+                      <button 
+                        onClick={() => clearNotifications(user?.email, user?.storeId, user?.role === 'superadmin')}
+                        style={{ padding: '8px 14px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Trash2 size={16} /> Təmizlə
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {notificationsList.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--white)', borderRadius: '16px', border: '1px solid var(--border)' }}>
+                      <Bell size={48} style={{ color: 'var(--text-muted)', opacity: 0.4, marginBottom: '12px' }} />
+                      <h3 style={{ fontSize: '1.1rem', color: 'var(--secondary)', marginBottom: '4px' }}>Bildirişiniz yoxdur</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sizə göndərilən bütün rəsmi mesajlar və sifariş yenilənmələri burada görünəcək.</p>
+                    </div>
+                  ) : (
+                    notificationsList.map(n => (
+                      <div 
+                        key={n.id}
+                        onClick={() => markAsRead(n.id)}
+                        style={{
+                          background: !n.read ? 'rgba(212, 175, 55, 0.06)' : 'var(--white)',
+                          border: !n.read ? '1.5px solid rgba(212, 175, 55, 0.3)' : '1px solid var(--border)',
+                          borderRadius: '14px',
+                          padding: '16px 20px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: '50px', background: '#F1F5F9', color: '#334155', fontSize: '0.75rem', fontWeight: 700 }}>
+                              {n.sender || '🔔 Sistem Bildirişi'}
+                            </span>
+                            {!n.read && (
+                              <span style={{ padding: '2px 8px', borderRadius: '50px', background: '#EF4444', color: '#FFF', fontSize: '0.65rem', fontWeight: 800 }}>YENİ</span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(n.createdAt).toLocaleDateString('az-AZ')} {new Date(n.createdAt).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--secondary)', margin: '0 0 4px' }}>{n.title}</h4>
+                        <p style={{ fontSize: '0.88rem', color: 'var(--text-color)', margin: 0, lineHeight: 1.5 }}>{n.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
             {activeTab === 'admin' && <AdminPanel />}
           </motion.div>
         </AnimatePresence>
@@ -271,7 +345,7 @@ const UserPanel = () => {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className={styles.mobileBottomBar}>
-        {TABS.filter(tab => tab.id !== 'stores' && tab.id !== 'admin').map(tab => (
+        {TABS.filter(tab => tab.id !== 'stores' && tab.id !== 'admin' && tab.id !== 'notifications').map(tab => (
           <button
             key={tab.id}
             className={`${styles.bottomTabItem} ${activeTab === tab.id ? styles.bottomTabActive : ''}`}

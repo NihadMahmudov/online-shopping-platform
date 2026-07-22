@@ -1,58 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Sun, Moon, Home, Package, Globe, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
-import { useTheme } from '../../../context/ThemeContext';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useNotifications } from '../../../context/NotificationContext';
 import styles from './Navbar.module.css';
-
-const AZFlag = () => (
-  <svg width="18" height="12" viewBox="0 0 1200 600" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle' }}>
-    <rect width="1200" height="200" fill="#3f9fc6"/>
-    <rect y="200" width="1200" height="200" fill="#ed2939"/>
-    <rect y="400" width="1200" height="200" fill="#3f9c35"/>
-    <circle cx="600" cy="300" r="60" fill="#fff"/>
-    <circle cx="618" cy="300" r="60" fill="#ed2939"/>
-    <polygon points="638,300 648,303 646,293 654,286 644,286 638,278 632,286 622,286 630,293 628,303" fill="#fff"/>
-  </svg>
-);
-
-const GBFlag = () => (
-  <svg width="18" height="12" viewBox="0 0 60 30" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle' }}>
-    <clipPath id="s">
-      <path d="M0,0 v30 h60 v-30 z"/>
-    </clipPath>
-    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" clipPath="url(#s)"/>
-    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" strokeWidth="4" clipPath="url(#s)"/>
-    <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
-    <path d="M30,0 v30 M0,15 h60" stroke="#c8102e" strokeWidth="6"/>
-  </svg>
-);
-
-const RUFlag = () => (
-  <svg width="18" height="12" viewBox="0 0 9 6" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle' }}>
-    <rect width="9" height="2" fill="#fff"/>
-    <rect y="2" width="9" height="2" fill="#0039a6"/>
-    <rect y="4" width="9" height="2" fill="#d52b1e"/>
-  </svg>
-);
-
-const languagesList = [
-  { code: 'az', label: 'AZ', fullName: 'Azərbaycan', flag: <AZFlag /> },
-  { code: 'en', label: 'EN', fullName: 'English', flag: <GBFlag /> },
-  { code: 'ru', label: 'RU', fullName: 'Русский', flag: <RUFlag /> },
-];
 
 const Navbar = () => {
   const { user, logout, isSuperAdmin, isVendor } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
-  const { language, changeLanguage, t } = useLanguage();
+  const { t } = useLanguage();
+  const { getFilteredNotifications, getUnreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const userEmail = user?.email;
+  const storeId = user?.storeId;
+
+  const filteredNotifs = getFilteredNotifications(userEmail, storeId, isSuperAdmin);
+  const unreadCount = getUnreadCount(userEmail, storeId, isSuperAdmin);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -78,6 +47,19 @@ const Navbar = () => {
 
   const closeDrawer = () => setIsDrawerOpen(false);
 
+  const handleNotifClick = (notif) => {
+    markAsRead(notif.id);
+    setIsNotifOpen(false);
+
+    if (isVendor) {
+      navigate('/store-dashboard');
+    } else if (isSuperAdmin) {
+      navigate('/dashboard');
+    } else {
+      navigate('/panel', { state: { activeTab: 'orders' } });
+    }
+  };
+
   const navLinks = [
     { to: '/', label: t('navbar.home'), icon: <Home size={20} /> },
     { to: '/about', label: t('navbar.about'), icon: <User size={20} /> },
@@ -100,6 +82,21 @@ const Navbar = () => {
           {/* Logo */}
           <div className={styles.logo}>
             <Link to="/">Atlas<span>Mall</span></Link>
+            {user && (
+              <button
+                className={styles.logoBellBtn}
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                aria-label="Bildirişlər"
+                title="Bildirişlər"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className={styles.logoBellBadge}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Desktop Nav Links */}
@@ -117,53 +114,6 @@ const Navbar = () => {
 
           {/* Actions */}
           <div className={styles.navActions}>
-            {/* Language Toggle */}
-            <div className={styles.langSwitcher}>
-              <button 
-                className={styles.langDropdownTrigger}
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                aria-label="Dil seçimi"
-              >
-                {languagesList.find(l => l.code === language)?.flag}
-                <span>{languagesList.find(l => l.code === language)?.label}</span>
-                <ChevronDown size={12} className={isLangOpen ? styles.rotated : ''} />
-              </button>
-
-              <AnimatePresence>
-                {isLangOpen && (
-                  <>
-                    <div className={styles.langDropdownOverlay} onClick={() => setIsLangOpen(false)} />
-                    <motion.div 
-                      className={styles.langDropdownMenu}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      {languagesList.map((lang) => (
-                        <button
-                          key={lang.code}
-                          className={`${styles.langDropdownItem} ${language === lang.code ? styles.langActive : ''}`}
-                          onClick={() => {
-                            changeLanguage(lang.code);
-                            setIsLangOpen(false);
-                          }}
-                        >
-                          <span className={styles.flagIcon}>{lang.flag}</span>
-                          <span className={styles.langName}>{lang.fullName}</span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Theme Toggle */}
-            <button className={styles.iconBtn} onClick={toggleTheme} title={isDarkMode ? t('navbar.lightMode') : t('navbar.darkMode')}>
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
             {/* User */}
             {user ? (
               <div className={styles.userMenu}>
@@ -183,6 +133,92 @@ const Navbar = () => {
                     <User size={20} />
                   </Link>
                 )}
+
+                {/* Notification Bell — right next to profile icon */}
+                <div className={styles.notifWrapper}>
+                  <button 
+                    className={styles.notifBtn} 
+                    onClick={() => setIsNotifOpen(!isNotifOpen)} 
+                    aria-label="Bildirişlər"
+                    title="Bildirişlər"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className={styles.notifBadge}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {isNotifOpen && (
+                      <>
+                        <div className={styles.langDropdownOverlay} onClick={() => setIsNotifOpen(false)} />
+                        <motion.div 
+                          className={styles.notifMenu}
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <div className={styles.notifHeader}>
+                            <div>
+                              <h4>Bildirişlər 🔔</h4>
+                              <span className={styles.notifSub}>{unreadCount} oxunmamış bildiriş</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {filteredNotifs.length > 0 && (
+                                <>
+                                  <button 
+                                    className={styles.notifActionBtn}
+                                    onClick={() => markAllAsRead(userEmail, storeId, isSuperAdmin)}
+                                    title="Hamısını oxunmuş et"
+                                  >
+                                    <CheckCheck size={16} />
+                                  </button>
+                                  <button 
+                                    className={styles.notifActionBtn}
+                                    onClick={() => clearNotifications(userEmail, storeId, isSuperAdmin)}
+                                    title="Təmizlə"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.notifList}>
+                            {filteredNotifs.length === 0 ? (
+                              <div className={styles.emptyNotif}>
+                                <Bell size={32} style={{ opacity: 0.3 }} />
+                                <p>Heç bir bildirişiniz yoxdur.</p>
+                              </div>
+                            ) : (
+                              filteredNotifs.map(n => (
+                                <div 
+                                  key={n.id} 
+                                  className={`${styles.notifItem} ${!n.read ? styles.unreadItem : ''}`}
+                                  onClick={() => handleNotifClick(n)}
+                                >
+                                  <div className={styles.notifDot} style={{ background: !n.read ? '#D4AF37' : '#CBD5E1' }} />
+                                  <div className={styles.notifContent}>
+                                    <h5>{n.title}</h5>
+                                    <p>{n.message}</p>
+                                    <span className={styles.notifTime}>
+                                      {new Date(n.createdAt).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <button onClick={handleLogout} className={styles.logoutBtn} title={t('navbar.logout')}>
                   <LogOut size={20} />
                 </button>
@@ -227,36 +263,22 @@ const Navbar = () => {
             </NavLink>
           ))}
 
-          <div className={styles.drawerLangSection}>
-            <div className={styles.drawerLangHeader}>
-              <Globe size={20} />
-              <span>Dil Seçimi</span>
-            </div>
-            <div className={styles.drawerLangList}>
-              {languagesList.map((lang) => (
-                <button
-                  key={lang.code}
-                  className={`${styles.drawerLangBtn} ${language === lang.code ? styles.drawerLangActive : ''}`}
-                  onClick={() => {
-                    changeLanguage(lang.code);
-                    closeDrawer();
-                  }}
-                >
-                  <span className={styles.drawerFlagIcon}>{lang.flag}</span>
-                  <span className={styles.drawerLangName}>{lang.fullName}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            className={styles.drawerLink}
-            onClick={() => { toggleTheme(); closeDrawer(); }}
-            style={{ border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
-          >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            {isDarkMode ? t('navbar.lightMode') : t('navbar.darkMode')}
-          </button>
+          {/* Notification Link in Drawer */}
+          {user && (
+            <button
+              className={styles.drawerLink}
+              onClick={() => { setIsDrawerOpen(false); setIsNotifOpen(true); }}
+              style={{ border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', position: 'relative' }}
+            >
+              <Bell size={20} />
+              Bildirişlər
+              {unreadCount > 0 && (
+                <span style={{ marginLeft: 'auto', background: '#ef4444', color: 'white', borderRadius: '50%', minWidth: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800 }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
         </nav>
 
         <div className={styles.drawerFooter}>
@@ -297,3 +319,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

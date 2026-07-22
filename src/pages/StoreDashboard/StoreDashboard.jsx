@@ -5,16 +5,17 @@ import {
   LogOut, Store, TrendingUp, ShoppingBag, Eye, ImagePlus,
   ShoppingCart, Zap, Calendar, CheckCircle, Camera,
   Phone, MapPin, User, Users, Clock, MessageSquare, Check, Truck,
-  ChevronDown, ChevronUp, Mail, Search, Tag, Menu, X, Settings
+  ChevronDown, ChevronUp, Mail, Search, Tag, Menu, X, Settings, Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { useStore } from '../../context/StoreContext';
+import { useNotifications } from '../../context/NotificationContext';
 import styles from './StoreDashboard.module.css';
 
-const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Analitika', 'Rəylər', 'Mağaza Parametrləri'];
+const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Bildirişlər', 'Analitika', 'Rəylər', 'Mağaza Parametrləri'];
 
 const StoreDashboard = () => {
   const navigate = useNavigate();
@@ -35,10 +36,12 @@ const StoreDashboard = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [form, setForm] = useState({
     name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '',
-    img: '', description: '', badge: '', collections: []
+    img: '', images: [], description: '', badge: '', collections: []
   });
   
   const [success, setSuccess] = useState(false);
+
+
 
   // Edit Product States
   const [editingProduct, setEditingProduct] = useState(null);
@@ -214,6 +217,7 @@ const StoreDashboard = () => {
       case 'Məhsul Əlavə Et': return <PlusCircle size={18} />;
       case 'Mağaza Kateqoriyaları': return <Tag size={18} />;
       case 'Sifarişlər': return <ShoppingBag size={18} />;
+      case 'Bildirişlər': return <Bell size={18} />;
       case 'Analitika': return <TrendingUp size={18} />;
       case 'Rəylər': return <MessageSquare size={18} />;
       case 'Mağaza Parametrləri': return <Settings size={18} />;
@@ -237,6 +241,9 @@ const StoreDashboard = () => {
   // Filter orders by this store
   const storeOrders = getOrdersByStore(user.storeId);
 
+  const { getFilteredNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const storeNotifications = getFilteredNotifications(user?.email, user?.storeId, false);
+
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleCollectionChange = (id) => {
@@ -249,14 +256,27 @@ const StoreDashboard = () => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const readers = files.map(file => new Promise(resolve => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm({ ...form, img: reader.result });
-      };
+      reader.onloadend = () => resolve(reader.result);
       reader.readAsDataURL(file);
-    }
+    }));
+    Promise.all(readers).then(results => {
+      setForm(prev => ({
+        ...prev,
+        img: results[0],
+        images: results
+      }));
+    });
+  };
+
+  const handleRemoveImage = (index) => {
+    setForm(prev => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return { ...prev, images: newImages, img: newImages[0] || '' };
+    });
   };
 
   const handleSubmit = e => {
@@ -269,12 +289,13 @@ const StoreDashboard = () => {
       category: form.category,
       storeCategory: form.storeCategory || null,
       img: form.img,
+      images: form.images.length > 0 ? form.images : [form.img],
       description: form.description,
       badge: form.badge,
       collections: form.collections
     }, user.storeId, user.storeName);
     
-    setForm({ name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '', img: '', description: '', badge: '', collections: [] });
+    setForm({ name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '', img: '', images: [], description: '', badge: '', collections: [] });
     setSuccess(true);
     setTimeout(() => { setSuccess(false); setActiveTab('Məhsullarım'); }, 1500);
   };
@@ -619,7 +640,7 @@ const StoreDashboard = () => {
                             <LayoutDashboard size={18} className={styles.inputIcon} />
                             <select name="category" value={editForm.category} onChange={handleEditChange}>
                               {categories.filter(c => c.id !== 'all' && !c.storeId).map(c => (
-                                <option key={c.id} value={c.id}>{c.label}</option>
+                                <option key={c.id} value={c.id}>{c.label || c.name || c.id}</option>
                               ))}
                             </select>
                           </div>
@@ -631,8 +652,8 @@ const StoreDashboard = () => {
                             <Tag size={18} className={styles.inputIcon} />
                             <select name="storeCategory" value={editForm.storeCategory} onChange={handleEditChange}>
                               <option value="">Heç biri / Yoxdur</option>
-                              {categories.filter(c => c.storeId === user.storeId).map(c => (
-                                <option key={c.id} value={c.id}>{c.label}</option>
+                              {categories.filter(c => c.storeId === user?.storeId).map(c => (
+                                <option key={c.id} value={c.id}>{c.label || c.name || c.id}</option>
                               ))}
                             </select>
                           </div>
@@ -864,7 +885,7 @@ const StoreDashboard = () => {
                           <LayoutDashboard size={18} className={styles.inputIcon} />
                           <select name="category" value={form.category} onChange={handleChange}>
                             {categories.filter(c => c.id !== 'all' && !c.storeId).map(c => (
-                              <option key={c.id} value={c.id}>{c.label}</option>
+                              <option key={c.id} value={c.id}>{c.label || c.name || c.id}</option>
                             ))}
                           </select>
                         </div>
@@ -876,8 +897,8 @@ const StoreDashboard = () => {
                           <Tag size={18} className={styles.inputIcon} />
                           <select name="storeCategory" value={form.storeCategory} onChange={handleChange}>
                             <option value="">Heç biri / Yoxdur</option>
-                            {categories.filter(c => c.storeId === user.storeId).map(c => (
-                              <option key={c.id} value={c.id}>{c.label}</option>
+                            {categories.filter(c => c.storeId === user?.storeId).map(c => (
+                              <option key={c.id} value={c.id}>{c.label || c.name || c.id}</option>
                             ))}
                           </select>
                         </div>
@@ -898,26 +919,42 @@ const StoreDashboard = () => {
                     </div>
 
                     <div className={styles.formSectionBox}>
-                      <h3 className={styles.boxTitle}>Məhsul Şəkli *</h3>
-                      <div className={styles.imageUploadBox}>
-                        <input type="file" accept="image/*" onChange={handleImageUpload} required={!form.img} />
-                        {form.img ? (
-                          <div className={styles.imgPreviewContainer}>
-                            <img src={form.img} alt="preview" className={styles.imgPreviewFull} />
-                            <div className={styles.changeImgOverlay}>
-                              <Camera size={24} />
-                              <span>Şəkli Dəyişdir</span>
+                      <h3 className={styles.boxTitle}>Məhsul Şəkilləri * <span style={{ fontWeight: 400, fontSize: '0.78rem', color: '#94A3B8' }}>(Maks. 5 şəkil)</span></h3>
+
+                      {/* Uploaded images gallery */}
+                      {form.images.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                          {form.images.map((img, idx) => (
+                            <div key={idx} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', aspectRatio: '1', border: idx === 0 ? '2.5px solid #D4AF37' : '1.5px solid #E2E8F0' }}>
+                              <img src={img} alt={`şəkil ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              {idx === 0 && (
+                                <span style={{ position: 'absolute', top: 4, left: 4, background: '#D4AF37', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '2px 5px', borderRadius: '4px' }}>ANA</span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                              >
+                                <X size={11} />
+                              </button>
                             </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Upload trigger */}
+                      {form.images.length < 5 && (
+                        <div className={styles.imageUploadBox}>
+                          <input type="file" accept="image/*" multiple onChange={handleImageUpload} required={!form.img} />
+                          <div className={styles.uploadIconWrapper}>
+                            <ImagePlus size={28} />
                           </div>
-                        ) : (
-                          <>
-                            <div className={styles.uploadIconWrapper}>
-                              <ImagePlus size={32} />
-                            </div>
-                            <div className={styles.uploadText}>Şəkil yükləmək üçün klikləyin</div>
-                          </>
-                        )}
-                      </div>
+                          <div className={styles.uploadText}>
+                            {form.images.length === 0 ? 'Şəkillər yükləmək üçün klikləyin' : `Daha şəkil əlavə edin (${form.images.length}/5)`}
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#94A3B8', marginTop: '4px' }}>İlk seçilən şəkil ana şəkil olacaq</div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1093,6 +1130,71 @@ const StoreDashboard = () => {
                             <option value="cancelled">Ləğv et</option>
                           </select>
                         </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            ) : activeTab === 'Bildirişlər' ? (
+              <motion.div
+                key="notifications-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A' }}>Mağaza Bildirişləri və Mesajlar 🔔</h2>
+                    <p style={{ fontSize: '0.85rem', color: '#64748B' }}>Müştəri sifarişləri, SuperAdmin elanları və sistem xəbərdarlıqları</p>
+                  </div>
+                  {storeNotifications.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button 
+                        onClick={() => markAllAsRead(user?.email, user?.storeId, false)}
+                        style={{ padding: '8px 14px', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Check size={16} /> Hamısını Oxunmuş Et
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {storeNotifications.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                      <Bell size={48} style={{ color: '#94A3B8', opacity: 0.4, marginBottom: '12px' }} />
+                      <h3 style={{ fontSize: '1.1rem', color: '#0F172A', marginBottom: '4px' }}>Bildirişiniz yoxdur</h3>
+                      <p style={{ fontSize: '0.85rem', color: '#64748B' }}>Mağazanıza gələn bütün sifariş mesajları və elanlar burada görünəcək.</p>
+                    </div>
+                  ) : (
+                    storeNotifications.map(n => (
+                      <div 
+                        key={n.id}
+                        onClick={() => markAsRead(n.id)}
+                        style={{
+                          background: !n.read ? 'rgba(67, 97, 238, 0.05)' : '#FFFFFF',
+                          border: !n.read ? '1.5px solid rgba(67, 97, 238, 0.3)' : '1px solid #E2E8F0',
+                          borderRadius: '14px',
+                          padding: '16px 20px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: '50px', background: '#EEF2FF', color: '#4361EE', fontSize: '0.75rem', fontWeight: 700 }}>
+                              {n.sender || '🔔 Sistem Bildirişi'}
+                            </span>
+                            {!n.read && (
+                              <span style={{ padding: '2px 8px', borderRadius: '50px', background: '#EF4444', color: '#FFF', fontSize: '0.65rem', fontWeight: 800 }}>YENİ</span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            {new Date(n.createdAt).toLocaleDateString('az-AZ')} {new Date(n.createdAt).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#0F172A', margin: '0 0 4px' }}>{n.title}</h4>
+                        <p style={{ fontSize: '0.88rem', color: '#334155', margin: 0, lineHeight: 1.5 }}>{n.message}</p>
                       </div>
                     ))
                   )}

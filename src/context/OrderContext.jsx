@@ -24,7 +24,42 @@ export const OrderProvider = ({ children }) => {
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    let updatedUserEmail = null;
+    let statusLabel = newStatus;
+    if (newStatus === 'approved') statusLabel = 'Təsdiqləndi ✅';
+    else if (newStatus === 'shipped') statusLabel = 'Yoldadır 🚚';
+    else if (newStatus === 'delivered') statusLabel = 'Çatdırıldı 🎁';
+    else if (newStatus === 'cancelled') statusLabel = 'Ləğv edildi ❌';
+    else if (newStatus === 'pending') statusLabel = 'Gözləmədə ⏳';
+
+    setOrders(prev => prev.map(o => {
+      if (o.id === orderId) {
+        updatedUserEmail = o.userEmail;
+        return { ...o, status: newStatus };
+      }
+      return o;
+    }));
+
+    if (updatedUserEmail) {
+      try {
+        const savedNotifs = localStorage.getItem('atlas_notifications_db');
+        let notifs = savedNotifs ? JSON.parse(savedNotifs) : [];
+        notifs.unshift({
+          id: `NOTIF-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          userEmail: updatedUserEmail,
+          title: 'Sifariş Statusu Yeniləndi 🚚',
+          message: `#${orderId} nömrəli sifarişinizin yeni statusu: "${statusLabel}"`,
+          orderId: orderId,
+          type: 'order_status',
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('atlas_notifications_db', JSON.stringify(notifs));
+        window.dispatchEvent(new Event('storage'));
+      } catch (err) {
+        console.error('Notification save error', err);
+      }
+    }
   };
 
   const getOrdersByUser = (userEmail) => orders.filter(o => o.userEmail === userEmail);

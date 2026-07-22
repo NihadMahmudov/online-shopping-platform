@@ -56,6 +56,9 @@
   color: var(--secondary);
   flex-shrink: 0;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .logo a {
@@ -65,6 +68,54 @@
 
 .logo span {
   color: var(--primary);
+}
+
+/* Bell icon right next to logo */
+
+.logoBellBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.18s, color 0.18s;
+  padding: 0;
+}
+
+.logoBellBtn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--primary);
+}
+
+.logoBellBadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--white);
+  line-height: 1;
+  animation: bellPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes bellPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
 }
 
 /* ─── Desktop Nav Links ─── */
@@ -209,6 +260,201 @@
   transform: translateY(-1px);
 }
 
+/* ─── Notification Bell ─── */
+.notifWrapper {
+  position: relative;
+}
+
+.notifBtn {
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  position: relative;
+  background: transparent;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notifBtn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--primary);
+}
+
+.notifBadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.58rem;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  padding: 0 3px;
+  border: 2px solid var(--white);
+  line-height: 1;
+}
+
+.notifMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  z-index: 999;
+  overflow: hidden;
+}
+
+[data-theme='dark'] .notifMenu {
+  background: #1a1a2e;
+  border-color: #2a2a3e;
+}
+
+.notifHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.04), rgba(212, 175, 55, 0.01));
+}
+
+.notifHeader h4 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+
+.notifSub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.notifActionBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notifActionBtn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.notifList {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notifList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notifList::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+}
+
+.notifItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.notifItem:last-child {
+  border-bottom: none;
+}
+
+.notifItem:hover {
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.unreadItem {
+  background: rgba(212, 175, 55, 0.04);
+}
+
+.notifDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.notifContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifContent h5 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+
+.notifContent p {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  margin: 0 0 4px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notifTime {
+  font-size: 0.7rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.emptyNotif {
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.emptyNotif p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
 .cartCount {
   position: absolute;
   top: 2px;
@@ -283,19 +529,16 @@
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: var(--bg-alt);
-  border: 1px solid var(--border);
-  transition: all 0.25s ease;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .mobileMenuBtn:hover {
-  background: var(--white);
+  background: rgba(212, 175, 55, 0.1);
   color: var(--primary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
-  transform: translateY(-1px);
 }
 
 /* ─── User Menu ─── */

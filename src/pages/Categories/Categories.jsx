@@ -80,7 +80,7 @@ const Categories = ({ inPanel = false }) => {
             animate="show"
             className={styles.categoryGrid}
           >
-            {categories.filter(c => c.id !== 'all' && !c.storeId).map(cat => (
+            {categories.filter(c => c.id !== 'all').map(cat => (
               <motion.div 
                 key={cat.id} 
                 variants={itemVariants}
@@ -91,8 +91,8 @@ const Categories = ({ inPanel = false }) => {
               >
                 <div className={styles.catImageWrapper}>
                   <img 
-                    src={cat.img || 'https://placehold.co/250x250/f5f0e8/D4AF37?text=' + cat.label} 
-                    alt={cat.label} 
+                    src={cat.img || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80'} 
+                    alt={cat.label || cat.name || ''} 
                   />
                   <div className={styles.cubeBadge}>📦</div>
                 </div>

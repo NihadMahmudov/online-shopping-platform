@@ -84,19 +84,41 @@ const mappedInitial = initialProducts.map((p, index) => {
 const demoProducts = [...trendingBoutiqueProducts, ...mappedInitial];
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState(() => {
-    // Always start with demoProducts
+    const saved = localStorage.getItem('atlas_products');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to load products from localStorage", e);
+      }
+    }
     return demoProducts;
   });
 
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('atlas_categories');
-    return saved ? JSON.parse(saved) : [
-      { id: 'all', label: 'Hamısı', img: '' },
-      { id: 'decor', label: 'Dekor', img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80' },
-      { id: 'accessories', label: 'Aksesuar', img: 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cf4?auto=format&fit=crop&q=80' },
-      { id: 'jewelry', label: 'Zərgərlik', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80' },
-      { id: 'candles', label: 'Şamlar', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&q=80' },
-      { id: 'sets', label: 'Hədiyyə Dəstləri', img: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80' }
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(c => ({
+            ...c,
+            label: c.label || c.name || c.id,
+            name: c.name || c.label || c.id
+          }));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'all', label: 'Hamısı', name: 'Hamısı', img: '' },
+      { id: 'decor', label: 'Dekor', name: 'Dekor', img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80' },
+      { id: 'accessories', label: 'Aksesuar', name: 'Aksesuar', img: 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cf4?auto=format&fit=crop&q=80' },
+      { id: 'jewelry', label: 'Zərgərlik', name: 'Zərgərlik', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80' },
+      { id: 'candles', label: 'Şamlar', name: 'Şamlar', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&q=80' },
+      { id: 'sets', label: 'Hədiyyə Dəstləri', name: 'Hədiyyə Dəstləri', img: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80' }
     ];
   });
 
@@ -245,7 +267,7 @@ export const ProductProvider = ({ children }) => {
       : cleanLabel.toLowerCase().replace(/\s+/g, '-');
     
     // Check if category already exists
-    const newCat = { id: generatedId, label: cleanLabel, img: '', storeId };
+    const newCat = { id: generatedId, label: cleanLabel, name: cleanLabel, img: '', storeId };
     setCategories(prev => {
       if (prev.some(c => c.id === generatedId)) return prev;
       return [...prev, newCat];

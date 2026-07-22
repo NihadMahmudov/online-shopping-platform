@@ -9,6 +9,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { OrderProvider } from './context/OrderContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/layout/Layout/Layout';
 import Home from './pages/Home/Home';
 import Shop from './pages/Shop/Shop';
@@ -94,10 +95,12 @@ function App() {
               <CartProvider>
                 <WishlistProvider>
                   <OrderProvider>
-                    {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
-                    <Router>
-                      <AnimatedRoutes />
-                    </Router>
+                    <NotificationProvider>
+                      {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
+                      <Router>
+                        <AnimatedRoutes />
+                      </Router>
+                    </NotificationProvider>
                   </OrderProvider>
                 </WishlistProvider>
               </CartProvider>

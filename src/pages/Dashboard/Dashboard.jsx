@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
+import { useNotifications } from '../../context/NotificationContext';
 import styles from './Dashboard.module.css';
 
-const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Kolleksiya və Etiketlər', 'Ana Səhifə Vitrini', 'Analitika'];
+const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Kolleksiya və Etiketlər', 'Ana Səhifə Vitrini', 'Kütləvi Bildiriş', 'Analitika'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const Dashboard = () => {
     deleteCollection
   } = useProducts();
   const { orders, updateOrderStatus, getTotalRevenue, getRevenueByStore } = useOrders();
+  const { broadcastNotification } = useNotifications();
 
   const [activeTab, setActiveTab] = useState('Mağazalar');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,6 +50,29 @@ const Dashboard = () => {
   const [newCollectionLabel, setNewCollectionLabel] = useState('');
   const [badgeSuccess, setBadgeSuccess] = useState(false);
   const [collectionSuccess, setCollectionSuccess] = useState(false);
+
+  // Broadcast Notification States
+  const [broadcastTarget, setBroadcastTarget] = useState('all');
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastSuccess, setBroadcastSuccess] = useState(false);
+
+  const handleSendBroadcast = (e) => {
+    e.preventDefault();
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
+
+    broadcastNotification({
+      targetGroup: broadcastTarget,
+      title: broadcastTitle.trim(),
+      message: broadcastMessage.trim(),
+      sender: '👑 AtlasMall SuperAdmin'
+    });
+
+    setBroadcastTitle('');
+    setBroadcastMessage('');
+    setBroadcastSuccess(true);
+    setTimeout(() => setBroadcastSuccess(false), 3000);
+  };
 
   const handleAddBadge = (e) => {
     e.preventDefault();
@@ -966,17 +991,115 @@ const Dashboard = () => {
                         )}
 
                         <div>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>Keçid Linki</label>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>🏷️ Kateqoriyaya Əlaqələndir</label>
+                          <select
+                            value={card.linkedCategory || ''}
+                            onChange={(e) => {
+                              const catId = e.target.value;
+                              if (catId === '') {
+                                updateShowcaseCard(card.id, { linkedCategory: '', link: '/shop' });
+                              } else {
+                                updateShowcaseCard(card.id, { linkedCategory: catId, link: `/shop?category=${catId}` });
+                              }
+                            }}
+                            style={{ width: '100%', padding: '8px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.85rem', background: '#F8FAFC', cursor: 'pointer' }}
+                          >
+                            <option value="">-- Kateqoriya seçin --</option>
+                            <option value="all">🛍️ Hamısı (Bütün Məhsullar)</option>
+                            {categories.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.label || cat.name || cat.id}</option>
+                            ))}
+                          </select>
+                          {card.linkedCategory && (
+                            <div style={{ marginTop: '6px', padding: '6px 10px', background: 'rgba(212,175,55,0.08)', borderRadius: '6px', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#92751f' }}>🔗</span>
+                              <span style={{ fontSize: '0.72rem', color: '#7C6A1A', fontWeight: 600, fontFamily: 'monospace' }}>{card.link}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', display: 'block', marginBottom: '4px' }}>Xüsusi Keçid Linki (İstəyə görə)</label>
                           <input 
                             type="text" 
                             value={card.link} 
-                            onChange={(e) => updateShowcaseCard(card.id, { link: e.target.value })}
+                            onChange={(e) => updateShowcaseCard(card.id, { link: e.target.value, linkedCategory: '' })}
+                            placeholder="/shop?category=decor"
                             style={{ width: '100%', padding: '8px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.85rem' }}
                           />
                         </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── BROADCAST NOTIFICATION TAB ── */}
+            {activeTab === 'Kütləvi Bildiriş' && (
+              <motion.div
+                key="broadcast"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className={styles.sectionHeader}>
+                  <h2 style={{ color: '#0F172A', fontWeight: 700, fontSize: '1.5rem' }}>📢 Kütləvi Bildiriş və Mesaj Göndərilməsi</h2>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '4px' }}>Bütün platforma istifadəçilərinə və ya mağaza sahiblərinə rəsmi bildirişlər, elanlar və kampaniya mesajları göndərin.</p>
+                </div>
+
+                <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '24px', maxWidth: '680px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                  {broadcastSuccess && (
+                    <div style={{ padding: '12px 16px', background: '#ECFDF5', border: '1px solid #10B981', color: '#047857', borderRadius: '10px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>🎉</span> Kütləvi bildiriş bütün hədəf istifadəçilərə uğurla çatdırıldı!
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSendBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>🎯 Hədəf Auditoriya</label>
+                      <select 
+                        value={broadcastTarget} 
+                        onChange={(e) => setBroadcastTarget(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', border: '1px solid #CBD5E1', borderRadius: '10px', fontSize: '0.9rem', background: '#F8FAFC', cursor: 'pointer', fontWeight: 600, color: '#1E293B' }}
+                      >
+                        <option value="all">👥 Bütün İstifadəçilər və Mağaza Sahibləri (Hamı)</option>
+                        <option value="customers">🛍️ Yalnız Müştərilər (İstifadəçilər)</option>
+                        <option value="vendors">🏪 Yalnız Mağaza Sahibləri (Vendors)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>📌 Mesaj Başlığı *</label>
+                      <input 
+                        type="text" 
+                        placeholder="Məs: Böyük Yay Endirimləri Başladı! 🎉" 
+                        value={broadcastTitle} 
+                        onChange={(e) => setBroadcastTitle(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '10px 14px', border: '1px solid #CBD5E1', borderRadius: '10px', fontSize: '0.9rem', outline: 'none' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>📝 Mesaj Mətni *</label>
+                      <textarea 
+                        rows="5"
+                        placeholder="İstifadəçilərə çatdırılacaq elan və ya mesaj mətni..." 
+                        value={broadcastMessage} 
+                        onChange={(e) => setBroadcastMessage(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', borderRadius: '10px', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #D4AF37 0%, #B4932F 100%)', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 14px rgba(212, 175, 55, 0.3)' }}
+                    >
+                      <Sparkles size={18} /> Bildirişi Çatdır
+                    </button>
+                  </form>
                 </div>
               </motion.div>
             )}

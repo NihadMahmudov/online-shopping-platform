@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { Trash2, Minus, Plus, MapPin, Phone, ArrowLeft } from 'lucide-react';
 import AuthModal from '../../components/common/AuthModal/AuthModal';
 import styles from './Cart.module.css';
@@ -10,6 +11,7 @@ import styles from './Cart.module.css';
 const Cart = ({ inPanel = false }) => {
   const { cart, removeFromCart, updateQuantity, clearCart, cartTotal, finalTotal, discountAmount, applyPromoCode, removePromoCode, appliedPromo } = useCart();
   const { addOrder } = useOrders();
+  const { addNotification } = useNotifications();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -30,7 +32,7 @@ const Cart = ({ inPanel = false }) => {
       return;
     }
 
-    addOrder({
+    const createdOrder = addOrder({
       userEmail: user.email,
       customerName: user.name,
       address,
@@ -39,6 +41,35 @@ const Cart = ({ inPanel = false }) => {
       total: finalTotal,
       discount: discountAmount,
       promo: appliedPromo
+    });
+
+    // Notify Customer
+    addNotification({
+      userEmail: user.email,
+      title: 'Sifarişiniz Göndərildi 🎉',
+      message: `#${createdOrder.id} nömrəli sifarişiniz qəbul edildi. Tezliklə satıcılar tərəfindən təsdiqlənəcək.`,
+      orderId: createdOrder.id,
+      type: 'order_created'
+    });
+
+    // Notify EACH vendor for items belonging to their store
+    const storeMap = {};
+    cart.forEach(item => {
+      const sId = item.storeId || 'default';
+      if (!storeMap[sId]) storeMap[sId] = [];
+      storeMap[sId].push(item);
+    });
+
+    Object.keys(storeMap).forEach(sId => {
+      const storeItems = storeMap[sId];
+      const itemsText = storeItems.map(i => `${i.name} (x${i.quantity})`).join(', ');
+      addNotification({
+        storeId: sId,
+        title: 'Yeni Sifariş Daxil Oldu! 📦',
+        message: `Müştəri: ${user.name} — #${createdOrder.id} (${storeItems.length} məhsul: ${itemsText})`,
+        orderId: createdOrder.id,
+        type: 'order_new'
+      });
     });
     
     setOrderSuccess(true);

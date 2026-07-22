@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal, ChevronDown, Search, Star, X, RotateCcw, Sparkles, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import styles from './Shop.module.css';
 import ProductCard from '../../components/common/ProductCard/ProductCard';
@@ -179,6 +178,22 @@ const Shop = ({ inPanel = false }) => {
           </div>
         </div>
 
+        {/* Category Pills Bar */}
+        <div className={styles.categoryPillsBar}>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              className={`${styles.catPill} ${activeCategory === cat.id ? styles.catPillActive : ''}`}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                navigate(`/shop?category=${cat.id}`, { replace: true });
+              }}
+            >
+              {cat.label || cat.name || cat.id}
+            </button>
+          ))}
+        </div>
+
         {/* Results Info */}
         <div className={styles.resultInfo}>
           <div className={styles.resultCount}>
@@ -196,13 +211,12 @@ const Shop = ({ inPanel = false }) => {
           
           {/* Core Product Grid */}
           <div className={styles.mainContent}>
-            <motion.div layout className={styles.grid}>
-              <AnimatePresence>
-                {filteredAndSorted.length > 0 ? (
-                  filteredAndSorted.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))
-                ) : (
+            <div className={styles.grid}>
+              {filteredAndSorted.length > 0 ? (
+                filteredAndSorted.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              ) : (
                   <div className={styles.noResultsBox}>
                     <Sparkles size={40} className={styles.noResultsIcon} />
                     <h3>Axtarışınıza uyğun məhsul tapılmadı</h3>
@@ -211,9 +225,8 @@ const Shop = ({ inPanel = false }) => {
                       Filtrləri Sıfırla
                     </button>
                   </div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+              )}
+            </div>
           </div>
 
         </div>
