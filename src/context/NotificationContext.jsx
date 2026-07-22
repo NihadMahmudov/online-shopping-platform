@@ -45,7 +45,9 @@ export const NotificationProvider = ({ children }) => {
       if (saved) {
         try {
           setNotifications(JSON.parse(saved));
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse notifications storage:', e);
+        }
       }
     };
     window.addEventListener('storage', handleStorageChange);

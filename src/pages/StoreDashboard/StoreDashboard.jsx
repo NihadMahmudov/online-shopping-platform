@@ -31,6 +31,7 @@ const StoreDashboard = () => {
   
   const { orders, updateOrderStatus, getOrdersByStore, getRevenueByStore } = useOrders();
   const { storeProfiles, updateStoreProfile, getStoreProfile } = useStore();
+  const { getFilteredNotifications, markAsRead, markAllAsRead } = useNotifications();
 
   const [activeTab, setActiveTab] = useState('Məhsullarım');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -241,7 +242,6 @@ const StoreDashboard = () => {
   // Filter orders by this store
   const storeOrders = getOrdersByStore(user.storeId);
 
-  const { getFilteredNotifications, markAsRead, markAllAsRead } = useNotifications();
   const storeNotifications = getFilteredNotifications(user?.email, user?.storeId, false);
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });

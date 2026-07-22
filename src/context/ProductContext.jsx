@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { products as initialProducts } from '../data/products';
+import { fetchProductsFromApi, createProductApi, deleteProductApi, uploadImageToCloudinary } from '../services/api';
 
 const ProductContext = createContext();
 
@@ -110,7 +111,9 @@ export const ProductProvider = ({ children }) => {
             name: c.name || c.label || c.id
           }));
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Failed to parse categories storage:', e);
+      }
     }
     return [
       { id: 'all', label: 'Hamısı', name: 'Hamısı', img: '' },
@@ -224,6 +227,19 @@ export const ProductProvider = ({ children }) => {
     ];
   });
 
+  // Sync with Neon PostgreSQL backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchProductsFromApi()
+      .then(apiProducts => {
+        if (isMounted && Array.isArray(apiProducts) && apiProducts.length > 0) {
+          setProducts(apiProducts);
+        }
+      })
+      .catch(err => console.warn('Product sync from API failed, using cached state:', err));
+    return () => { isMounted = false; };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('atlas_products', JSON.stringify(products));
     localStorage.setItem('atlas_categories', JSON.stringify(categories));
@@ -235,22 +251,71 @@ export const ProductProvider = ({ children }) => {
   }, [products, categories, badges, collections, flashSale, stories, showcaseCards]);
 
   // ── Products ────────────────────────────────────────────
-  const addProduct = (product, storeId = null, storeName = null) => {
-    const newProduct = {
-      ...product,
-      id: Date.now(),
-      reviews: 0,
-      rating: 5,
-      comments: [],
-      storeId: storeId || 'bame_demo',
-      storeName: storeName || 'AtlasMall',
-      createdAt: new Date().toISOString()
+  const addProduct = async (product, storeId = null, storeName = null) => {
+    let imageUrl = product.img;
+
+    // If image is a File or base64 data URL, upload to Cloudinary first
+    if (product.imageFile || (typeof product.img === 'string' && product.img.startsWith('data:'))) {
+      try {
+        const uploadResult = await uploadImageToCloudinary(
+          product.imageFile || product.img,
+          'atlasmall_products'
+        );
+        if (uploadResult && uploadResult.url) {
+          imageUrl = uploadResult.url;
+        }
+      } catch (err) {
+        console.warn('Cloudinary upload fallback to current image:', err);
+      }
+    }
+
+    const newProductData = {
+      name: product.name,
+      category: product.category || 'all',
+      price: Number(product.price),
+      oldPrice: product.oldPrice ? Number(product.oldPrice) : null,
+      img: imageUrl,
+      badge: product.badge || 'Yeni',
+      collections: product.collections || ['flash'],
+      storeId: storeId || product.storeId || 'bame_demo',
+      storeName: storeName || product.storeName || 'AtlasMall',
+      description: product.description || '',
+      stock: product.stock ? Number(product.stock) : 10
     };
-    setProducts(prev => [...prev, newProduct]);
-    return newProduct;
+
+    try {
+      // Create product in Neon PostgreSQL
+      const createdApiProduct = await createProductApi(newProductData);
+      const newProduct = {
+        ...newProductData,
+        ...createdApiProduct,
+        comments: []
+      };
+      setProducts(prev => [newProduct, ...prev]);
+      return newProduct;
+    } catch (err) {
+      console.warn('Backend product creation failed, creating locally:', err);
+      const localProduct = {
+        ...newProductData,
+        id: Date.now(),
+        reviews: 0,
+        rating: 5,
+        comments: [],
+        createdAt: new Date().toISOString()
+      };
+      setProducts(prev => [localProduct, ...prev]);
+      return localProduct;
+    }
   };
 
-  const deleteProduct = (id) => setProducts(prev => prev.filter(p => p.id !== id));
+  const deleteProduct = async (id) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    try {
+      await deleteProductApi(id);
+    } catch (e) {
+      console.warn('Backend product delete error:', e);
+    }
+  };
 
   const updateProduct = (id, data) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
