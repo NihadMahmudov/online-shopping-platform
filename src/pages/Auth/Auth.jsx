@@ -24,15 +24,15 @@ const Auth = () => {
 
     let result;
     if (mode === 'register') {
-      result = register(form.name, form.email, form.password);
+      result = await register(form.name, form.email, form.password);
     } else {
-      result = login(form.email, form.password);
+      result = await login(form.email, form.password);
     }
     setLoading(false);
 
-    if (result.error) { setError(result.error); return; }
+    if (result?.error) { setError(result.error); return; }
 
-    const role = result.user.role;
+    const role = result?.user?.role;
     if (role === 'superadmin') navigate('/dashboard');
     else if (role === 'vendor') navigate('/store-dashboard');
     else navigate('/panel');
@@ -152,8 +152,8 @@ const Auth = () => {
 
               <div className={styles.divider}><span>və ya</span></div>
 
-              <button type="button" className={styles.demoBtn} onClick={() => {
-                login('qonaq@atlasmall.az', 'qonaq123');
+              <button type="button" className={styles.demoBtn} onClick={async () => {
+                await login('qonaq@atlasmall.az', 'qonaq123');
                 navigate('/panel');
               }}>
                 Qonaq kimi daxil ol (Sürətli)

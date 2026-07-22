@@ -43,10 +43,10 @@ const StoreAuth = () => {
     setError('');
     setLoading(true);
     await new Promise(r => setTimeout(r, 400));
-    const result = login(form.email, form.password);
+    const result = await login(form.email, form.password);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
-    if (result.user.role !== 'vendor') {
+    if (result?.error) { setError(result.error); return; }
+    if (result?.user?.role !== 'vendor') {
       setError('Bu hesab mağaza hesabı deyil. Müştəri girişi üçün buraya klikləyin.');
       return;
     }
@@ -66,9 +66,9 @@ const StoreAuth = () => {
     setError('');
     setLoading(true);
     await new Promise(r => setTimeout(r, 600));
-    const result = registerVendor(form.storeName, form.email, form.password, form.phone, form.category);
+    const result = await registerVendor(form.storeName, form.email, form.password, form.phone, form.category);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result?.error) { setError(result.error); return; }
     setStep(3); // success / pending state
   };
 

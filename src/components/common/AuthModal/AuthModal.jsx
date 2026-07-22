@@ -18,13 +18,13 @@ const AuthModal = ({ isOpen, onClose, message = '' }) => {
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
+    try {
       let result;
       if (mode === 'login') {
-        result = login(form.email, form.password);
+        result = await login(form.email, form.password);
       } else {
         if (!form.name) { setError('Ad daxil edin.'); setLoading(false); return; }
-        result = register(form.name, form.email, form.password);
+        result = await register(form.name, form.email, form.password);
       }
 
       if (result?.error) {
@@ -32,8 +32,11 @@ const AuthModal = ({ isOpen, onClose, message = '' }) => {
       } else {
         onClose(true); // true = success, action should proceed
       }
+    } catch (err) {
+      setError(err.message || 'Xəta baş verdi.');
+    } finally {
       setLoading(false);
-    }, 400);
+    }
   };
 
   const handleBackdrop = (e) => {
