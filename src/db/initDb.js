@@ -96,6 +96,46 @@ export async function initDatabase() {
       );
     `);
 
+    // 6. Create USERS table
+    await query(`
+      CREATE TABLE IF NOT EXISTS users (
+        email VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'user',
+        status VARCHAR(50) DEFAULT 'active',
+        store_id VARCHAR(100),
+        store_name VARCHAR(255),
+        store_category VARCHAR(100),
+        phone VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Check if initial users exist
+    const userRes = await query('SELECT COUNT(*) FROM users');
+    if (parseInt(userRes.rows[0].count) === 0) {
+      console.log('🌱 [Neon DB] Seeding initial users...');
+      const defaultUsers = [
+        ['atlas@admin.com', 'AtlasMall Admin', 'admin123', 'superadmin', 'active', null, null, null, null],
+        ['qonaq@atlasmall.az', 'Qonaq İstifadəçi', 'qonaq123', 'user', 'active', null, null, null, null],
+        ['vogue@bame.az', 'Vogue Art', 'vogue', 'vendor', 'approved', 'vogue_art', 'Vogue Art', 'Premium', '+994 50 111 22 33'],
+        ['modernist@bame.az', 'Modernist', 'modernist', 'vendor', 'approved', 'modernist', 'Modernist', 'Müasir', '+994 51 222 33 44'],
+        ['zarif@bame.az', 'Zərif Atelye', 'zarif', 'vendor', 'approved', 'zarif_atelye', 'Zərif Atelye', 'Əl işi', '+994 55 333 44 55'],
+        ['style@bame.az', 'Style Lab', 'style', 'vendor', 'approved', 'style_lab', 'Style Lab', 'Dəb', '+994 70 444 55 66'],
+        ['closet@bame.az', 'Baku Closet', 'closet', 'vendor', 'approved', 'baku_closet', 'Baku Closet', 'Vintage', '+994 99 555 66 77'],
+        ['silk@bame.az', 'Silk Way', 'silk', 'vendor', 'approved', 'silk_way', 'Silk Way', 'İpək', '+994 12 400 90 90']
+      ];
+
+      for (const u of defaultUsers) {
+        await query(
+          `INSERT INTO users (email, name, password, role, status, store_id, store_name, store_category, phone)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (email) DO NOTHING`,
+          u
+        );
+      }
+    }
+
     // Check if initial categories exist
     const catRes = await query('SELECT COUNT(*) FROM categories');
     if (parseInt(catRes.rows[0].count) === 0) {

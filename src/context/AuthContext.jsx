@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Migration: If any vendor has status 'active' (due to previous bug), convert to 'approved'
         return parsed.map(u => {
           if (u.role === 'vendor' && u.status === 'active') {
             return { ...u, status: 'approved' };
@@ -49,24 +48,38 @@ export const AuthProvider = ({ children }) => {
     if (parsed && parsed.role === 'vendor' && parsed.status === 'active') {
       parsed.status = 'approved';
     }
-    // Retrieve fresher record from users database if exists
-    const savedDb = localStorage.getItem('atlas_users_db');
-    if (savedDb) {
-      try {
-        const dbUsers = JSON.parse(savedDb);
-        const fresh = dbUsers.find(u => u.email === parsed.email);
-        if (fresh) {
-          if (fresh.role === 'vendor' && fresh.status === 'active') {
-            return { ...fresh, status: 'approved' };
-          }
-          return fresh;
-        }
-      } catch (e) {
-        console.error("Error parsing users db:", e);
-      }
-    }
     return parsed;
   });
+
+  // Fetch fresh users list from backend (Neon DB) on mount
+  useEffect(() => {
+    const fetchUsersFromDb = async () => {
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const dbUsers = await res.json();
+          if (Array.isArray(dbUsers) && dbUsers.length > 0) {
+            setUsers(dbUsers);
+            localStorage.setItem('atlas_users_db', JSON.stringify(dbUsers));
+            
+            // Sync current user session status if logged in
+            setUser(currentUser => {
+              if (currentUser?.email) {
+                const freshUser = dbUsers.find(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (freshUser) {
+                  return { ...currentUser, ...freshUser };
+                }
+              }
+              return currentUser;
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching users from Neon DB:", err);
+      }
+    };
+    fetchUsersFromDb();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -81,100 +94,168 @@ export const AuthProvider = ({ children }) => {
   }, [users]);
 
   // ── Customer Register ──────────────────────────────────
-  const register = (name, email, password) => {
-    const existing = users.find(u => u.email === email);
+  const register = async (name, email, password) => {
+    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) return { error: 'Bu email artıq qeydiyyatdan keçib.' };
-    const newUser = {
-      name, email, password,
+
+    const newUserPayload = {
+      name, email: email.toLowerCase(), password,
       role: 'user',
-      status: 'active',
-      createdAt: new Date().toISOString()
+      status: 'active'
     };
-    const updated = [...users, newUser];
-    setUsers(updated);
-    setUser(newUser);
-    return { user: newUser };
+
+    try {
+      const res = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUserPayload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Qeydiyyat zamanı xəta baş verdi.' };
+      }
+      const createdUser = { ...data, password };
+      setUsers(prev => [createdUser, ...prev]);
+      setUser(createdUser);
+      return { user: createdUser };
+    } catch (err) {
+      console.error('Register API error:', err);
+      const fallbackUser = { ...newUserPayload, createdAt: new Date().toISOString() };
+      setUsers(prev => [fallbackUser, ...prev]);
+      setUser(fallbackUser);
+      return { user: fallbackUser };
+    }
   };
 
   // ── Vendor Register ────────────────────────────────────
-  const registerVendor = (storeName, email, password, phone, category) => {
-    const existing = users.find(u => u.email === email);
+  const registerVendor = async (storeName, email, password, phone, category) => {
+    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) return { error: 'Bu email artıq qeydiyyatdan keçib.' };
+
     const storeId = `store_${Date.now()}`;
-    const newVendor = {
+    const vendorPayload = {
       name: storeName,
-      email, password, phone,
+      email: email.toLowerCase(),
+      password,
+      phone,
       role: 'vendor',
       storeId,
       storeName,
       storeCategory: category || 'Geyim & Moda',
-      status: 'pending',     // must be approved by superadmin before accessing dashboard
-      createdAt: new Date().toISOString()
+      status: 'pending'
     };
-    const updated = [...users, newVendor];
-    setUsers(updated);
-    setUser(newVendor);
-    return { user: newVendor };
+
+    try {
+      const res = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(vendorPayload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Qeydiyyat zamanı xəta baş verdi.' };
+      }
+      const createdVendor = { ...data, password };
+      setUsers(prev => [createdVendor, ...prev]);
+      setUser(createdVendor);
+      return { user: createdVendor };
+    } catch (err) {
+      console.error('Register vendor error:', err);
+      const fallbackVendor = { ...vendorPayload, createdAt: new Date().toISOString() };
+      setUsers(prev => [fallbackVendor, ...prev]);
+      setUser(fallbackVendor);
+      return { user: fallbackVendor };
+    }
   };
 
   // ── Login ──────────────────────────────────────────────
-  const login = (email, password) => {
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) return { error: 'E-poçt və ya şifrə yanlışdır.' };
-    if (found.status === 'suspended') return { error: 'Bu hesab dondurulmuşdur. Ətraflı məlumat üçün AtlasMall ilə əlaqə saxlayın.' };
-    setUser(found);
-    return { user: found };
+  const login = async (email, password) => {
+    try {
+      const res = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Giriş uğursuz oldu.' };
+      }
+      setUser(data);
+      return { user: data };
+    } catch (err) {
+      console.error('Login API error, checking local fallback:', err);
+      const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!found) return { error: 'E-poçt və ya şifrə yanlışdır.' };
+      if (found.status === 'suspended') return { error: 'Bu hesab dondurulmuşdur. Ətraflı məlumat üçün AtlasMall ilə əlaqə saxlayın.' };
+      setUser(found);
+      return { user: found };
+    }
   };
 
   const logout = () => setUser(null);
 
   // ── User Management (SuperAdmin) ───────────────────────
-  const deleteUser = (email) => {
+  const deleteUser = async (email) => {
     if (email === DEFAULT_SUPERADMIN.email) return;
-    const updated = users.filter(u => u.email !== email);
-    setUsers(updated);
-    if (user?.email === email) setUser(null);
+    setUsers(prev => prev.filter(u => u.email.toLowerCase() !== email.toLowerCase()));
+    if (user?.email?.toLowerCase() === email.toLowerCase()) setUser(null);
+
+    try {
+      await fetch(`/api/users/${encodeURIComponent(email)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Delete user API error:', err);
+    }
+  };
+
+  const updateUserStatusInDb = async (email, status) => {
+    try {
+      await fetch('/api/users/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, status })
+      });
+    } catch (err) {
+      console.error('Update status API error:', err);
+    }
   };
 
   const suspendUser = (email) => {
     if (email === DEFAULT_SUPERADMIN.email) return;
-    const updated = users.map(u => {
-      if (u.email === email) {
+    let nextStatus = 'suspended';
+    setUsers(prev => prev.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
         const isActive = u.status === 'suspended';
-        const nextStatus = isActive ? (u.role === 'vendor' ? 'approved' : 'active') : 'suspended';
+        nextStatus = isActive ? (u.role === 'vendor' ? 'approved' : 'active') : 'suspended';
         return { ...u, status: nextStatus };
       }
       return u;
-    });
-    setUsers(updated);
-    
-    // Also update logged-in session user if they are the one affected
-    if (user?.email === email) {
-      const updatedUser = updated.find(u => u.email === email);
-      setUser(updatedUser);
+    }));
+
+    updateUserStatusInDb(email, nextStatus);
+
+    if (user?.email?.toLowerCase() === email.toLowerCase()) {
+      setUser(prev => prev ? { ...prev, status: nextStatus } : null);
     }
   };
 
   const approveVendor = (email) => {
-    const updated = users.map(u => u.email === email ? { ...u, status: 'approved' } : u);
-    setUsers(updated);
-    // If currently logged in vendor gets approved, update session
-    if (user?.email === email) {
-      const approvedUser = updated.find(u => u.email === email);
-      setUser(approvedUser);
+    setUsers(prev => prev.map(u => u.email.toLowerCase() === email.toLowerCase() ? { ...u, status: 'approved' } : u));
+    updateUserStatusInDb(email, 'approved');
+    if (user?.email?.toLowerCase() === email.toLowerCase()) {
+      setUser(prev => prev ? { ...prev, status: 'approved' } : null);
     }
   };
 
   const rejectVendor = (email) => {
-    const updated = users.map(u => u.email === email ? { ...u, status: 'rejected' } : u);
-    setUsers(updated);
+    setUsers(prev => prev.map(u => u.email.toLowerCase() === email.toLowerCase() ? { ...u, status: 'rejected' } : u));
+    updateUserStatusInDb(email, 'rejected');
   };
 
   // ── Role helpers ───────────────────────────────────────
   const isSuperAdmin = user?.role === 'superadmin';
   const isVendor = user?.role === 'vendor';
   const isUser = user?.role === 'user';
-  const isAdmin = isSuperAdmin; // backward compat
+  const isAdmin = isSuperAdmin;
 
   const vendors = users.filter(u => u.role === 'vendor');
   const customers = users.filter(u => u.role === 'user');
@@ -194,3 +275,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

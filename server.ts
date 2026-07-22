@@ -365,6 +365,124 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// 7. USERS & AUTH ENDPOINTS
+// ─────────────────────────────────────────────────────────────
+app.get('/api/users', async (req, res) => {
+  try {
+    if (getPool()) {
+      const result = await query('SELECT email, name, role, status, store_id as "storeId", store_name as "storeName", store_category as "storeCategory", phone, created_at as "createdAt" FROM users ORDER BY created_at DESC');
+      return res.json(result.rows);
+    }
+    res.json([]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/users/register', async (req, res) => {
+  try {
+    const { email, name, password, role, status, storeId, storeName, storeCategory, phone } = req.body;
+    if (!email || !name || !password) {
+      return res.status(400).json({ error: 'E-poçt, ad və şifrə mütləqdir.' });
+    }
+
+    if (getPool()) {
+      const existing = await query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ error: 'Bu email artıq qeydiyyatdan keçib.' });
+      }
+
+      const userRole = role || 'user';
+      const userStatus = status || (userRole === 'vendor' ? 'pending' : 'active');
+
+      const result = await query(
+        `INSERT INTO users (email, name, password, role, status, store_id, store_name, store_category, phone)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING email, name, role, status, store_id as "storeId", store_name as "storeName", store_category as "storeCategory", phone, created_at as "createdAt"`,
+        [email.toLowerCase(), name, password, userRole, userStatus, storeId || null, storeName || null, storeCategory || null, phone || null]
+      );
+
+      return res.status(201).json(result.rows[0]);
+    }
+
+    res.status(201).json({ email, name, role: role || 'user', status: status || 'active' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/users/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'E-poçt və şifrə daxil edin.' });
+    }
+
+    if (getPool()) {
+      const result = await query(
+        `SELECT email, name, password, role, status, store_id as "storeId", store_name as "storeName", store_category as "storeCategory", phone, created_at as "createdAt"
+         FROM users WHERE LOWER(email) = LOWER($1)`,
+        [email]
+      );
+
+      if (result.rows.length === 0 || result.rows[0].password !== password) {
+        return res.status(401).json({ error: 'E-poçt və ya şifrə yanlışdır.' });
+      }
+
+      const user = result.rows[0];
+      if (user.status === 'suspended') {
+        return res.status(403).json({ error: 'Bu hesab dondurulmuşdur. Ətraflı məlumat üçün AtlasMall ilə əlaqə saxlayın.' });
+      }
+
+      delete user.password;
+      return res.json(user);
+    }
+
+    res.status(401).json({ error: 'Verilənlər bazası qoşulmayıb.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/users/status', async (req, res) => {
+  try {
+    const { email, status } = req.body;
+    if (!email || !status) {
+      return res.status(400).json({ error: 'Email və status vacibdir.' });
+    }
+
+    if (getPool()) {
+      const result = await query(
+        `UPDATE users SET status = $1 WHERE LOWER(email) = LOWER($2)
+         RETURNING email, name, role, status, store_id as "storeId", store_name as "storeName", store_category as "storeCategory", phone`,
+        [status, email]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'İstifadəçi tapılmadı.' });
+      }
+      return res.json(result.rows[0]);
+    }
+
+    res.json({ email, status });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/users/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    if (getPool()) {
+      await query('DELETE FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+      return res.json({ success: true, message: 'İstifadəçi bazadan silindi.' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // VITE MIDDLEWARE / PRODUCTION STATIC SERVING
 // ─────────────────────────────────────────────────────────────
 async function startServer() {
