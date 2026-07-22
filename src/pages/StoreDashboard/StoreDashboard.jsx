@@ -41,6 +41,8 @@ const StoreDashboard = () => {
   });
   
   const [success, setSuccess] = useState(false);
+  const [submittingProduct, setSubmittingProduct] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
 
 
@@ -279,25 +281,35 @@ const StoreDashboard = () => {
     });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!form.name || !form.price || !form.img) return;
-    addProduct({
-      name: form.name,
-      price: Number(form.price),
-      oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
-      category: form.category,
-      storeCategory: form.storeCategory || null,
-      img: form.img,
-      images: form.images.length > 0 ? form.images : [form.img],
-      description: form.description,
-      badge: form.badge,
-      collections: form.collections
-    }, user.storeId, user.storeName);
-    
-    setForm({ name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '', img: '', images: [], description: '', badge: '', collections: [] });
-    setSuccess(true);
-    setTimeout(() => { setSuccess(false); setActiveTab('Məhsullarım'); }, 1500);
+    setSubmittingProduct(true);
+    setSubmitError('');
+
+    try {
+      await addProduct({
+        name: form.name,
+        price: Number(form.price),
+        oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
+        category: form.category,
+        storeCategory: form.storeCategory || null,
+        img: form.img,
+        images: form.images.length > 0 ? form.images : [form.img],
+        description: form.description,
+        badge: form.badge,
+        collections: form.collections
+      }, user.storeId, user.storeName);
+      
+      setForm({ name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '', img: '', images: [], description: '', badge: '', collections: [] });
+      setSuccess(true);
+      setTimeout(() => { setSuccess(false); setActiveTab('Məhsullarım'); }, 1500);
+    } catch (err) {
+      console.error('Product creation error:', err);
+      setSubmitError('Məhsul bazaya əlavə edilərkən xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+    } finally {
+      setSubmittingProduct(false);
+    }
   };
 
   // Filter reviews of products belonging to this vendor
@@ -830,6 +842,12 @@ const StoreDashboard = () => {
                   </div>
                 )}
 
+                {submitError && (
+                  <div className={styles.errorMsg} style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: '16px', fontSize: '0.9rem' }}>
+                    ❌ {submitError}
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className={styles.premiumForm}>
                   {/* Left Column: Main Info */}
                   <div className={styles.formColumn}>
@@ -958,8 +976,12 @@ const StoreDashboard = () => {
                     </div>
                   </div>
 
-                  <button type="submit" className={styles.submitBtn}>
-                    <PlusCircle size={20} /> Məhsul Əlavə Et
+                  <button type="submit" className={styles.submitBtn} disabled={submittingProduct}>
+                    {submittingProduct ? (
+                      <>⏳ Şəkil Cloudinary-ə yüklənir və baza yenilənir...</>
+                    ) : (
+                      <><PlusCircle size={20} /> Məhsul Əlavə Et</>
+                    )}
                   </button>
                 </form>
               </motion.div>

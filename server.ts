@@ -166,13 +166,29 @@ app.post('/api/products', async (req, res) => {
     }
 
     if (getPool()) {
+      const targetStoreId = storeId || 'vogue_art';
+      const targetStoreName = storeName || 'Vogue Art';
+      const targetCategory = category || 'all';
+
+      // Auto-ensure store exists in stores table to prevent FK constraint error
+      await query(
+        `INSERT INTO stores (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+        [targetStoreId, targetStoreName, 'Boutique Store']
+      );
+
+      // Auto-ensure category exists in categories table to prevent FK constraint error
+      await query(
+        `INSERT INTO categories (id, label, name) VALUES ($1, $2, $2) ON CONFLICT (id) DO NOTHING`,
+        [targetCategory, targetCategory]
+      );
+
       const result = await query(
         `INSERT INTO products (name, category_id, price, old_price, rating, reviews, img, badge, collections, store_id, store_name, description, stock)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING *`,
         [
           name,
-          category || 'all',
+          targetCategory,
           price,
           oldPrice || null,
           5.0,
@@ -180,8 +196,8 @@ app.post('/api/products', async (req, res) => {
           img, // Store Cloudinary URL in Neon DB
           badge || 'Yeni',
           collections || ['flash'],
-          storeId || 'vogue_art',
-          storeName || 'Vogue Art',
+          targetStoreId,
+          targetStoreName,
           description || '',
           stock || 10
         ]
@@ -341,11 +357,17 @@ app.post('/api/orders', async (req, res) => {
     const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
     if (getPool()) {
+      const targetStoreId = storeId || 'vogue_art';
+      await query(
+        `INSERT INTO stores (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+        [targetStoreId, targetStoreId, 'Boutique Store']
+      );
+
       const result = await query(
         `INSERT INTO orders (id, user_email, store_id, items, total_amount, shipping_address, payment_method)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [orderId, userEmail, storeId || 'vogue_art', JSON.stringify(items), totalAmount, shippingAddress, paymentMethod || 'Nağd']
+        [orderId, userEmail, targetStoreId, JSON.stringify(items), totalAmount, shippingAddress, paymentMethod || 'Nağd']
       );
       return res.status(201).json(result.rows[0]);
     }
@@ -394,6 +416,15 @@ app.post('/api/users/register', async (req, res) => {
 
       const userRole = role || 'user';
       const userStatus = status || (userRole === 'vendor' ? 'pending' : 'active');
+
+      if (userRole === 'vendor' && storeId) {
+        await query(
+          `INSERT INTO stores (id, name, owner_email, phone)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, owner_email = EXCLUDED.owner_email, phone = EXCLUDED.phone`,
+          [storeId, storeName || name, email.toLowerCase(), phone || null]
+        );
+      }
 
       const result = await query(
         `INSERT INTO users (email, name, password, role, status, store_id, store_name, store_category, phone)
