@@ -536,6 +536,120 @@
   color: var(--text-muted);
 }
 
+.storeSearchRow {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.storeSearchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.storeSearchBox:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.storeSearchBox input {
+  width: 100%;
+  padding: 12px 42px 12px 44px;
+  border: none;
+  background: transparent;
+  font-size: 0.92rem;
+  color: var(--secondary);
+  outline: none;
+  font-family: inherit;
+  border-radius: 50px;
+}
+
+.storeSearchBox input::placeholder {
+  color: var(--text-muted);
+}
+
+.storeSearchIcon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.clearSearchBtn:hover {
+  background: var(--border);
+  color: var(--secondary);
+}
+
+.noStoresFound {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--white);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.noStoresIcon {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.noStoresFound h3 {
+  font-size: 1.2rem;
+  color: var(--secondary);
+  font-weight: 700;
+}
+
+.noStoresFound p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.resetSearchBtn {
+  padding: 8px 18px;
+  background: var(--secondary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resetSearchBtn:hover {
+  background: var(--primary);
+  color: var(--secondary);
+}
+
 .storesGrid {
   display: grid;
   grid-template-columns: 1fr;

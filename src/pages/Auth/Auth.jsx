@@ -263,19 +263,33 @@ const Auth = () => {
 
               <div className={styles.divider}><span>və ya</span></div>
 
-              <button type="button" className={styles.demoBtn} onClick={async () => {
-                await login('qonaq@atlasmall.az', 'qonaq123');
-                navigate('/panel');
-              }}>
-                Qonaq kimi daxil ol (Sürətli)
+              {/* Secondary CTA Button to switch between Login / Register */}
+              <button 
+                type="button" 
+                className={styles.secondaryCtaBtn} 
+                onClick={() => { 
+                  setMode(mode === 'login' ? 'register' : 'login'); 
+                  setError(''); 
+                  setIsVerifying(false);
+                }}
+              >
+                {mode === 'login' ? 'Hesab yaradın (Qeydiyyat)' : 'Artıq hesabınız var? Daxil ol'}
               </button>
 
-              <p className={styles.switchMode}>
-                {mode === 'login' ? 'Hesabınız yoxdur?' : 'Artıq hesabınız var?'}
-                <button type="button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
-                  {mode === 'login' ? ' Qeydiyyat →' : ' Giriş →'}
+              {/* Tertiary Guest Option */}
+              <div className={styles.guestBox}>
+                <span>Hesabsız davam etmək istəyirsiniz?</span>
+                <button 
+                  type="button" 
+                  className={styles.guestLink} 
+                  onClick={async () => {
+                    await login('qonaq@atlasmall.az', 'qonaq123');
+                    navigate('/panel');
+                  }}
+                >
+                  Qonaq kimi davam et →
                 </button>
-              </p>
+              </div>
             </motion.form>
           </AnimatePresence>
         </div>

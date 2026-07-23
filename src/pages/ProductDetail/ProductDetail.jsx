@@ -81,6 +81,10 @@ const ProductDetail = () => {
   }
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     const timer = setTimeout(() => {
       const foundProduct = products.find(p => p.id === parseInt(id));
       if (foundProduct) {
@@ -94,6 +98,7 @@ const ProductDetail = () => {
         setProduct(null);
       }
       setLoading(false);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, 450); // Sleek transition delay
     return () => clearTimeout(timer);
   }, [id, products]);
@@ -131,6 +136,14 @@ const ProductDetail = () => {
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 
+  const handleBack = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate(user ? '/panel' : '/');
+    }
+  };
+
   return (
     <>
       <motion.div 
@@ -139,7 +152,7 @@ const ProductDetail = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.32, ease: "easeOut" }}
       >
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+        <button className={styles.backBtn} onClick={handleBack}>
           <ArrowLeft size={20} /> Geri Qayıt
         </button>
 

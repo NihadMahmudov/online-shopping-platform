@@ -12,11 +12,24 @@ import styles from './Home.module.css';
 const Home = () => {
   const navigate = useNavigate();
   const { products } = useProducts();
-  const { user, users } = useAuth();
+  const { user, users, isVendor, isSuperAdmin } = useAuth();
   const { getStoreProfile } = useStore();
 
   const [storeSearch, setStoreSearch] = useState('');
   const [visibleStoreCount, setVisibleStoreCount] = useState(6);
+
+  // If user is already logged in, redirect directly to their respective panel/dashboard
+  React.useEffect(() => {
+    if (user) {
+      if (isVendor) {
+        navigate('/store-dashboard', { replace: true });
+      } else if (isSuperAdmin) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/panel', { replace: true });
+      }
+    }
+  }, [user, isVendor, isSuperAdmin, navigate]);
 
   // Dynamically load boutiques/stores from AuthContext
   const vendorsList = users.filter(u => u.role === 'vendor');

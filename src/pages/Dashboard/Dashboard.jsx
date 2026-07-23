@@ -220,9 +220,6 @@ const Dashboard = () => {
                     {tab}
                   </button>
                 ))}
-                <button className={styles.navItem} onClick={() => navigate('/')}>
-                  <ArrowLeft size={18} /> Sayta Qayıt
-                </button>
               </nav>
 
               <button className={styles.logoutBtn} onClick={() => { logout(); navigate('/'); }}>
@@ -235,7 +232,7 @@ const Dashboard = () => {
 
       {/* Desktop Sidebar */}
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogo}>Atlas<span>Mall Admin</span></div>
+        <div className={styles.sidebarLogo} onClick={() => setActiveTab('Mağazalar')} style={{ cursor: 'pointer' }}>Atlas<span>Mall Admin</span></div>
 
         <div className={styles.storeInfo}>
           <div className={styles.storeAvatar}>A</div>
@@ -266,9 +263,6 @@ const Dashboard = () => {
               {tab}
             </button>
           ))}
-          <button className={styles.navItem} onClick={() => navigate('/')}>
-            <ArrowLeft size={18} /> Sayta Qayıt
-          </button>
         </nav>
 
         <button className={styles.logoutBtn} onClick={() => { logout(); navigate('/'); }}>

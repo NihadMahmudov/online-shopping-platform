@@ -41,6 +41,19 @@ const pageVariants = {
   }
 };
 
+// ── Scroll To Top Helper ─────────────────────────────────────────────
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [pathname]);
+
+  return null;
+};
+
 // ── Animated Routes wrapper ──────────────────────────────────────────
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -98,6 +111,7 @@ function App() {
                     <NotificationProvider>
                       {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
                       <Router>
+                        <ScrollToTop />
                         <AnimatedRoutes />
                       </Router>
                     </NotificationProvider>

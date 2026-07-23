@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight, Shield, Bell, CheckCheck, Trash2 } from 'lucide-react';
+import { Store, Heart, ShoppingCart, User as UserIcon, LogOut, Package, LayoutGrid, Menu, X, Home, ShoppingBag, MapPin, ArrowRight, Shield, Bell, CheckCheck, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -12,7 +12,6 @@ import Shop from '../Shop/Shop';
 import Cart from '../Cart/Cart';
 import Wishlist from '../Wishlist/Wishlist';
 import Orders from '../Orders/Orders';
-import Categories from '../Categories/Categories';
 import AdminPanel from './AdminPanel';
 import styles from './UserPanel.module.css';
 
@@ -37,6 +36,7 @@ const UserPanel = () => {
     }
   }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [storeSearchTerm, setStoreSearchTerm] = useState('');
 
   // Compute boutiques list
   const vendorsList = users.filter(u => u.role === 'vendor');
@@ -61,13 +61,17 @@ const UserPanel = () => {
     };
   });
 
+  const filteredBoutiques = boutiques.filter(b => 
+    b.name.toLowerCase().includes(storeSearchTerm.toLowerCase()) ||
+    b.location.toLowerCase().includes(storeSearchTerm.toLowerCase())
+  );
+
   const { getFilteredNotifications, getUnreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const unreadCount = getUnreadCount(user?.email, user?.storeId, user?.role === 'superadmin');
   const notificationsList = getFilteredNotifications(user?.email, user?.storeId, user?.role === 'superadmin');
 
   const baseTabs = [
     { id: 'kataloq', label: 'Kataloq', icon: <ShoppingBag size={20} />, count: null },
-    { id: 'categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} />, count: null },
     { id: 'stores', label: 'Mağazalar', icon: <Store size={20} />, count: null },
     { id: 'wishlist', label: 'Sevimlilər', icon: <Heart size={20} />, count: wishlist.length },
     { id: 'cart', label: 'Səbət', icon: <ShoppingCart size={20} />, count: cartItemCount },
@@ -98,10 +102,10 @@ const UserPanel = () => {
     <div className={styles.panelContainer}>
       {/* Mobile Top Bar */}
       <header className={styles.mobileHeader}>
-        <Link to="/" className={styles.mobileHomeBtn}>
-          <Home size={20} />
-        </Link>
-        <div className={styles.logo}>
+        <button className={styles.mobileHomeBtn} onClick={() => setActiveTab('kataloq')} title="Kataloqa Keç">
+          <ShoppingBag size={20} />
+        </button>
+        <div className={styles.logo} onClick={() => setActiveTab('kataloq')} style={{ cursor: 'pointer' }} title="Kataloqa Keç">
           <span>Atlas</span><span className={styles.logoDot}>Mall</span>
         </div>
         <div className={styles.mobileAvatar} onClick={() => setIsMobileMenuOpen(true)}>
@@ -169,9 +173,6 @@ const UserPanel = () => {
                 <button className={styles.logoutBtn} onClick={handleLogout}>
                   <LogOut size={18} /> Çıxış
                 </button>
-                <Link to="/" className={styles.backToSiteBtn} onClick={() => setIsMobileMenuOpen(false)}>
-                  <Home size={18} /> Ana Səhifə
-                </Link>
               </div>
             </motion.aside>
           </>
@@ -180,8 +181,8 @@ const UserPanel = () => {
 
       {/* Desktop Left Sidebar (hidden on mobile via CSS) */}
       <aside className={styles.sidebar}>
-        <div className={styles.logo}>
-          <Link to="/"><span>Atlas</span><span className={styles.logoDot}>Mall</span></Link>
+        <div className={styles.logo} onClick={() => setActiveTab('kataloq')} style={{ cursor: 'pointer' }} title="Kataloqa Keç">
+          <span>Atlas</span><span className={styles.logoDot}>Mall</span>
         </div>
 
         <div className={styles.userInfo}>
@@ -226,45 +227,73 @@ const UserPanel = () => {
             className={styles.tabWrapper}
           >
              {activeTab === 'kataloq' && <Shop inPanel={true} />}
-            {activeTab === 'categories' && <Categories inPanel={true} />}
             {activeTab === 'stores' && (
               <div className={styles.storesTab}>
                 <div className={styles.tabHeader}>
                   <h2>Mağazalar</h2>
-                  <p>AtlasMall platformasında fəaliyyət göstərən bütün premium butiklər</p>
+                  <p>AtlasMall platformasında fəaliyyət göstərən bütün premium butiklər ({filteredBoutiques.length})</p>
                 </div>
-                <div className={styles.storesGrid}>
-                  {boutiques.map(store => (
-                    <div 
-                      key={store.id} 
-                      className={styles.storeCard}
-                      onClick={() => navigate(`/store/${store.id}`)}
-                    >
-                      <div className={styles.storeCardHeader}>
-                        <div className={styles.storeAvatar}>
-                          {store.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className={styles.storeName}>{store.name}</h3>
-                          <span className={styles.storeBadge}>{store.badge}</span>
-                        </div>
-                      </div>
-                      <div className={styles.storeDetails}>
-                        <div className={styles.storeDetailItem}>
-                          <MapPin size={14} className={styles.storeDetailIcon} />
-                          <span>{store.location}</span>
-                        </div>
-                        <div className={styles.storeDetailItem}>
-                          <Store size={14} className={styles.storeDetailIcon} />
-                          <span>{store.count}</span>
-                        </div>
-                      </div>
-                      <button className={styles.storeActionBtn}>
-                        Mağazaya bax <ArrowRight size={14} />
+
+                <div className={styles.storeSearchRow}>
+                  <div className={styles.storeSearchBox}>
+                    <Search size={18} className={styles.storeSearchIcon} />
+                    <input 
+                      type="text" 
+                      placeholder="Mağaza adı və ya ünvan üzrə axtarın..." 
+                      value={storeSearchTerm}
+                      onChange={(e) => setStoreSearchTerm(e.target.value)}
+                    />
+                    {storeSearchTerm && (
+                      <button className={styles.clearSearchBtn} onClick={() => setStoreSearchTerm('')} title="Təmizlə">
+                        <X size={16} />
                       </button>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
+
+                {filteredBoutiques.length > 0 ? (
+                  <div className={styles.storesGrid}>
+                    {filteredBoutiques.map(store => (
+                      <div 
+                        key={store.id} 
+                        className={styles.storeCard}
+                        onClick={() => navigate(`/store/${store.id}`)}
+                      >
+                        <div className={styles.storeCardHeader}>
+                          <div className={styles.storeAvatar}>
+                            {store.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className={styles.storeName}>{store.name}</h3>
+                            <span className={styles.storeBadge}>{store.badge}</span>
+                          </div>
+                        </div>
+                        <div className={styles.storeDetails}>
+                          <div className={styles.storeDetailItem}>
+                            <MapPin size={14} className={styles.storeDetailIcon} />
+                            <span>{store.location}</span>
+                          </div>
+                          <div className={styles.storeDetailItem}>
+                            <Store size={14} className={styles.storeDetailIcon} />
+                            <span>{store.count}</span>
+                          </div>
+                        </div>
+                        <button className={styles.storeActionBtn}>
+                          Mağazaya bax <ArrowRight size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.noStoresFound}>
+                    <Store size={48} className={styles.noStoresIcon} />
+                    <h3>Mağaza tapılmadı</h3>
+                    <p>"{storeSearchTerm}" axtarışına uyğun heç bir mağaza tapılmadı.</p>
+                    <button className={styles.resetSearchBtn} onClick={() => setStoreSearchTerm('')}>
+                      Axtarışı sıfırla
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {activeTab === 'wishlist' && <Wishlist inPanel={true} />}

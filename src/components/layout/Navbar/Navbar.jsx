@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2 } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2, ShoppingBag, Store, Heart, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -60,11 +60,13 @@ const Navbar = () => {
     }
   };
 
-  const navLinks = [
-    { to: '/', label: t('navbar.home'), icon: <Home size={20} /> },
-    { to: '/about', label: t('navbar.about'), icon: <User size={20} /> },
-    { to: '/contact', label: t('navbar.contact'), icon: <Package size={20} /> },
-  ];
+  const navLinks = user
+    ? []
+    : [
+        { to: '/', label: t('navbar.home'), icon: <Home size={20} /> },
+        { to: '/about', label: t('navbar.about'), icon: <User size={20} /> },
+        { to: '/contact', label: t('navbar.contact'), icon: <Package size={20} /> },
+      ];
 
   return (
     <>
@@ -81,7 +83,7 @@ const Navbar = () => {
 
           {/* Logo */}
           <div className={styles.logo}>
-            <Link to="/">Atlas<span>Mall</span></Link>
+            <Link to={user ? (isVendor ? '/store-dashboard' : isSuperAdmin ? '/dashboard' : '/panel') : '/'}>Atlas<span>Mall</span></Link>
             {user && (
               <button
                 className={styles.logoBellBtn}
@@ -101,14 +103,24 @@ const Navbar = () => {
 
           {/* Desktop Nav Links */}
           <div className={styles.navLinks}>
-            {navLinks.map(link => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) => isActive ? styles.activeLink : ''}
-              >
-                {link.label}
-              </NavLink>
+            {navLinks.map((link, idx) => (
+              link.onClick ? (
+                <button
+                  key={idx}
+                  onClick={link.onClick}
+                  className={styles.navBtn}
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <NavLink
+                  key={link.to || idx}
+                  to={link.to}
+                  className={({ isActive }) => isActive ? styles.activeLink : ''}
+                >
+                  {link.label}
+                </NavLink>
+              )
             ))}
           </div>
 
@@ -249,18 +261,30 @@ const Navbar = () => {
         </div>
 
         <nav className={styles.drawerNav}>
-          {navLinks.map(link => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              onClick={closeDrawer}
-              className={({ isActive }) =>
-                `${styles.drawerLink} ${isActive ? styles.drawerActive : ''}`
-              }
-            >
-              {link.icon}
-              {link.label}
-            </NavLink>
+          {navLinks.map((link, idx) => (
+            link.onClick ? (
+              <button
+                key={idx}
+                onClick={() => { closeDrawer(); link.onClick(); }}
+                className={styles.drawerLink}
+                style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
+              >
+                {link.icon}
+                {link.label}
+              </button>
+            ) : (
+              <NavLink
+                key={link.to || idx}
+                to={link.to}
+                onClick={closeDrawer}
+                className={({ isActive }) =>
+                  `${styles.drawerLink} ${isActive ? styles.drawerActive : ''}`
+                }
+              >
+                {link.icon}
+                {link.label}
+              </NavLink>
+            )
           ))}
 
           {/* Notification Link in Drawer */}
