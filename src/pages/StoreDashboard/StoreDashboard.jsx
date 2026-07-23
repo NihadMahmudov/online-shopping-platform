@@ -440,7 +440,6 @@ const StoreDashboard = () => {
           {user.storeName?.charAt(0).toUpperCase()}
         </div>
       </header>
-
       {/* Slide Drawer for Mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (

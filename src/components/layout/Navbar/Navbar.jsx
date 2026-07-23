@@ -129,21 +129,6 @@ const Navbar = () => {
           {/* Logo */}
           <div className={styles.logo}>
             <Link to={user ? (isVendor ? '/store-dashboard' : isSuperAdmin ? '/dashboard' : '/panel') : '/'}>Atlas<span>Mall</span></Link>
-            {user && (
-              <button
-                className={styles.logoBellBtn}
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                aria-label="Bildirişlər"
-                title="Bildirişlər"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className={styles.logoBellBadge}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-            )}
           </div>
 
           {/* Desktop Nav Links */}
@@ -191,7 +176,7 @@ const Navbar = () => {
                   </Link>
                 )}
 
-                {/* Notification Bell — right next to profile icon */}
+                {/* Notification Bell — right side */}
                 <div className={styles.notifWrapper}>
                   <button 
                     className={styles.notifBtn} 

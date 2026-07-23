@@ -164,7 +164,6 @@ const Dashboard = () => {
         <div className={styles.sidebarLogo}>Atlas<span>Mall Admin</span></div>
         <div className={styles.mobileAvatar}>A</div>
       </header>
-
       {/* Slide Drawer for Mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (

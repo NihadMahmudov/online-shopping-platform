@@ -114,7 +114,6 @@ const UserPanel = () => {
           {user.name.charAt(0).toUpperCase()}
         </div>
       </header>
-
       {/* Slide Drawer for Mobile (user info + logout) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
