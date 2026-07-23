@@ -1,33 +1,87 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Store } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Store, ShieldCheck, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Auth.module.css';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { register, login } = useAuth();
+  const { register, login, sendVerificationCode, verifyEmailCode } = useAuth();
   const [mode, setMode] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [infoMsg, setInfoMsg] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async e => {
+  const handleSendCode = async (e) => {
+    e.preventDefault();
+    setError('');
+    setInfoMsg('');
+    setLoading(true);
+
+    const res = await sendVerificationCode(form.email);
+    setLoading(false);
+
+    if (res?.error) {
+      setError(res.error);
+      return;
+    }
+
+    setIsVerifying(true);
+    if (res?.devCode) {
+      setInfoMsg(`Kod e-poçtunuza göndərildi (Demo Kod: ${res.devCode})`);
+    } else {
+      setInfoMsg('6 rəqəmli təsdiqləmə kodu Gmail ünvanınıza göndərildi. Qutunu yoxlayın.');
+    }
+  };
+
+  const handleVerifyAndRegister = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 400)); // smooth UX delay
 
-    let result;
-    if (mode === 'register') {
-      result = await register(form.name, form.email, form.password);
-    } else {
-      result = await login(form.email, form.password);
+    const verifyRes = await verifyEmailCode(form.email, verificationCode);
+    if (verifyRes?.error) {
+      setLoading(false);
+      setError(verifyRes.error);
+      return;
     }
+
+    const regRes = await register(form.name, form.email, form.password);
+    setLoading(false);
+
+    if (regRes?.error) {
+      setError(regRes.error);
+      return;
+    }
+
+    const role = regRes?.user?.role;
+    if (role === 'superadmin') navigate('/dashboard');
+    else if (role === 'vendor') navigate('/store-dashboard');
+    else navigate('/panel');
+  };
+
+  const handleSubmit = async e => {
+    if (mode === 'register') {
+      if (!isVerifying) {
+        await handleSendCode(e);
+      } else {
+        await handleVerifyAndRegister(e);
+      }
+      return;
+    }
+
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const result = await login(form.email, form.password);
     setLoading(false);
 
     if (result?.error) { setError(result.error); return; }
@@ -103,51 +157,108 @@ const Auth = () => {
               transition={{ duration: 0.22 }}
             >
               <div className={styles.formHeader}>
-                <h1>{mode === 'login' ? 'Xoş Gəldiniz!' : 'Hesab Yaradın'}</h1>
-                <p>{mode === 'login' ? 'AtlasMall hesabınıza daxil olun' : 'Qeydiyyatdan keçin, pulsuz!'}</p>
+                <h1>{mode === 'login' ? 'Xoş Gəldiniz!' : (isVerifying ? 'E-poçtu Təsdiqləyin' : 'Hesab Yaradın')}</h1>
+                <p>{mode === 'login' ? 'AtlasMall hesabınıza daxil olun' : (isVerifying ? `${form.email} ünvanına daxil edilmiş 6 rəqəmli kodu yazın` : 'Qeydiyyatdan keçin, pulsuz!')}</p>
                 {error && <div className={styles.errorMessage}>{error}</div>}
+                {infoMsg && <div style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#D4AF37', border: '1px solid rgba(212, 175, 55, 0.3)', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '12px', lineHeight: '1.4' }}>{infoMsg}</div>}
               </div>
 
-              {mode === 'register' && (
+              {mode === 'register' && !isVerifying && (
+                <>
+                  <div className={styles.inputGroup}>
+                    <label>Ad Soyad</label>
+                    <div className={styles.inputBox}>
+                      <User size={18} />
+                      <input type="text" name="name" placeholder="Adınızı daxil edin"
+                        value={form.name} onChange={handleChange} required />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label>E-poçt (Gmail)</label>
+                    <div className={styles.inputBox}>
+                      <Mail size={18} />
+                      <input type="email" name="email" placeholder="email@example.com"
+                        value={form.email} onChange={handleChange} required />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label>Şifrə</label>
+                    <div className={styles.inputBox}>
+                      <Lock size={18} />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password" placeholder="••••••••"
+                        value={form.password} onChange={handleChange} required
+                      />
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {mode === 'register' && isVerifying && (
                 <div className={styles.inputGroup}>
-                  <label>Ad Soyad</label>
+                  <label>6 Rəqəmli Təsdiqləmə Kodu</label>
                   <div className={styles.inputBox}>
-                    <User size={18} />
-                    <input type="text" name="name" placeholder="Adınızı daxil edin"
-                      value={form.name} onChange={handleChange} required />
+                    <ShieldCheck size={18} color="#D4AF37" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="123456"
+                      style={{ letterSpacing: '4px', fontSize: '1.2rem', fontWeight: 'bold' }}
+                      value={verificationCode}
+                      onChange={e => setVerificationCode(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                    <button type="button" onClick={() => setIsVerifying(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.8rem' }}>
+                      ← Məlumatları dəyiş
+                    </button>
+                    <button type="button" onClick={handleSendCode} style={{ background: 'none', border: 'none', color: '#D4AF37', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <RefreshCw size={12} /> Yenidən kod göndər
+                    </button>
                   </div>
                 </div>
               )}
 
-              <div className={styles.inputGroup}>
-                <label>E-poçt</label>
-                <div className={styles.inputBox}>
-                  <Mail size={18} />
-                  <input type="email" name="email" placeholder="email@example.com"
-                    value={form.email} onChange={handleChange} required />
-                </div>
-              </div>
+              {mode === 'login' && (
+                <>
+                  <div className={styles.inputGroup}>
+                    <label>E-poçt</label>
+                    <div className={styles.inputBox}>
+                      <Mail size={18} />
+                      <input type="email" name="email" placeholder="email@example.com"
+                        value={form.email} onChange={handleChange} required />
+                    </div>
+                  </div>
 
-              <div className={styles.inputGroup}>
-                <label>
-                  Şifrə
-                  {mode === 'login' && <span className={styles.forgot}>Şifrəni unutdunuz?</span>}
-                </label>
-                <div className={styles.inputBox}>
-                  <Lock size={18} />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password" placeholder="••••••••"
-                    value={form.password} onChange={handleChange} required
-                  />
-                  <button type="button" className={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
+                  <div className={styles.inputGroup}>
+                    <label>
+                      Şifrə
+                      <span className={styles.forgot}>Şifrəni unutdunuz?</span>
+                    </label>
+                    <div className={styles.inputBox}>
+                      <Lock size={18} />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password" placeholder="••••••••"
+                        value={form.password} onChange={handleChange} required
+                      />
+                      <button type="button" className={styles.eyeBtn} onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <button type="submit" className={styles.submitBtn} disabled={loading}>
-                {loading ? <span className={styles.spinner} /> : (mode === 'login' ? 'Daxil Ol' : 'Qeydiyyatdan Keç')}
+                {loading ? <span className={styles.spinner} /> : (mode === 'login' ? 'Daxil Ol' : (isVerifying ? 'Təsdiqlə və Qeydiyyatı Tamamla' : 'Təsdiqləmə Kodu Göndər'))}
               </button>
 
               <div className={styles.divider}><span>və ya</span></div>

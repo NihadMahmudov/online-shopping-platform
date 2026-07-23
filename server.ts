@@ -2,11 +2,20 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import multer from 'multer';
+import { Resend } from 'resend';
 import { createServer as createViteServer } from 'vite';
 import { query, getPool } from './src/db/index.js';
 import { initDatabase } from './src/db/initDb.js';
 import { uploadImageToCloudinary, initCloudinary } from './src/services/cloudinary.js';
 import { products as fallbackProducts, categories as fallbackCategories } from './src/data/products.js';
+
+let resendClient: Resend | null = null;
+function getResend() {
+  if (!resendClient && process.env.RESEND_API_KEY) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -508,6 +517,90 @@ app.delete('/api/users/:email', async (req, res) => {
       return res.json({ success: true, message: 'İstifadəçi bazadan silindi.' });
     }
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// 8. EMAIL VERIFICATION (RESEND)
+// ─────────────────────────────────────────────────────────────
+app.post('/api/auth/send-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'E-poçt ünvanı vacibdir.' });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    if (getPool()) {
+      await query(
+        `INSERT INTO verification_codes (email, code, created_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         ON CONFLICT (email) DO UPDATE SET code = EXCLUDED.code, created_at = CURRENT_TIMESTAMP`,
+        [email.toLowerCase(), code]
+      );
+    }
+
+    const resend = getResend();
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: 'AtlasMall <onboarding@resend.dev>',
+          to: [email],
+          subject: 'AtlasMall - Hesab Təsdiqləmə Kodu',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; color: #333;">
+              <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #eee;">
+                <h2 style="color: #111; font-size: 22px; margin-bottom: 10px;">AtlasMall-a Xoş Gəldiniz!</h2>
+                <p style="color: #555; line-height: 1.5;">Qeydiyyatınızı tamamlamaq üçün təsdiqləmə kodunuz:</p>
+                <div style="background: #0f172a; color: #f59e0b; font-size: 32px; font-weight: bold; letter-spacing: 6px; padding: 18px; text-align: center; border-radius: 8px; margin: 25px 0;">
+                  ${code}
+                </div>
+                <p style="color: #888; font-size: 13px;">Əgər bu sorğunu siz etməmisinizsə, bu məktubu nəzərə almayın.</p>
+              </div>
+            </div>
+          `
+        });
+        return res.json({ success: true, message: 'Təsdiqləmə kodu Gmail ünvanınıza göndərildi.' });
+      } catch (emailErr) {
+        console.error('Resend email error:', emailErr);
+        return res.status(500).json({ error: 'E-poçt göndərilərkən xəta baş verdi: ' + (emailErr.message || '') });
+      }
+    } else {
+      return res.json({ 
+        success: true, 
+        message: 'Təsdiqləmə kodu yaradıldı. (RESEND_API_KEY təyin edilməyib)',
+        devCode: code 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/verify-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'E-poçt və kod vacibdir.' });
+    }
+
+    if (getPool()) {
+      const result = await query(
+        'SELECT * FROM verification_codes WHERE LOWER(email) = LOWER($1)',
+        [email]
+      );
+      if (result.rows.length === 0 || result.rows[0].code !== code.toString().trim()) {
+        return res.status(400).json({ error: 'Təsdiqləmə kodu yanlışdır.' });
+      }
+
+      await query('DELETE FROM verification_codes WHERE LOWER(email) = LOWER($1)', [email]);
+      return res.json({ success: true, message: 'E-poçt uğurla təsdiqləndi.' });
+    }
+
+    return res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

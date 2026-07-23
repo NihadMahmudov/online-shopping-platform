@@ -112,6 +112,15 @@ export async function initDatabase() {
       );
     `);
 
+    // 7. Create VERIFICATION_CODES table
+    await query(`
+      CREATE TABLE IF NOT EXISTS verification_codes (
+        email VARCHAR(255) PRIMARY KEY,
+        code VARCHAR(10) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Check if initial users exist
     const userRes = await query('SELECT COUNT(*) FROM users');
     if (parseInt(userRes.rows[0].count) === 0) {

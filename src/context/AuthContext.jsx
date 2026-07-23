@@ -194,6 +194,43 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => setUser(null);
 
+  // ── Email Verification (Resend) ───────────────────────
+  const sendVerificationCode = async (email) => {
+    try {
+      const res = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Kod göndərilərkən xəta baş verdi.' };
+      }
+      return data;
+    } catch (err) {
+      console.error('Send code error:', err);
+      return { error: 'Serverlə əlaqə kəsildi.' };
+    }
+  };
+
+  const verifyEmailCode = async (email, code) => {
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Kod yanlışdır.' };
+      }
+      return data;
+    } catch (err) {
+      console.error('Verify code error:', err);
+      return { error: 'Serverlə əlaqə kəsildi.' };
+    }
+  };
+
   // ── User Management (SuperAdmin) ───────────────────────
   const deleteUser = async (email) => {
     if (email === DEFAULT_SUPERADMIN.email) return;
@@ -266,6 +303,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       user, users, customers, vendors, pendingVendors, approvedVendors,
       register, registerVendor, login, logout,
+      sendVerificationCode, verifyEmailCode,
       deleteUser, suspendUser, approveVendor, rejectVendor,
       isSuperAdmin, isVendor, isUser, isAdmin
     }}>
