@@ -27,10 +27,10 @@ const BottomBar = () => {
       active: location.pathname === '/panel' && location.state?.activeTab === 'kataloq'
     },
     { 
-      onClick: () => navigate('/panel', { state: { activeTab: 'stores' } }), 
+      onClick: () => navigate('/panel', { state: { activeTab: 'categories' } }), 
       icon: <Compass size={22} />, 
-      label: 'Mağazalar',
-      active: location.pathname === '/panel' && location.state?.activeTab === 'stores'
+      label: 'Kateqoriyalar',
+      active: location.pathname === '/panel' && location.state?.activeTab === 'categories'
     },
     { 
       onClick: () => navigate('/panel', { state: { activeTab: 'wishlist' } }), 

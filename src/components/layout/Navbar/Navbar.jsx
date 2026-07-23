@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2, ShoppingBag, Store, Heart, ShoppingCart } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2, ShoppingBag, Store, Heart, ShoppingCart, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -61,9 +61,54 @@ const Navbar = () => {
   };
 
   const navLinks = user
-    ? []
+    ? isVendor
+      ? [
+          { to: '/store-dashboard', label: 'Mağaza Paneli', icon: <Store size={20} /> },
+          { to: '/shop', label: 'Kataloq', icon: <ShoppingBag size={20} /> },
+          { to: '/categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} /> },
+        ]
+      : isSuperAdmin
+      ? [
+          { to: '/dashboard', label: 'Admin Paneli', icon: <Settings size={20} /> },
+          { to: '/shop', label: 'Kataloq', icon: <ShoppingBag size={20} /> },
+          { to: '/categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} /> },
+        ]
+      : [
+          { 
+            label: 'Kataloq', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'kataloq' } }), 
+            icon: <ShoppingBag size={20} /> 
+          },
+          { 
+            label: 'Kateqoriyalar', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'categories' } }), 
+            icon: <LayoutGrid size={20} /> 
+          },
+          { 
+            label: 'Mağazalar', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'stores' } }), 
+            icon: <Store size={20} /> 
+          },
+          { 
+            label: 'Sevimlilər', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'wishlist' } }), 
+            icon: <Heart size={20} /> 
+          },
+          { 
+            label: 'Səbət', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'cart' } }), 
+            icon: <ShoppingCart size={20} /> 
+          },
+          { 
+            label: 'Sifarişlərim', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'orders' } }), 
+            icon: <Package size={20} /> 
+          },
+        ]
     : [
         { to: '/', label: t('navbar.home'), icon: <Home size={20} /> },
+        { to: '/shop', label: 'Kataloq', icon: <ShoppingBag size={20} /> },
+        { to: '/categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} /> },
         { to: '/about', label: t('navbar.about'), icon: <User size={20} /> },
         { to: '/contact', label: t('navbar.contact'), icon: <Package size={20} /> },
       ];

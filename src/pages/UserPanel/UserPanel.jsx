@@ -9,6 +9,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Shop from '../Shop/Shop';
+import Categories from '../Categories/Categories';
 import Cart from '../Cart/Cart';
 import Wishlist from '../Wishlist/Wishlist';
 import Orders from '../Orders/Orders';
@@ -72,6 +73,7 @@ const UserPanel = () => {
 
   const baseTabs = [
     { id: 'kataloq', label: 'Kataloq', icon: <ShoppingBag size={20} />, count: null },
+    { id: 'categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} />, count: null },
     { id: 'stores', label: 'Mağazalar', icon: <Store size={20} />, count: null },
     { id: 'wishlist', label: 'Sevimlilər', icon: <Heart size={20} />, count: wishlist.length },
     { id: 'cart', label: 'Səbət', icon: <ShoppingCart size={20} />, count: cartItemCount },
@@ -227,6 +229,7 @@ const UserPanel = () => {
             className={styles.tabWrapper}
           >
              {activeTab === 'kataloq' && <Shop inPanel={true} />}
+             {activeTab === 'categories' && <Categories inPanel={true} />}
             {activeTab === 'stores' && (
               <div className={styles.storesTab}>
                 <div className={styles.tabHeader}>

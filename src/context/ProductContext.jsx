@@ -99,30 +99,42 @@ export const ProductProvider = ({ children }) => {
     return demoProducts;
   });
 
+  const defaultCategoriesList = [
+    { id: 'all', label: 'Hamısı', name: 'Hamısı', img: '' },
+    { id: 'women', label: 'Qadın Geyimləri', name: 'Qadın Geyimləri', img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80' },
+    { id: 'men', label: 'Kişi Geyimləri', name: 'Kişi Geyimləri', img: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80' },
+    { id: 'kids', label: 'Uşaq Geyimləri', name: 'Uşaq Geyimləri', img: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&q=80' },
+    { id: 'shoes', label: 'Ayaqqabı & Çanta', name: 'Ayaqqabı & Çanta', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80' },
+    { id: 'accessories', label: 'Aksesuar & Saat', name: 'Aksesuar & Saat', img: 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cf4?auto=format&fit=crop&q=80' },
+    { id: 'jewelry', label: 'Zərgərlik', name: 'Zərgərlik', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80' },
+    { id: 'beauty', label: 'Kosmetika & Qulluq', name: 'Kosmetika & Qulluq', img: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80' },
+    { id: 'decor', label: 'Ev & Dekor', name: 'Ev & Dekor', img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80' },
+    { id: 'candles', label: 'Şamlar', name: 'Şamlar', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&q=80' },
+    { id: 'sets', label: 'Hədiyyə Dəstləri', name: 'Hədiyyə Dəstləri', img: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80' },
+    { id: 'electronics', label: 'Elektronika', name: 'Elektronika', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80' }
+  ];
+
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('atlas_categories');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(c => ({
+          const mapped = parsed.map(c => ({
             ...c,
             label: c.label || c.name || c.id,
             name: c.name || c.label || c.id
           }));
+          // Merge defaults if missing
+          const existingIds = new Set(mapped.map(c => c.id));
+          const missing = defaultCategoriesList.filter(d => !existingIds.has(d.id));
+          return [...mapped, ...missing];
         }
       } catch (e) {
         console.warn('Failed to parse categories storage:', e);
       }
     }
-    return [
-      { id: 'all', label: 'Hamısı', name: 'Hamısı', img: '' },
-      { id: 'decor', label: 'Dekor', name: 'Dekor', img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80' },
-      { id: 'accessories', label: 'Aksesuar', name: 'Aksesuar', img: 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cf4?auto=format&fit=crop&q=80' },
-      { id: 'jewelry', label: 'Zərgərlik', name: 'Zərgərlik', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80' },
-      { id: 'candles', label: 'Şamlar', name: 'Şamlar', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&q=80' },
-      { id: 'sets', label: 'Hədiyyə Dəstləri', name: 'Hədiyyə Dəstləri', img: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80' }
-    ];
+    return defaultCategoriesList;
   });
 
   const [badges, setBadges] = useState(() => {
