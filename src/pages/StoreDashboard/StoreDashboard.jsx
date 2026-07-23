@@ -1380,7 +1380,7 @@ const StoreDashboard = () => {
                         value={settingsForm.address} 
                         onChange={handleSettingsChange} 
                         className={styles.settingsInput}
-                        placeholder="Bakı, Nizami küç. 45"
+                        placeholder="Mingəçevir, H.Əliyev pr. 12"
                       />
                     </div>
 

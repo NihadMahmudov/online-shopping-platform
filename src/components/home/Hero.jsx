@@ -49,7 +49,7 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Bakının ən seçkin geyim mağazalarını kəşf edin. <br />
+            Mingəçevirin ən seçkin geyim mağazalarını kəşf edin. <br />
             Mağaza-mağaza gəzmədən trendləri izləyin və yerli brendləri dəstəkləyin.
           </motion.p>
 

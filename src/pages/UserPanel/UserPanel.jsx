@@ -55,7 +55,7 @@ const UserPanel = () => {
     return {
       id: v.storeId,
       name: v.storeName || v.name,
-      location: profile.address || 'Bakı, Nizami küçəsi',
+      location: profile.address || 'Mingəçevir, Mərkəz',
       badge: badge,
       count: `${storeProductCount} məhsul`,
     };

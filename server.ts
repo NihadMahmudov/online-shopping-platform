@@ -11,8 +11,9 @@ import { products as fallbackProducts, categories as fallbackCategories } from '
 
 let resendClient: Resend | null = null;
 function getResend() {
-  if (!resendClient && process.env.RESEND_API_KEY) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+  const apiKey = process.env.RESEND_API_KEY || 're_3MqmhJ7P_7fNquDpgajFcPwXcLTKyNQtc';
+  if (!resendClient && apiKey) {
+    resendClient = new Resend(apiKey);
   }
   return resendClient;
 }
@@ -546,7 +547,7 @@ app.post('/api/auth/send-code', async (req, res) => {
     const resend = getResend();
     if (resend) {
       try {
-        await resend.emails.send({
+        const sendResult = await resend.emails.send({
           from: 'AtlasMall <onboarding@resend.dev>',
           to: [email],
           subject: 'AtlasMall - Hesab Təsdiqləmə Kodu',
@@ -563,15 +564,23 @@ app.post('/api/auth/send-code', async (req, res) => {
             </div>
           `
         });
+
+        if (sendResult.error) {
+          console.error('Resend API Returned Error:', sendResult.error);
+          return res.status(400).json({ 
+            error: sendResult.error.message || 'Resend vasitəsilə e-poçt göndərilə bilmədi.'
+          });
+        }
+
         return res.json({ success: true, message: 'Təsdiqləmə kodu Gmail ünvanınıza göndərildi.' });
-      } catch (emailErr) {
+      } catch (emailErr: any) {
         console.error('Resend email error:', emailErr);
-        return res.status(500).json({ error: 'E-poçt göndərilərkən xəta baş verdi: ' + (emailErr.message || '') });
+        return res.status(500).json({ error: 'E-poçt göndərilərkən xəta baş verdi: ' + (emailErr?.message || '') });
       }
     } else {
       return res.json({ 
         success: true, 
-        message: 'Təsdiqləmə kodu yaradıldı. (RESEND_API_KEY təyin edilməyib)',
+        message: 'Təsdiqləmə kodu yaradıldı.',
         devCode: code 
       });
     }

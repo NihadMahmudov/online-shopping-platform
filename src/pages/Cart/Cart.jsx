@@ -213,7 +213,7 @@ const Cart = ({ inPanel = false }) => {
                 <MapPin size={18} />
                 <input 
                   type="text" 
-                  placeholder="Çatdırılma ünvanı (Məs: 28 May m/s)" 
+                  placeholder="Çatdırılma ünvanı (Məs: Mingəçevir, Mərkəz)" 
                   value={address} 
                   onChange={(e) => setAddress(e.target.value)} 
                 />

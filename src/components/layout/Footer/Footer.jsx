@@ -32,19 +32,10 @@ const Footer = () => {
         <div className={styles.contact}>
           <h3>Əlaqə</h3>
           <ul>
-            <li><MapPin size={18} /> Bakı şəhəri, Nizami küç. 45</li>
+            <li><MapPin size={18} /> Mingəçevir şəhəri, H.Əliyev pr. 12</li>
             <li><Phone size={18} /> +994 50 123 45 67</li>
             <li><Mail size={18} /> info@atlasmall.com</li>
           </ul>
-        </div>
-
-        <div className={styles.newsletter}>
-          <h3>Yeniliklərdən Xəbərdar Ol</h3>
-          <p>Yeni kolleksiyalar və endirimlər üçün abunə olun.</p>
-          <form className={styles.subscribeForm}>
-            <input type="email" placeholder="E-poçt ünvanınız" />
-            <button type="submit">Abunə Ol</button>
-          </form>
         </div>
       </div>
       <div className={styles.bottom}>

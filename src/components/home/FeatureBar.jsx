@@ -7,7 +7,7 @@ const FeatureBar = () => {
     {
       icon: <Truck size={24} className={styles.icon} />,
       title: 'Sürətli Çatdırılma',
-      desc: 'Bakı daxili 24 saat ərzində sürətli çatdırılma xidməti'
+      desc: 'Mingəçevir daxili operativ çatdırılma xidməti'
     },
     {
       icon: <Gift size={24} className={styles.icon} />,

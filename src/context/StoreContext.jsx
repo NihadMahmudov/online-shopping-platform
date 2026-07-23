@@ -12,7 +12,7 @@ export const StoreProvider = ({ children }) => {
       banner: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 50 111 22 33',
       email: 'vogue@bame.az',
-      address: 'Bakı, Nizami küçəsi'
+      address: 'Mingəçevir, Mərkəz'
     },
     modernist: {
       storeName: 'Modernist',
@@ -20,7 +20,7 @@ export const StoreProvider = ({ children }) => {
       banner: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 51 222 33 44',
       email: 'modernist@bame.az',
-      address: 'Bakı, 28 May'
+      address: 'Mingəçevir, Energetik'
     },
     zarif_atelye: {
       storeName: 'Zərif Atelye',
@@ -28,23 +28,23 @@ export const StoreProvider = ({ children }) => {
       banner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 55 333 44 55',
       email: 'zarif@bame.az',
-      address: 'Bakı, İçərişəhər'
+      address: 'Mingəçevir, Kür sahili'
     },
     style_lab: {
       storeName: 'Style Lab',
-      description: 'Küçə dəbi və premium idman geyimlərinin laboratoriyası. Bakının ən trend üslub bələdçisi.',
+      description: 'Küçə dəbi və premium idman geyimlərinin laboratoriyası. Mingəçevirin ən trend üslub bələdçisi.',
       banner: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 70 444 55 66',
       email: 'stylelab@bame.az',
-      address: 'Bakı, Port Baku'
+      address: 'Mingəçevir, Günəşli'
     },
     baku_closet: {
-      storeName: 'Baku Closet',
+      storeName: 'Məngəçevir Closet',
       description: 'Vintage geyimlər, retro aksesuarlar və təkrarolunmaz klassik geyim şkafları. Zamanın sınağından keçmiş dərslər.',
       banner: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 99 555 66 77',
       email: 'closet@bame.az',
-      address: 'Bakı, Fəvvarələr Meydanı'
+      address: 'Mingəçevir, İşıqlar'
     },
     silk_way: {
       storeName: 'Silk Way',
@@ -52,7 +52,7 @@ export const StoreProvider = ({ children }) => {
       banner: 'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&q=80&w=1200',
       phone: '+994 12 400 90 90',
       email: 'silkway@bame.az',
-      address: 'Bakı, Səbail'
+      address: 'Mingəçevir, Puşkin k.'
     }
   };
 
@@ -78,7 +78,7 @@ export const StoreProvider = ({ children }) => {
     // Get store name from registered users
     const savedUsers = localStorage.getItem('atlas_users_db');
     let storeName = 'Yeni Mağaza';
-    let address = 'Bakı, Nizami küçəsi';
+    let address = 'Mingəçevir, Mərkəz';
     if (savedUsers) {
       try {
         const usersList = JSON.parse(savedUsers);

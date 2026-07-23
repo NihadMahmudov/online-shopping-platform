@@ -49,7 +49,7 @@ const StorePage = () => {
   const logo = storeProfile.logo || '';
   const phone = storeProfile.phone || '+994 50 123 45 67';
   const email = storeProfile.email || 'support@atlasmall.com';
-  const address = storeProfile.address || 'Bakı, Azərbaycan';
+  const address = storeProfile.address || 'Mingəçevir, Azərbaycan';
 
   return (
     <div className={`container ${styles.page}`}>

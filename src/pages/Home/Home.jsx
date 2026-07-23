@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { MapPin, ArrowRight, Truck, ShieldCheck, Sparkles, Star, Store, Plus, CheckCircle, Award, UserPlus, UploadCloud, Rocket } from 'lucide-react';
+import { MapPin, ArrowRight, Truck, ShieldCheck, Sparkles, Star, Store, Plus, Search, ChevronDown, Building2 } from 'lucide-react';
 import { useProducts } from '../../context/ProductContext';
 import { useAuth } from '../../context/AuthContext';
 import { useStore } from '../../context/StoreContext';
@@ -14,7 +14,9 @@ const Home = () => {
   const { products } = useProducts();
   const { user, users } = useAuth();
   const { getStoreProfile } = useStore();
-  const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly', 'halfYearly', 'yearly'
+
+  const [storeSearch, setStoreSearch] = useState('');
+  const [visibleStoreCount, setVisibleStoreCount] = useState(6);
 
   // Dynamically load boutiques/stores from AuthContext
   const vendorsList = users.filter(u => u.role === 'vendor');
@@ -36,11 +38,19 @@ const Home = () => {
     return {
       id: v.storeId,
       name: v.storeName || v.name,
-      location: profile.address || 'Bakı, Nizami küçəsi',
+      location: profile.address || 'Mingəçevir, Mərkəz',
       badge: badge,
       count: `${storeProductCount} məhsul`,
+      logo: profile.logo,
     };
   });
+
+  const filteredBoutiques = boutiques.filter(b => {
+    return b.name.toLowerCase().includes(storeSearch.toLowerCase()) || 
+           b.location.toLowerCase().includes(storeSearch.toLowerCase());
+  });
+
+  const displayedBoutiques = filteredBoutiques.slice(0, visibleStoreCount);
 
   const handleBoutiqueClick = (id) => {
     navigate(`/store/${id}`);
@@ -109,7 +119,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              "Bakının küçələrində gəzərək kəşf etdiyiniz butiklərin <span>rəqəmsal vitrini</span>. Yerli üslub, bir kliklə."
+              "Mingəçevir küçələrində gəzərək kəşf etdiyiniz butiklərin <span>rəqəmsal vitrini</span>. Yerli üslub, bir kliklə."
             </motion.h2>
             <span className={styles.manifestAuthor}>Məkan redaksiyası</span>
           </div>
@@ -117,7 +127,7 @@ const Home = () => {
       </section>
 
       {/* 5. Şəhərin Seçkin Ünvanları (Boutiques Directory) */}
-      <section className={styles.boutiquesSection}>
+      <section className={styles.boutiquesSection} id="stores-directory">
         <div className="container">
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitleGroup}>
@@ -125,286 +135,107 @@ const Home = () => {
               <h2 className={styles.sectionTitle}>Şəhərin seçkin ünvanları</h2>
             </div>
             <span className={styles.headerLink}>
-              Bütün mağazalar ({boutiques.length})
+              Aktiv mağazalar ({boutiques.length})
             </span>
           </div>
 
-          <div className={styles.boutiquesGrid}>
-            {boutiques.map((boutique, index) => (
-              <motion.div 
-                key={boutique.id}
-                className={styles.boutiqueCard}
-                onClick={() => handleBoutiqueClick(boutique.id)}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
-              >
-                <div className={styles.boutiqueHeader}>
-                  <h3 className={styles.boutiqueName}>{boutique.name}</h3>
-                  <span className={styles.boutiqueBadge}>{boutique.badge}</span>
-                </div>
-
-                <div className={styles.boutiqueDetails}>
-                  <div className={styles.detailItem}>
-                    <MapPin size={14} className={styles.detailIcon} />
-                    <span>{boutique.location}</span>
-                  </div>
-                  <div className={styles.detailItem}>
-                    <Store size={14} className={styles.detailIcon} />
-                    <span>{boutique.count}</span>
-                  </div>
-                </div>
-
-                <button className={styles.boutiqueAction}>
-                  Mağazaya bax <ArrowRight size={14} />
+          {/* Search Bar */}
+          <div className={styles.storeFilterBar}>
+            <div className={styles.storeSearchBox}>
+              <Search size={18} className={styles.storeSearchIcon} />
+              <input 
+                type="text" 
+                placeholder="Mağaza adı və ya ünvan axtarın..." 
+                value={storeSearch}
+                onChange={(e) => {
+                  setStoreSearch(e.target.value);
+                  setVisibleStoreCount(6);
+                }}
+                className={styles.storeSearchInput}
+              />
+              {storeSearch && (
+                <button 
+                  className={styles.clearSearchBtn}
+                  onClick={() => setStoreSearch('')}
+                >
+                  ✕
                 </button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Mağaza Ortaqlığı, Satışa Başlama Rəhbəri və Abunəlik Planları */}
-      <section className={styles.vendorOnboardingSection} id="sell-on-atlas">
-        <div className="container">
-          
-          {/* Billing Switcher Toggle */}
-          <div className={styles.billingToggleContainer}>
-            <span className={`${styles.billingToggleLabel} ${billingPeriod === 'monthly' ? styles.billingToggleLabelActive : ''}`}>
-              Aylıq Ödəniş
-            </span>
-            <div 
-              className={styles.billingToggle} 
-              id="billing-switcher"
-            >
-              <div className={`
-                ${styles.billingToggleActiveBg} 
-                ${billingPeriod === 'halfYearly' ? styles.billingToggleActiveBgHalfYearly : ''} 
-                ${billingPeriod === 'yearly' ? styles.billingToggleActiveBgYearly : ''}
-              `} />
-              <button 
-                type="button"
-                className={`${styles.billingToggleOption} ${billingPeriod === 'monthly' ? styles.billingToggleOptionActive : ''}`}
-                onClick={() => setBillingPeriod('monthly')}
-              >
-                Aylıq
-              </button>
-              <button 
-                type="button"
-                className={`${styles.billingToggleOption} ${billingPeriod === 'halfYearly' ? styles.billingToggleOptionActive : ''}`}
-                onClick={() => setBillingPeriod('halfYearly')}
-              >
-                6 Aylıq <span className={styles.saveTag}>-10%</span>
-              </button>
-              <button 
-                type="button"
-                className={`${styles.billingToggleOption} ${billingPeriod === 'yearly' ? styles.billingToggleOptionActive : ''}`}
-                onClick={() => setBillingPeriod('yearly')}
-              >
-                İllik <span className={styles.saveTag}>-17%</span>
-              </button>
+              )}
             </div>
-            <span className={`${styles.billingToggleLabel} ${billingPeriod === 'yearly' ? styles.billingToggleLabelActive : ''}`}>
-              İllik Ödəniş (Ən sərfəli)
-            </span>
           </div>
 
-          <div className={styles.onboardingGrid}>
-            
-            {/* Guide & Steps */}
-            <div className={styles.onboardingLeft}>
-              <span className={styles.sectionPre} style={{ color: '#d4af37' }}>ATLASMALL-DA SATIŞ</span>
-              <h3>Necə qeydiyyatdan keçib məhsul yerləşdirmək olar?</h3>
-              <p>
-                AtlasMall platforması vasitəsilə fiziki butikinizi rəqəmsal dünyaya daşımaq və Bakının minlərlə aktiv alıcısına birbaşa satış etmək cəmi bir neçə dəqiqə çəkir.
-              </p>
-
-              <div className={styles.onboardingSteps}>
+          {/* Boutiques Responsive Grid */}
+          {displayedBoutiques.length > 0 ? (
+            <div className={styles.boutiquesGrid}>
+              {displayedBoutiques.map((boutique, index) => (
                 <motion.div 
-                  className={styles.onboardingStep}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  key={boutique.id}
+                  className={styles.boutiqueCard}
+                  onClick={() => handleBoutiqueClick(boutique.id)}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: (index % 6) * 0.05 }}
                 >
-                  <div className={styles.stepIconBadge}>1</div>
-                  <div className={styles.stepMeta}>
-                    <h4>Pulsuz Qeydiyyatdan Keçin</h4>
-                    <p>Mağazanızın adını, əlaqə məlumatlarını daxil edərək saniyələr içində satıcı hesabı yaradın.</p>
+                  <div className={styles.boutiqueCardInner}>
+                    <div className={styles.boutiqueHeader}>
+                      <div className={styles.boutiqueTitleArea}>
+                        <div className={styles.storeAvatar}>
+                          {boutique.logo ? (
+                            <img src={boutique.logo} alt={boutique.name} className={styles.avatarImg} />
+                          ) : (
+                            <Building2 size={18} className={styles.avatarIcon} />
+                          )}
+                        </div>
+                        <h3 className={styles.boutiqueName}>{boutique.name}</h3>
+                      </div>
+                      <span className={styles.boutiqueBadge}>{boutique.badge}</span>
+                    </div>
+
+                    <div className={styles.boutiqueDetails}>
+                      <div className={styles.detailItem}>
+                        <MapPin size={14} className={styles.detailIcon} />
+                        <span>{boutique.location}</span>
+                      </div>
+                      <div className={styles.detailItem}>
+                        <Store size={14} className={styles.detailIcon} />
+                        <span>{boutique.count}</span>
+                      </div>
+                    </div>
+
+                    <button className={styles.boutiqueAction}>
+                      Mağazaya bax <ArrowRight size={14} />
+                    </button>
                   </div>
                 </motion.div>
-
-                <motion.div 
-                  className={styles.onboardingStep}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                >
-                  <div className={styles.stepIconBadge}>2</div>
-                  <div className={styles.stepMeta}>
-                    <h4>Abunəlik Planı Seçin</h4>
-                    <p>Biznesinizə ən uyğun olan Aylıq (10 AZN) və ya fərdi üstünlüklərə malik İllik abunəliyi aktivləşdirin.</p>
-                  </div>
-                </motion.div>
-
-                <motion.div 
-                  className={styles.onboardingStep}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                >
-                  <div className={styles.stepIconBadge}>3</div>
-                  <div className={styles.stepMeta}>
-                    <h4>Məhsulları Yerləşdirin</h4>
-                    <p>Satıcı panelinizə daxil olaraq məhsullarınızın şəkillərini, təsvirlərini və qiymətlərini rahatlıqla əlavə edin.</p>
-                  </div>
-                </motion.div>
-
-                <motion.div 
-                  className={styles.onboardingStep}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                >
-                  <div className={styles.stepIconBadge}>4</div>
-                  <div className={styles.stepMeta}>
-                    <h4>Sifarişləri Qəbul Edin</h4>
-                    <p>Məhsullarınız dərhal ana səhifədə görünəcək. Sifarişləri idarə edin, qalan işləri (kuryer və ödəniş) biz həll edək!</p>
-                  </div>
-                </motion.div>
-              </div>
+              ))}
             </div>
-
-            {/* Pricing / Subscriptions */}
-            <div className={styles.pricingContainer}>
-
-              {/* Monthly Plan */}
-              <div className={styles.pricingCard}>
-                <div>
-                  <h4 className={styles.pricingTitle}>Aylıq Abunə</h4>
-                  <p className={styles.pricingDescription}>Fəaliyyətə yeni başlayan butiklər üçün çevik və rahat seçim.</p>
-                  <div className={styles.pricingPriceRow}>
-                    <span className={styles.priceAmount}>10 AZN</span>
-                    <span className={styles.pricePeriod}>/ ay</span>
-                  </div>
-                  <div className={styles.pricingFeatures}>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Dinamik mağaza səhifəsi və loqo</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Limitsiz məhsul əlavə etmə imkanı</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Sürətli Bakıdaxili kuryer inteqrasiyası</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>7/24 Texniki və satıcı dəstəyi</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  className={`${styles.pricingCtaBtn} ${styles.lightCtaBtn}`}
-                  onClick={() => navigate('/store-login', { state: { mode: 'register' } })}
-                  id="cta-monthly"
-                >
-                  <Store size={16} /> Mağaza Açın
-                </button>
-              </div>
-
-              {/* Yearly Plan */}
-              <div className={`${styles.pricingCard} ${styles.popularPricingCard}`}>
-                <div className={styles.pricingBadge}>ƏN SƏRFƏLİ</div>
-                <div>
-                  <h4 className={styles.pricingTitle}>
-                    {billingPeriod === 'monthly' ? 'Aylıq VIP Abunə' : billingPeriod === 'halfYearly' ? '6 Aylıq VIP Abunə' : 'İllik VIP Abunə'}
-                  </h4>
-                  <p className={styles.pricingDescription}>Biznesini böyütmək və daha çox müştəri qazanmaq istəyənlər üçün.</p>
-                  <div className={styles.pricingPriceRow}>
-                    <span className={styles.priceAmount}>
-                      {billingPeriod === 'monthly' ? '99 AZN' : billingPeriod === 'halfYearly' ? '9.00 AZN' : '8.25 AZN'}
-                    </span>
-                    <span className={styles.pricePeriod}>
-                      {billingPeriod === 'monthly' ? '/ il' : billingPeriod === 'halfYearly' ? '/ ay (54 AZN/6ay)' : '/ ay (99 AZN/il)'}
-                    </span>
-                  </div>
-                  <div className={styles.pricingFeatures}>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span><strong>Bütün Aylıq imkanlar daxildir</strong></span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Ana səhifədə VIP önə çıxarılma</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Sosial media səhifələrimizdə reklam</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Xüsusi brend banner dizaynı dəstəyi</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  className={`${styles.pricingCtaBtn} ${styles.goldCtaBtn}`}
-                  onClick={() => navigate('/store-login', { state: { mode: 'register' } })}
-                  id="cta-yearly"
-                >
-                  <Award size={16} /> {billingPeriod === 'monthly' ? 'VIP Abunə Ol' : billingPeriod === 'halfYearly' ? '6 Aylıq Abunə Ol' : 'İllik Abunə Ol'}
-                </button>
-              </div>
-
-              {/* Enterprise / Corporate Plan */}
-              <div className={styles.pricingCard}>
-                <div className={styles.pricingBadge} style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', color: '#ffffff' }}>KORPORATİV</div>
-                <div>
-                  <h4 className={styles.pricingTitle}>Pro Korporativ</h4>
-                  <p className={styles.pricingDescription}>Böyük butiklər, çoxsaylı filiallar və tam avtomatlaşdırılmış satış istəyənlər üçün.</p>
-                  <div className={styles.pricingPriceRow}>
-                    <span className={styles.priceAmount}>
-                      {billingPeriod === 'monthly' ? '25 AZN' : billingPeriod === 'halfYearly' ? '22.50 AZN' : '20.75 AZN'}
-                    </span>
-                    <span className={styles.pricePeriod}>
-                      {billingPeriod === 'monthly' ? '/ ay' : billingPeriod === 'halfYearly' ? '/ ay (135 AZN/6ay)' : '/ ay (249 AZN/il)'}
-                    </span>
-                  </div>
-                  <div className={styles.pricingFeatures}>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span><strong>Bütün VIP imkanlar daxildir</strong></span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Limitsiz filial və ünvan dəstəyi</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>Detallı satış analitikası və hesabatlar</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>1C, Shopify və s. avtomatlaşdırılmış inteqrasiya</span>
-                    </div>
-                    <div className={styles.pricingFeatureItem}>
-                      <CheckCircle size={16} className={styles.pricingFeatureIcon} />
-                      <span>7/24 Prioritet VIP dəstək xidməti</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  className={`${styles.pricingCtaBtn} ${styles.lightCtaBtn}`}
-                  onClick={() => navigate('/store-login', { state: { mode: 'register' } })}
-                  id="cta-corporate"
-                  style={{ border: '1px solid #3b82f6' }}
-                >
-                  <Rocket size={16} style={{ color: '#3b82f6' }} /> Biznesə Başla
-                </button>
-              </div>
-
+          ) : (
+            <div className={styles.noStoresFound}>
+              <Building2 size={40} className={styles.noStoresIcon} />
+              <h4>Axtarışa uyğun mağaza tapılmadı</h4>
+              <p>Daxil etdiyiniz söz və ya filtrlərə uyğun nəticə Yoxdur.</p>
+              <button 
+                className={styles.resetFilterBtn}
+                onClick={() => setStoreSearch('')}
+              >
+                Axtarışı sıfırla
+              </button>
             </div>
+          )}
 
-          </div>
+          {/* Show More Button if more items exist */}
+          {filteredBoutiques.length > visibleStoreCount && (
+            <div className={styles.showMoreContainer}>
+              <button 
+                className={styles.showMoreBtn}
+                onClick={() => setVisibleStoreCount(prev => prev + 6)}
+              >
+                Daha çox mağaza göstər (+{filteredBoutiques.length - visibleStoreCount})
+                <ChevronDown size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -418,7 +249,7 @@ const Home = () => {
               </div>
               <div className={styles.trustInfo}>
                 <h4>Sürətli Çatdırılma</h4>
-                <p>Bakıdaxili bütün sifarişlər 24 saat ərzində birbaşa qapınıza çatdırılır.</p>
+                <p>Mingəçevirdaxili bütün sifarişlər operativ şəkildə birbaşa qapınıza çatdırılır.</p>
               </div>
             </div>
 
@@ -451,7 +282,7 @@ const Home = () => {
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitleGroup}>
               <span className={styles.sectionPre}>MÜŞTƏRİ RƏYLƏRİ</span>
-              <h2 className={styles.sectionTitle}>Bakılıların söylədikləri</h2>
+              <h2 className={styles.sectionTitle}>Mingəçevirlilərin söylədikləri</h2>
             </div>
           </div>
 
@@ -474,7 +305,7 @@ const Home = () => {
                 {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
               </div>
               <p className={styles.quoteText}>
-                "Bakıdakı dizayner butiklərinin bir yerdə olması, qiymətlərin şəffaf göstərilməsi əla ideyadır. Kuryer sifarişi elə həmin gün gətirdi, çox razı qaldım."
+                "Mingəçevirdəki dizayner butiklərinin bir yerdə olması, qiymətlərin şəffaf göstərilməsi əla ideyadır. Kuryer sifarişi elə həmin gün gətirdi, çox razı qaldım."
               </p>
               <div className={styles.authorMeta}>
                 <h5>Tural Əliyev</h5>
@@ -511,8 +342,8 @@ const Home = () => {
               <span className={styles.statLabel}>Məhsul Kataloqu</span>
             </div>
             <div className={styles.statItem}>
-              <span className={styles.statNum}>24s</span>
-              <span className={styles.statLabel}>Bakı Çatdırılması</span>
+              <span className={styles.statNum}>Sürətli</span>
+              <span className={styles.statLabel}>Mingəçevir Çatdırılması</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statNum}>12k+</span>
@@ -530,7 +361,7 @@ const Home = () => {
               <span className={styles.ctaPre}>BUTİKLƏR ÜÇÜN SƏNƏDLƏR</span>
               <h2 className={styles.ctaTitle}>Butikinizi <span>AtlasMall</span>-a əlavə edin.</h2>
               <p className={styles.ctaDesc}>
-                Platformamızda mağazanızı qeydiyyatdan keçirərək Bakıdakı minlərlə müştəriyə rəqəmsal olaraq çatın. İnventarınızı idarə edin, satışlarınızı artırın və brendinizi inkişaf etdirin.
+                Platformamızda mağazanızı qeydiyyatdan keçirərək Mingəçevirdəki minlərlə müştəriyə rəqəmsal olaraq çatın. İnventarınızı idarə edin, satışlarınızı artırın və brendinizi inkişaf etdirin.
               </p>
             </div>
             <button 

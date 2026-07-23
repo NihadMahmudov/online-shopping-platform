@@ -186,132 +186,356 @@
   }
 }
 
+/* ─── Filter & Search Bar ─── */
+.storeFilterBar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .storeFilterBar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.storeSearchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 420px;
+}
+
+.storeSearchIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.storeSearchInput {
+  width: 100%;
+  padding: 12px 38px 12px 42px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background-color: var(--white);
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: var(--transition-fast);
+  outline: none;
+}
+
+.storeSearchInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearSearchBtn:hover {
+  color: var(--text);
+}
+
+.locationFilterChips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.locationFilterChips::-webkit-scrollbar {
+  display: none;
+}
+
+.locationChip {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background-color: var(--white);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+}
+
+.locationChip:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.activeChip {
+  background-color: var(--secondary);
+  color: var(--white);
+  border-color: var(--secondary);
+}
+
+.activeChip:hover {
+  background-color: var(--secondary);
+  color: var(--white);
+}
+
+/* ─── Boutiques Responsive Grid ─── */
 .boutiquesGrid {
   display: grid;
-  grid-template-rows: repeat(2, auto);
-  grid-auto-flow: column;
-  overflow-x: auto;
-  gap: 20px;
-  padding: 10px 4px 20px;
-  scrollbar-width: thin;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
 }
 
-.boutiquesGrid::-webkit-scrollbar {
-  height: 6px;
+@media (min-width: 640px) {
+  .boutiquesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.boutiquesGrid::-webkit-scrollbar-track {
-  background: var(--bg-alt);
-  border-radius: var(--radius-full);
-}
-
-.boutiquesGrid::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--radius-full);
-}
-
-.boutiquesGrid::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+@media (min-width: 1024px) {
+  .boutiquesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .boutiqueCard {
   background-color: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 20px;
+  border-radius: var(--radius-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: var(--transition);
-  min-height: 160px;
   cursor: pointer;
-  width: 280px;
-  scroll-snap-align: start;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .boutiqueCard {
-    padding: 28px;
-    min-height: 180px;
-    width: 340px;
-  }
+.boutiqueCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, #e6ca65 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .boutiqueCard:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.boutiqueCard:hover::before {
+  opacity: 1;
+}
+
+.boutiqueCardInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
 }
 
 .boutiqueHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.boutiqueTitleArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.storeAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-alt);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarIcon {
+  color: var(--primary-dark);
 }
 
 .boutiqueName {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--secondary);
-}
-
-@media (min-width: 768px) {
-  .boutiqueName {
-    font-size: 1.5rem;
-  }
+  line-height: 1.3;
 }
 
 .boutiqueBadge {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
+  background-color: rgba(212, 175, 55, 0.12);
+  color: #8a6d14;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .boutiqueDetails {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 24px;
 }
 
 .detailItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  gap: 10px;
+  font-size: 0.88rem;
   color: var(--text-muted);
 }
 
 .detailIcon {
-  color: var(--text-light);
+  color: var(--primary);
   flex-shrink: 0;
 }
 
 .boutiqueAction {
   font-family: var(--font-sans);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--secondary);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: var(--transition-fast);
   margin-top: auto;
   align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-alt);
+  border: 1px solid transparent;
 }
 
 .boutiqueCard:hover .boutiqueAction {
-  color: var(--primary);
+  color: var(--secondary);
+  background-color: rgba(212, 175, 55, 0.18);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateX(4px);
+}
+
+/* ─── Empty & Show More ─── */
+.noStoresFound {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: var(--white);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.noStoresIcon {
+  color: var(--text-light);
+}
+
+.noStoresFound h4 {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: var(--secondary);
+}
+
+.noStoresFound p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.resetFilterBtn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--secondary);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-fast);
+}
+
+.resetFilterBtn:hover {
+  background-color: var(--primary);
+}
+
+.showMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.showMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background-color: var(--white);
+  color: var(--secondary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.showMoreBtn:hover {
+  border-color: var(--primary);
+  background-color: var(--secondary);
+  color: var(--white);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 /* ─── Trust Badges Horizontal Bar ─── */
