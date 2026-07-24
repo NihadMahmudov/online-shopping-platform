@@ -46,6 +46,27 @@ const ProductShowcase = () => {
           <p className={styles.subtitle}>AtlasMall tərəfindən sizin üçün xüsusi seçilmiş premium məhsullar</p>
         </div>
 
+        {/* Category Filters */}
+        <div className={styles.filtersWrapper}>
+          <div className={styles.filters}>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`${styles.filterBtn} ${activeCategory === cat.id ? styles.active : ''}`}
+              >
+                {activeCategory === cat.id && (
+                  <motion.div
+                    layoutId="activeHomeCategory"
+                    className={styles.activeBg}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <span className={styles.btnLabel}>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Product Grid */}
         {filteredProducts.length === 0 ? (

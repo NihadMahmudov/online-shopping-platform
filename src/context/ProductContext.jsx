@@ -120,11 +120,18 @@ export const ProductProvider = ({ children }) => {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const mapped = parsed.map(c => ({
-            ...c,
-            label: c.label || c.name || c.id,
-            name: c.name || c.label || c.id
-          }));
+          const mapped = parsed.map(c => {
+            const defaultItem = defaultCategoriesList.find(d => d.id === c.id);
+            const validImg = (c.img && typeof c.img === 'string' && (c.img.startsWith('http') || c.img.startsWith('data:'))) 
+              ? c.img 
+              : (defaultItem?.img || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80');
+            return {
+              ...c,
+              label: c.label || c.name || c.id,
+              name: c.name || c.label || c.id,
+              img: validImg
+            };
+          });
           // Merge defaults if missing
           const existingIds = new Set(mapped.map(c => c.id));
           const missing = defaultCategoriesList.filter(d => !existingIds.has(d.id));
@@ -311,7 +318,7 @@ export const ProductProvider = ({ children }) => {
         ...newProductData,
         id: Date.now(),
         reviews: 0,
-        rating: 5,
+        rating: 0,
         comments: [],
         createdAt: new Date().toISOString()
       };
@@ -373,19 +380,33 @@ export const ProductProvider = ({ children }) => {
   // ── Comments ────────────────────────────────────────────
   const addComment = (productId, comment) => {
     const newComment = { ...comment, id: Date.now(), date: new Date().toLocaleDateString('az-AZ') };
-    setProducts(prev => prev.map(p =>
-      p.id === productId
-        ? { ...p, comments: [newComment, ...(p.comments || [])], reviews: (p.reviews || 0) + 1 }
-        : p
-    ));
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      const updatedComments = [newComment, ...(p.comments || [])];
+      const sum = updatedComments.reduce((acc, c) => acc + Number(c.rating || 5), 0);
+      const avg = Number((sum / updatedComments.length).toFixed(1));
+      return {
+        ...p,
+        comments: updatedComments,
+        reviews: updatedComments.length,
+        rating: avg
+      };
+    }));
   };
 
   const deleteComment = (productId, commentId) => {
-    setProducts(prev => prev.map(p =>
-      p.id === productId
-        ? { ...p, comments: (p.comments || []).filter(c => c.id !== commentId), reviews: Math.max(0, (p.reviews || 1) - 1) }
-        : p
-    ));
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      const updatedComments = (p.comments || []).filter(c => c.id !== commentId);
+      const sum = updatedComments.reduce((acc, c) => acc + Number(c.rating || 5), 0);
+      const avg = updatedComments.length > 0 ? Number((sum / updatedComments.length).toFixed(1)) : 0;
+      return {
+        ...p,
+        comments: updatedComments,
+        reviews: updatedComments.length,
+        rating: avg
+      };
+    }));
   };
 
   // ── Stories ─────────────────────────────────────────────

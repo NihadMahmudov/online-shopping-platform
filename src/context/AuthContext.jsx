@@ -2,9 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+const PRIMARY_ADMIN_EMAILS = ['rovshan.mammad03@gmail.com', 'mahmudovnihad5b37@gmail.com'];
+const DEFAULT_ADMIN_EMAILS = ['rovshan.mammad03@gmail.com', 'mahmudovnihad5b37@gmail.com'];
+
 const DEFAULT_SUPERADMIN = {
-  name: 'AtlasMall Admin',
-  email: 'atlas@admin.com',
+  name: 'Rövşən Məmmədov (Admin)',
+  email: 'rovshan.mammad03@gmail.com',
   password: 'admin123',
   role: 'superadmin',
   createdAt: new Date().toISOString(),
@@ -12,6 +15,30 @@ const DEFAULT_SUPERADMIN = {
 };
 
 export const AuthProvider = ({ children }) => {
+  // Admin emails whitelist
+  const [adminEmails, setAdminEmails] = useState(() => {
+    const saved = localStorage.getItem('atlas_admin_emails');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const list = parsed.map(e => e.toLowerCase().trim());
+          PRIMARY_ADMIN_EMAILS.forEach(email => {
+            if (!list.includes(email)) list.push(email);
+          });
+          return list;
+        }
+      } catch (e) {
+        console.error("Failed to parse admin emails", e);
+      }
+    }
+    return DEFAULT_ADMIN_EMAILS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('atlas_admin_emails', JSON.stringify(adminEmails));
+  }, [adminEmails]);
+
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('atlas_users_db');
     if (saved) {
@@ -20,6 +47,9 @@ export const AuthProvider = ({ children }) => {
         return parsed.map(u => {
           if (u.role === 'vendor' && u.status === 'active') {
             return { ...u, status: 'approved' };
+          }
+          if (adminEmails.includes(u.email?.toLowerCase())) {
+            return { ...u, role: 'superadmin' };
           }
           return u;
         });
@@ -45,8 +75,13 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('atlas_user');
     if (!saved) return null;
     let parsed = JSON.parse(saved);
-    if (parsed && parsed.role === 'vendor' && parsed.status === 'active') {
-      parsed.status = 'approved';
+    if (parsed) {
+      if (parsed.role === 'vendor' && parsed.status === 'active') {
+        parsed.status = 'approved';
+      }
+      if (adminEmails.includes(parsed.email?.toLowerCase())) {
+        parsed.role = 'superadmin';
+      }
     }
     return parsed;
   });
@@ -59,13 +94,19 @@ export const AuthProvider = ({ children }) => {
         if (res.ok) {
           const dbUsers = await res.json();
           if (Array.isArray(dbUsers) && dbUsers.length > 0) {
-            setUsers(dbUsers);
-            localStorage.setItem('atlas_users_db', JSON.stringify(dbUsers));
+            const formatted = dbUsers.map(u => {
+              if (adminEmails.includes(u.email?.toLowerCase())) {
+                return { ...u, role: 'superadmin' };
+              }
+              return u;
+            });
+            setUsers(formatted);
+            localStorage.setItem('atlas_users_db', JSON.stringify(formatted));
             
             // Sync current user session status if logged in
             setUser(currentUser => {
               if (currentUser?.email) {
-                const freshUser = dbUsers.find(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
+                const freshUser = formatted.find(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (freshUser) {
                   return { ...currentUser, ...freshUser };
                 }
@@ -79,7 +120,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
     fetchUsersFromDb();
-  }, []);
+  }, [adminEmails]);
 
   useEffect(() => {
     if (user) {
@@ -93,14 +134,44 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('atlas_users_db', JSON.stringify(users));
   }, [users]);
 
+  // Admin Emails Management
+  const addAdminEmail = (newEmail) => {
+    const clean = newEmail.toLowerCase().trim();
+    if (!clean) return { error: 'E-poçt ünvanı boş ola bilməz.' };
+    if (adminEmails.includes(clean)) return { error: 'Bu email artıq Admin siyahısındadır.' };
+
+    setAdminEmails(prev => [...prev, clean]);
+
+    // Promote existing user if registered
+    setUsers(prev => prev.map(u => u.email.toLowerCase() === clean ? { ...u, role: 'superadmin' } : u));
+    if (user?.email?.toLowerCase() === clean) {
+      setUser(prev => prev ? { ...prev, role: 'superadmin' } : null);
+    }
+    return { success: true };
+  };
+
+  const removeAdminEmail = (email) => {
+    const clean = email.toLowerCase().trim();
+    if (PRIMARY_ADMIN_EMAILS.includes(clean)) return { error: 'Əsas Baş Admin email ünvanı silinə bilməz.' };
+
+    setAdminEmails(prev => prev.filter(e => e !== clean));
+    setUsers(prev => prev.map(u => u.email.toLowerCase() === clean ? { ...u, role: 'user' } : u));
+    if (user?.email?.toLowerCase() === clean) {
+      setUser(prev => prev ? { ...prev, role: 'user' } : null);
+    }
+    return { success: true };
+  };
+
   // ── Customer Register ──────────────────────────────────
   const register = async (name, email, password) => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
     if (existing) return { error: 'Bu email artıq qeydiyyatdan keçib.' };
 
+    const isAdminEmail = adminEmails.includes(cleanEmail);
     const newUserPayload = {
-      name, email: email.toLowerCase(), password,
-      role: 'user',
+      name, email: cleanEmail, password,
+      role: isAdminEmail ? 'superadmin' : 'user',
       status: 'active'
     };
 
@@ -114,7 +185,7 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) {
         return { error: data.error || 'Qeydiyyat zamanı xəta baş verdi.' };
       }
-      const createdUser = { ...data, password };
+      const createdUser = { ...data, password, role: isAdminEmail ? 'superadmin' : (data.role || 'user') };
       setUsers(prev => [createdUser, ...prev]);
       setUser(createdUser);
       return { user: createdUser };
@@ -129,16 +200,18 @@ export const AuthProvider = ({ children }) => {
 
   // ── Vendor Register ────────────────────────────────────
   const registerVendor = async (storeName, email, password, phone, category) => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
     if (existing) return { error: 'Bu email artıq qeydiyyatdan keçib.' };
 
+    const isAdminEmail = adminEmails.includes(cleanEmail);
     const storeId = `store_${Date.now()}`;
     const vendorPayload = {
       name: storeName,
-      email: email.toLowerCase(),
+      email: cleanEmail,
       password,
       phone,
-      role: 'vendor',
+      role: isAdminEmail ? 'superadmin' : 'vendor',
       storeId,
       storeName,
       storeCategory: category || 'Geyim & Moda',
@@ -155,7 +228,7 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) {
         return { error: data.error || 'Qeydiyyat zamanı xəta baş verdi.' };
       }
-      const createdVendor = { ...data, password };
+      const createdVendor = { ...data, password, role: isAdminEmail ? 'superadmin' : (data.role || 'vendor') };
       setUsers(prev => [createdVendor, ...prev]);
       setUser(createdVendor);
       return { user: createdVendor };
@@ -169,26 +242,55 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ── Login ──────────────────────────────────────────────
+  const loginAsGuest = () => {
+    const guestUser = {
+      name: 'Qonaq İstifadəçi',
+      email: 'qonaq@atlasmall.az',
+      role: 'user',
+      status: 'active'
+    };
+    setUser(guestUser);
+    localStorage.setItem('atlas_user', JSON.stringify(guestUser));
+    return { user: guestUser };
+  };
+
   const login = async (email, password) => {
+    const cleanEmail = email.toLowerCase().trim();
+    if (cleanEmail === 'qonaq@atlasmall.az') {
+      return loginAsGuest();
+    }
+
+    const isAdminEmail = adminEmails.includes(cleanEmail);
+
     try {
       const res = await fetch('/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: cleanEmail, password })
       });
       const data = await res.json();
       if (!res.ok) {
+        // Local fallback if API rejects or backend missing
+        const found = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
+        if (found) {
+          if (found.status === 'suspended') return { error: 'Bu hesab dondurulmuşdur.' };
+          const userWithRole = isAdminEmail ? { ...found, role: 'superadmin' } : found;
+          setUser(userWithRole);
+          return { user: userWithRole };
+        }
         return { error: data.error || 'Giriş uğursuz oldu.' };
       }
-      setUser(data);
-      return { user: data };
+      const userData = isAdminEmail ? { ...data, role: 'superadmin' } : data;
+      setUser(userData);
+      return { user: userData };
     } catch (err) {
       console.error('Login API error, checking local fallback:', err);
-      const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      const found = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
       if (!found) return { error: 'E-poçt və ya şifrə yanlışdır.' };
       if (found.status === 'suspended') return { error: 'Bu hesab dondurulmuşdur. Ətraflı məlumat üçün AtlasMall ilə əlaqə saxlayın.' };
-      setUser(found);
-      return { user: found };
+      const userWithRole = isAdminEmail ? { ...found, role: 'superadmin' } : found;
+      setUser(userWithRole);
+      return { user: userWithRole };
     }
   };
 
@@ -233,7 +335,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── User Management (SuperAdmin) ───────────────────────
   const deleteUser = async (email) => {
-    if (email === DEFAULT_SUPERADMIN.email) return;
+    if (adminEmails.includes(email.toLowerCase())) return;
     setUsers(prev => prev.filter(u => u.email.toLowerCase() !== email.toLowerCase()));
     if (user?.email?.toLowerCase() === email.toLowerCase()) setUser(null);
 
@@ -257,7 +359,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const suspendUser = (email) => {
-    if (email === DEFAULT_SUPERADMIN.email) return;
+    if (adminEmails.includes(email.toLowerCase())) return;
     let nextStatus = 'suspended';
     setUsers(prev => prev.map(u => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
@@ -289,7 +391,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ── Role helpers ───────────────────────────────────────
-  const isSuperAdmin = user?.role === 'superadmin';
+  const isSuperAdmin = user?.role === 'superadmin' || (user?.email && adminEmails.includes(user.email.toLowerCase()));
   const isVendor = user?.role === 'vendor';
   const isUser = user?.role === 'user';
   const isAdmin = isSuperAdmin;
@@ -302,7 +404,8 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, users, customers, vendors, pendingVendors, approvedVendors,
-      register, registerVendor, login, logout,
+      adminEmails, addAdminEmail, removeAdminEmail,
+      register, registerVendor, login, loginAsGuest, logout,
       sendVerificationCode, verifyEmailCode,
       deleteUser, suspendUser, approveVendor, rejectVendor,
       isSuperAdmin, isVendor, isUser, isAdmin
@@ -313,4 +416,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

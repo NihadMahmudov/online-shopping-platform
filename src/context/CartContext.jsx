@@ -1,24 +1,51 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
-export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem('atlas_cart');
+const getCartForUser = (user) => {
+  const isRealUser = Boolean(user && user.email && user.email !== 'qonaq@atlasmall.az');
+  if (!isRealUser) return [];
+  const cartKey = `atlas_cart_${user.email.toLowerCase().trim()}`;
+  try {
+    const saved = localStorage.getItem(cartKey);
     return saved ? JSON.parse(saved) : [];
-  });
+  } catch (e) {
+    return [];
+  }
+};
 
+export const CartProvider = ({ children }) => {
+  const { user } = useAuth();
+  const userEmail = user?.email || '';
+
+  const isRealUser = Boolean(user && user.email && user.email !== 'qonaq@atlasmall.az');
+  const cartKey = isRealUser ? `atlas_cart_${user.email.toLowerCase().trim()}` : null;
+
+  const [cart, setCart] = useState(() => getCartForUser(user));
+  const [prevEmail, setPrevEmail] = useState(userEmail);
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState('');
 
+  if (prevEmail !== userEmail) {
+    setPrevEmail(userEmail);
+    setCart(getCartForUser(user));
+  }
+
+  // Remove legacy global key if exists
   useEffect(() => {
-    localStorage.setItem('atlas_cart', JSON.stringify(cart));
-  }, [cart]);
+    try {
+      if (localStorage.getItem('atlas_cart')) {
+        localStorage.removeItem('atlas_cart');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   const applyPromoCode = (code) => {
-    // Simple mock promo code logic
     if (code.toUpperCase() === 'ATLAS10') {
-      setDiscount(0.10); // 10% endirim
+      setDiscount(0.10);
       setAppliedPromo(code.toUpperCase());
       return { success: true, message: 'Promo kod tətbiq edildi!' };
     }
@@ -33,17 +60,38 @@ export const CartProvider = ({ children }) => {
   const addToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
+      let updated;
       if (existing) {
-        return prev.map((item) =>
+        updated = prev.map((item) =>
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
+      } else {
+        updated = [...prev, { ...product, quantity: 1 }];
       }
-      return [...prev, { ...product, quantity: 1 }];
+
+      if (isRealUser && cartKey) {
+        try {
+          localStorage.setItem(cartKey, JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
     });
   };
 
   const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+    setCart((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      if (isRealUser && cartKey) {
+        try {
+          localStorage.setItem(cartKey, JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
   };
 
   const updateQuantity = (id, quantity) => {
@@ -51,13 +99,28 @@ export const CartProvider = ({ children }) => {
       removeFromCart(id);
       return;
     }
-    setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
+    setCart((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, quantity } : item));
+      if (isRealUser && cartKey) {
+        try {
+          localStorage.setItem(cartKey, JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return updated;
+    });
   };
 
   const clearCart = () => {
     setCart([]);
+    if (isRealUser && cartKey) {
+      try {
+        localStorage.removeItem(cartKey);
+      } catch (e) {
+        console.error(e);
+      }
+    }
   };
 
   const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);

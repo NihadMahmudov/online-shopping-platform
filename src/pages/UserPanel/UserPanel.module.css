@@ -102,7 +102,9 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 999;
+  touch-action: none;
 }
 
 .sidebarDrawer {
@@ -111,6 +113,7 @@
   top: 0;
   bottom: 0;
   width: 280px;
+  max-width: 85vw;
   background: var(--white);
   z-index: 1000;
   box-shadow: var(--shadow-lg);
@@ -118,6 +121,8 @@
   flex-direction: column;
   padding: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .drawerHeader {
@@ -430,10 +435,24 @@
     position: sticky;
     top: 0;
     height: 100vh;
+    max-height: 100vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     flex-shrink: 0;
     background: var(--white);
     gap: 0;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .sidebar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   .logo {

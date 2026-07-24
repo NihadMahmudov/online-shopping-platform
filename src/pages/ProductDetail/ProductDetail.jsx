@@ -23,14 +23,17 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const [commentForm, setCommentForm] = useState({ name: '', rating: 5, text: '' });
+  const [commentForm, setCommentForm] = useState({ rating: 0, text: '' });
+  const [hoverRating, setHoverRating] = useState(0);
   const [showCommentSuccess, setShowCommentSuccess] = useState(false);
   const [authModal, setAuthModal] = useState({ open: false, message: '', action: null });
 
   const categoryLabel = categories.find(c => c.id === product?.category)?.label || product?.category;
 
+  const isRealUser = user && user.email !== 'qonaq@atlasmall.az';
+
   const requireAuth = (message, action) => {
-    if (user) {
+    if (isRealUser) {
       action();
     } else {
       setAuthModal({ open: true, message, action });
@@ -67,11 +70,20 @@ const ProductDetail = () => {
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
-    if (!commentForm.name || !commentForm.text) return;
-    addComment(product.id, commentForm);
-    setCommentForm({ name: '', rating: 5, text: '' });
-    setShowCommentSuccess(true);
-    setTimeout(() => setShowCommentSuccess(false), 3000);
+    if (!commentForm.text.trim()) return;
+
+    requireAuth('Rəy bildirmək üçün daxil olun', () => {
+      const reviewerName = user?.name || user?.email?.split('@')[0] || 'İstifadəçi';
+      addComment(product.id, {
+        name: reviewerName,
+        rating: commentForm.rating || 5,
+        text: commentForm.text.trim()
+      });
+      setCommentForm({ rating: 0, text: '' });
+      setHoverRating(0);
+      setShowCommentSuccess(true);
+      setTimeout(() => setShowCommentSuccess(false), 3000);
+    });
   };
 
   const [prevId, setPrevId] = useState(id);
@@ -132,6 +144,18 @@ const ProductDetail = () => {
 
   const isLiked = isInWishlist(product.id);
   
+  const commentsList = product.comments || [];
+  const reviewsCount = commentsList.length > 0 ? commentsList.length : (product.reviews || 0);
+  const hasReviews = reviewsCount > 0;
+
+  let effectiveRating = 0;
+  if (commentsList.length > 0) {
+    const sum = commentsList.reduce((acc, c) => acc + Number(c.rating || 5), 0);
+    effectiveRating = Number((sum / commentsList.length).toFixed(1));
+  } else if (product.reviews > 0 && product.rating) {
+    effectiveRating = Number(product.rating);
+  }
+
   const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
@@ -177,10 +201,17 @@ const ProductDetail = () => {
             <div className={styles.ratingRow}>
               <div className={styles.stars}>
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={16} fill={i < Math.round(product.rating || 5) ? "var(--primary)" : "none"} color="var(--primary)" />
+                  <Star 
+                    key={i} 
+                    size={16} 
+                    fill={hasReviews && i < Math.round(effectiveRating) ? "var(--primary)" : "none"} 
+                    color={hasReviews && i < Math.round(effectiveRating) ? "var(--primary)" : "var(--border)"} 
+                  />
                 ))}
               </div>
-              <span className={styles.reviews}>({product.reviews || 0} Rəy)</span>
+              <span className={styles.reviews}>
+                {hasReviews ? `${effectiveRating} (${reviewsCount} Rəy)` : "Hələ rəy yazılmayıb"}
+              </span>
             </div>
 
             <div className={styles.priceRow}>
@@ -223,30 +254,106 @@ const ProductDetail = () => {
           <div className={styles.reviewsHeader}>
             <h2>Müştəri Rəyləri</h2>
             <div className={styles.ratingOverview}>
-              <div className={styles.bigRating}>{product.rating || 5.0}</div>
+              <div className={styles.bigRating}>{hasReviews ? effectiveRating : '0.0'}</div>
               <div className={styles.stars}>
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={20} fill={i < 5 ? "var(--primary)" : "none"} color="var(--primary)" />
+                  <Star 
+                    key={i} 
+                    size={20} 
+                    fill={hasReviews && i < Math.round(effectiveRating) ? "var(--primary)" : "none"} 
+                    color={hasReviews && i < Math.round(effectiveRating) ? "var(--primary)" : "var(--border)"} 
+                  />
                 ))}
               </div>
-              <span>{product.reviews || 0} rəy</span>
+              <span>{hasReviews ? `${reviewsCount} rəy` : "Hələ rəy yoxdur"}</span>
             </div>
           </div>
 
           <div className={styles.reviewsGrid}>
             <div className={styles.commentFormBox}>
               <h3>Rəy Bildir</h3>
+              {isRealUser ? (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '8px', fontWeight: 500 }}>
+                  Rəy yazan: <strong style={{ color: 'var(--primary)' }}>{user.name || user.email}</strong>
+                </p>
+              ) : (
+                <div style={{
+                  background: 'rgba(212, 175, 55, 0.08)',
+                  border: '1px solid rgba(212, 175, 55, 0.25)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  fontSize: '0.88rem',
+                  color: 'var(--text)',
+                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  flexWrap: 'wrap'
+                }}>
+                  <span>🔒 Rəy bildirmək üçün qeydiyyatdan keçin</span>
+                  <button 
+                    type="button" 
+                    onClick={() => requireAuth('Rəy bildirmək üçün qeydiyyatdan keçin və ya daxil olun', () => {})}
+                    style={{
+                      background: 'var(--primary)',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    Qeydiyyat / Daxil Ol
+                  </button>
+                </div>
+              )}
               {showCommentSuccess && <div className={styles.successNote}>Təşəkkür edirik! Rəyiniz əlavə edildi.</div>}
               <form onSubmit={handleCommentSubmit} className={styles.commentForm}>
-                <input type="text" required value={commentForm.name} onChange={e => setCommentForm({...commentForm, name: e.target.value})} placeholder="Adınız" />
                 <div className={styles.starSelector}>
-                  {[1, 2, 3, 4, 5].map(num => (
-                    <button key={num} type="button" onClick={() => setCommentForm({...commentForm, rating: num})}>
-                      <Star size={24} fill={commentForm.rating >= num ? "var(--primary)" : "none"} color={commentForm.rating >= num ? "var(--primary)" : "var(--border)"} />
-                    </button>
-                  ))}
+                  {[1, 2, 3, 4, 5].map(num => {
+                    const activeRating = hoverRating || commentForm.rating;
+                    return (
+                      <button 
+                        key={num} 
+                        type="button" 
+                        onClick={() => {
+                          if (!isRealUser) {
+                            requireAuth('Rəy bildirmək üçün qeydiyyatdan keçin və ya daxil olun', () => {
+                              setCommentForm(prev => ({ ...prev, rating: num }));
+                            });
+                          } else {
+                            setCommentForm(prev => ({ ...prev, rating: num }));
+                          }
+                        }}
+                        onMouseEnter={() => setHoverRating(num)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        title={`${num} Ulduz`}
+                      >
+                        <Star 
+                          size={24} 
+                          fill={activeRating >= num ? "var(--primary)" : "none"} 
+                          color={activeRating >= num ? "var(--primary)" : "var(--border)"} 
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
-                <textarea required rows="4" value={commentForm.text} onChange={e => setCommentForm({...commentForm, text: e.target.value})} placeholder="Rəyiniz..."></textarea>
+                <textarea 
+                  required 
+                  rows="4" 
+                  value={commentForm.text} 
+                  onChange={e => setCommentForm({ ...commentForm, text: e.target.value })} 
+                  placeholder="Rəyiniz..."
+                  onFocus={() => {
+                    if (!isRealUser) {
+                      requireAuth('Rəy bildirmək üçün qeydiyyatdan keçin və ya daxil olun', () => {});
+                    }
+                  }}
+                ></textarea>
                 <button type="submit" className={styles.submitComment}>Rəyi Göndər</button>
               </form>
             </div>

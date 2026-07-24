@@ -7,7 +7,7 @@ import styles from './Auth.module.css';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { register, login, sendVerificationCode, verifyEmailCode } = useAuth();
+  const { register, login, loginAsGuest, logout, sendVerificationCode, verifyEmailCode } = useAuth();
   const [mode, setMode] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -282,9 +282,9 @@ const Auth = () => {
                 <button 
                   type="button" 
                   className={styles.guestLink} 
-                  onClick={async () => {
-                    await login('qonaq@atlasmall.az', 'qonaq123');
-                    navigate('/panel');
+                  onClick={() => {
+                    loginAsGuest();
+                    navigate('/');
                   }}
                 >
                   Qonaq kimi davam et →

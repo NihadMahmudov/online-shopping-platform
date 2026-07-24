@@ -1,105 +1,102 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeft } from 'lucide-react';
+import { 
+  Shirt, 
+  User, 
+  Baby, 
+  ShoppingBag, 
+  Watch, 
+  Crown, 
+  Sparkles, 
+  Home, 
+  Flame, 
+  Gift, 
+  Headphones, 
+  ArrowRight,
+  FolderTree
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import styles from './Categories.module.css';
 
+// Minimalist vector icons for categories
+const CATEGORY_ICONS = {
+  women: Shirt,
+  men: User,
+  kids: Baby,
+  shoes: ShoppingBag,
+  accessories: Watch,
+  jewelry: Crown,
+  beauty: Sparkles,
+  decor: Home,
+  candles: Flame,
+  sets: Gift,
+  electronics: Headphones,
+  default: FolderTree
+};
+
 const Categories = ({ inPanel = false }) => {
   const navigate = useNavigate();
-  const { categories } = useProducts();
+  const { categories, products } = useProducts();
+
+  // Compute product counts per main category
+  const categoryCounts = useMemo(() => {
+    const map = {};
+    if (products && Array.isArray(products)) {
+      products.forEach(p => {
+        if (p.category) {
+          map[p.category] = (map[p.category] || 0) + 1;
+        }
+      });
+    }
+    return map;
+  }, [products]);
+
+  // Main categories excluding 'all'
+  const mainCategories = useMemo(() => {
+    return categories.filter(c => c.id !== 'all');
+  }, [categories]);
 
   const handleCategoryClick = (catId) => {
     navigate(`/shop?category=${catId}`);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, scale: 0.9, y: 10 },
-    show: { opacity: 1, scale: 1, y: 0 }
-  };
-
   return (
-    <div className={`${styles.pageContainer} ${inPanel ? styles.inPanel : ''}`}>
-      {/* Search Header */}
-      {!inPanel && (
-        <div className={styles.searchHeader}>
-          <div className={styles.searchBox}>
-            <Search size={20} className={styles.searchIcon} />
-            <input type="text" placeholder="Brend, məhsul və ya kateqoriya axtar" />
-          </div>
-        </div>
-      )}
+    <div className={`${styles.pageWrapper} ${inPanel ? styles.inPanel : ''}`}>
+      <div className={styles.container}>
+        {/* Minimalist Grid of Clean Cards */}
+        <div className={styles.cleanGrid}>
+          {mainCategories.map((cat, idx) => {
+            const count = categoryCounts[cat.id] || 0;
+            const IconComponent = CATEGORY_ICONS[cat.id] || CATEGORY_ICONS.default;
 
-      {/* Main Layout */}
-      <div className={styles.mainLayout}>
-        {/* Content Area */}
-        <div className={styles.content}>
-          {!inPanel && (
-            <>
-              <button 
-                onClick={() => navigate(-1)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: 'none',
-                  border: 'none',
-                  color: '#D4AF37',
-                  cursor: 'pointer',
-                  padding: '8px 0',
-                  marginBottom: '15px',
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#B4932F'}
-                onMouseLeave={(e) => e.target.style.color = '#D4AF37'}
-              >
-                <ArrowLeft size={18} /> Geri Qayıt
-              </button>
-              <div className={styles.pageHeader}>
-                <h1 className={styles.pageTitle}>Kateqoriyalar</h1>
-                <p className={styles.pageSubtitle}>Şəhərimizin seçkin butiklərinin kolleksiyalarını kateqoriyalar üzrə kəşf edin</p>
-              </div>
-            </>
-          )}
-          
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className={styles.categoryGrid}
-          >
-            {categories.filter(c => c.id !== 'all').map(cat => (
-              <motion.div 
-                key={cat.id} 
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={styles.catCard} 
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: idx * 0.02 }}
+                className={styles.simpleCard}
                 onClick={() => handleCategoryClick(cat.id)}
               >
-                <div className={styles.catImageWrapper}>
-                  <img 
-                    src={cat.img || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80'} 
-                    alt={cat.label || cat.name || ''} 
-                  />
-                  <div className={styles.cubeBadge}>📦</div>
+                <div className={styles.cardLeft}>
+                  <div className={styles.iconCircle}>
+                    <IconComponent size={22} />
+                  </div>
+                  <div className={styles.cardInfo}>
+                    <h3 className={styles.categoryTitle}>{cat.label || cat.name}</h3>
+                    <span className={styles.productCount}>
+                      {count > 0 ? `${count} məhsul` : 'Kolleksiya'}
+                    </span>
+                  </div>
                 </div>
-                <span className={styles.catName}>{cat.label}</span>
+
+                <div className={styles.arrowCircle}>
+                  <ArrowRight size={16} />
+                </div>
               </motion.div>
-            ))}
-          </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>

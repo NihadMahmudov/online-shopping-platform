@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Store, Users, ShoppingBag, LogOut,
-  TrendingUp, CheckCircle, XCircle, Trash2, ShieldAlert,
+  TrendingUp, CheckCircle, XCircle, Trash2, ShieldAlert, ShieldCheck,
   Clock, Calendar, UserCheck, UserX, Menu, X, ArrowLeft, Tag, PlusCircle,
   Camera, ImagePlus, Award, Sparkles
 } from 'lucide-react';
@@ -11,14 +11,16 @@ import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { useNotifications } from '../../context/NotificationContext';
+import ConfirmModal from '../../components/common/ConfirmModal/ConfirmModal';
 import styles from './Dashboard.module.css';
 
-const TABS = ['Mağazalar', 'İstifadəçilər', 'Sifarişlər', 'Kateqoriyalar', 'Kolleksiya və Etiketlər', 'Ana Səhifə Vitrini', 'Kütləvi Bildiriş', 'Analitika'];
+const TABS = ['Mağazalar', 'İstifadəçilər', 'Admin Tənzimləmələri', 'Sifarişlər', 'Kateqoriyalar', 'Kolleksiya və Etiketlər', 'Ana Səhifə Vitrini', 'Kütləvi Bildiriş', 'Analitika'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { 
     user, users, customers, vendors, logout,
+    adminEmails, addAdminEmail, removeAdminEmail,
     deleteUser, suspendUser, approveVendor, rejectVendor 
   } = useAuth();
   
@@ -46,6 +48,27 @@ const Dashboard = () => {
   const [newCatLabel, setNewCatLabel] = useState('');
   const [catSuccess, setCatSuccess] = useState(false);
 
+  // Admin Emails Management State
+  const [newAdminInput, setNewAdminInput] = useState('');
+  const [adminMsg, setAdminMsg] = useState('');
+  const [adminError, setAdminError] = useState('');
+
+  const handleAddAdmin = (e) => {
+    e.preventDefault();
+    setAdminMsg('');
+    setAdminError('');
+    if (!newAdminInput.trim()) return;
+
+    const res = addAdminEmail(newAdminInput.trim());
+    if (res?.error) {
+      setAdminError(res.error);
+    } else {
+      setAdminMsg(`'${newAdminInput.trim()}' daxil edildi. İndi bu Gmail ilə qeydiyyat/giriş edildikdə avtomatik Admin hüququ veriləcək!`);
+      setNewAdminInput('');
+      setTimeout(() => setAdminMsg(''), 4000);
+    }
+  };
+
   const [newBadgeLabel, setNewBadgeLabel] = useState('');
   const [newCollectionLabel, setNewCollectionLabel] = useState('');
   const [badgeSuccess, setBadgeSuccess] = useState(false);
@@ -56,6 +79,55 @@ const Dashboard = () => {
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastSuccess, setBroadcastSuccess] = useState(false);
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    itemName: '',
+    onConfirm: null
+  });
+
+  const promptDeleteUser = (email, name) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'İstifadəçini silmək istəyirsiniz?',
+      message: 'Bu istifadəçi hesabı sistemdən tamamilə silinəcək.',
+      itemName: name || email,
+      onConfirm: () => deleteUser(email)
+    });
+  };
+
+  const promptDeleteCategory = (category) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Kateqoriyanı silmək istəyirsiniz?',
+      message: 'Bu kateqoriya bütün mağazaların ümumi siyahısından silinəcək.',
+      itemName: category.label,
+      onConfirm: () => deleteCategory(category.id)
+    });
+  };
+
+  const promptDeleteCollection = (collection) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Kolleksiyanı silmək istəyirsiniz?',
+      message: 'Bu kolleksiya sistemdən silinəcək.',
+      itemName: collection.label,
+      onConfirm: () => deleteCollection(collection.id)
+    });
+  };
+
+  const promptDeleteBadge = (badgeLabel) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Etiketi silmək istəyirsiniz?',
+      message: 'Bu məhsul etiketi sistemdən silinəcək.',
+      itemName: badgeLabel,
+      onConfirm: () => deleteBadge(badgeLabel)
+    });
+  };
 
   const handleSendBroadcast = (e) => {
     e.preventDefault();
@@ -114,6 +186,21 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
+  // Lock body scroll when mobile menu drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   if (!user || user.role !== 'superadmin') {
     return null;
   }
@@ -164,6 +251,7 @@ const Dashboard = () => {
         <div className={styles.sidebarLogo}>Atlas<span>Mall Admin</span></div>
         <div className={styles.mobileAvatar}>A</div>
       </header>
+
       {/* Slide Drawer for Mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -211,6 +299,7 @@ const Dashboard = () => {
                   >
                     {tab === 'Mağazalar' ? <Store size={18} /> : 
                      tab === 'İstifadəçilər' ? <Users size={18} /> : 
+                     tab === 'Admin Tənzimləmələri' ? <ShieldCheck size={18} /> :
                      tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                      tab === 'Kateqoriyalar' ? <Tag size={18} /> :
                      tab === 'Kolleksiya və Etiketlər' ? <Award size={18} /> :
@@ -254,6 +343,7 @@ const Dashboard = () => {
             >
               {tab === 'Mağazalar' ? <Store size={18} /> : 
                tab === 'İstifadəçilər' ? <Users size={18} /> : 
+               tab === 'Admin Tənzimləmələri' ? <ShieldCheck size={18} /> :
                tab === 'Sifarişlər' ? <ShoppingBag size={18} /> : 
                tab === 'Kateqoriyalar' ? <Tag size={18} /> :
                tab === 'Kolleksiya və Etiketlər' ? <Award size={18} /> :
@@ -521,7 +611,7 @@ const Dashboard = () => {
                               {c.status === 'suspended' ? <UserCheck size={16} /> : <UserX size={16} />}
                             </motion.button>
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                              className={styles.deleteBtn} onClick={() => deleteUser(c.email)}>
+                              className={styles.deleteBtn} onClick={() => promptDeleteUser(c.email, c.name)}>
                               <Trash2 size={16} />
                             </motion.button>
                           </div>
@@ -565,13 +655,114 @@ const Dashboard = () => {
                           </motion.button>
                           <motion.button whileTap={{ scale: 0.97 }}
                             className={styles.actionBtnGhost}
-                            onClick={() => deleteUser(c.email)}>
+                            onClick={() => promptDeleteUser(c.email, c.name)}>
                             <Trash2 size={15} /> Sil
                           </motion.button>
                         </div>
                       </div>
                     ))
                   )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── ADMIN SETTINGS TAB ── */}
+            {activeTab === 'Admin Tənzimləmələri' && (
+              <motion.div key="admin_settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className={styles.sectionHeader}>
+                  <h2>Səlahiyyətli Adminlər ({adminEmails.length})</h2>
+                  <p className={styles.sectionSub}>Bu siyahıda yer alan Gmail ünvanları saytda istənilən vaxt öz daxil etdikləri şifrə ilə daxil olduqda avtomatik olaraq Admin Panelinə tam çıxış əldə edir.</p>
+                </div>
+
+                {/* Add New Admin Form */}
+                <div className={styles.tableCard} style={{ marginBottom: '24px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShieldCheck size={20} style={{ color: '#D4AF37' }} /> 2-ci Admin və ya Həm-təsisçi Gmail-i Əlavə Et
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px' }}>
+                    Dostunuzun və ya tərəfdaşınızın şəxsi Gmail ünvanını bura yazın. O, öz emailı ilə qeydiyyatdan keçdikdə və ya daxil olduqda birbaşa Admin Panelinə yönləndiriləcək.
+                  </p>
+
+                  <form onSubmit={handleAddAdmin} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <input
+                      type="email"
+                      placeholder="məs: dostum@gmail.com"
+                      value={newAdminInput}
+                      onChange={e => setNewAdminInput(e.target.value)}
+                      style={{
+                        flex: '1', minWidth: '260px', padding: '12px 16px',
+                        borderRadius: '10px', border: '1.5px solid #E2E8F0',
+                        fontSize: '14px', outline: 'none'
+                      }}
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      style={{
+                        background: 'linear-gradient(135deg, #111827 0%, #1F2937 100%)',
+                        color: '#FFF', padding: '12px 24px', borderRadius: '10px',
+                        border: 'none', fontWeight: '600', fontSize: '14px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '8px'
+                      }}
+                    >
+                      <PlusCircle size={18} /> Admin Hüququ Ver
+                    </motion.button>
+                  </form>
+
+                  {adminMsg && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '12px', color: '#16A34A', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CheckCircle size={16} /> {adminMsg}
+                    </motion.div>
+                  )}
+                  {adminError && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '12px', color: '#DC2626', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldAlert size={16} /> {adminError}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Current Admin Emails List */}
+                <div className={styles.tableCard}>
+                  <div className={styles.table}>
+                    <div className={styles.tableHeaderCustomers}>
+                      <span>Gmail Ünvanı</span><span>Rolu / Vəzifəsi</span><span>Status</span><span>Səlahiyyət</span><span>Əməliyyat</span>
+                    </div>
+                    {adminEmails.map(email => {
+                      const isPrimaryAdmin = email === 'rovshan.mammad03@gmail.com' || email === 'mahmudovnihad5b37@gmail.com';
+                      return (
+                        <div key={email} className={styles.tableRowCustomers}>
+                          <div className={styles.customerCell}>
+                            <div className={styles.custAvatar} style={{ background: '#111827', color: '#D4AF37' }}>
+                              <ShieldCheck size={16} />
+                            </div>
+                            <div>
+                              <strong>{email}</strong>
+                              {isPrimaryAdmin && (
+                                <span style={{ display: 'block', fontSize: '11px', color: '#D4AF37', fontWeight: '600' }}>Əsas Layihə Rəhbəri</span>
+                              )}
+                            </div>
+                          </div>
+                          <span>{isPrimaryAdmin ? 'Əsas Admin' : 'Həm-təsisçi Admin'}</span>
+                          <span>
+                            <span className={`${styles.statusBadge} ${styles.statusApproved}`}>
+                              <CheckCircle size={14} className={styles.badgeIcon} /> Aktividir
+                            </span>
+                          </span>
+                          <span>Full Admin Control</span>
+                          <div className={styles.customerActions}>
+                            {!isPrimaryAdmin ? (
+                              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                className={styles.deleteBtn} onClick={() => removeAdminEmail(email)}>
+                                <Trash2 size={16} /> Sil
+                              </motion.button>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: '#94A3B8', fontStyle: 'italic' }}>Əsas Admin</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -744,7 +935,7 @@ const Dashboard = () => {
                             <div>
                               <button
                                 className={styles.rejectBtn}
-                                onClick={() => deleteCategory(cat.id)}
+                                onClick={() => promptDeleteCategory(cat)}
                                 title="Sil"
                               >
                                 <Trash2 size={14} /> Sil
@@ -829,7 +1020,7 @@ const Dashboard = () => {
                                 <button
                                   type="button"
                                   className={styles.rejectBtn}
-                                  onClick={() => deleteCollection(coll.id)}
+                                  onClick={() => promptDeleteCollection(coll)}
                                   style={{ padding: '6px', borderRadius: '6px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
                                   title="Kolleksiyanı Sil"
                                 >
@@ -897,7 +1088,7 @@ const Dashboard = () => {
                                 <button
                                   type="button"
                                   className={styles.rejectBtn}
-                                  onClick={() => deleteBadge(badge)}
+                                  onClick={() => promptDeleteBadge(badge)}
                                   style={{ padding: '6px', borderRadius: '6px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
                                   title="Etiketi Sil"
                                 >
@@ -1162,6 +1353,15 @@ const Dashboard = () => {
           </AnimatePresence>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        itemName={confirmModal.itemName}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

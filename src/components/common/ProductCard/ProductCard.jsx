@@ -21,8 +21,10 @@ const ProductCard = ({ product }) => {
     ? Math.round(((Number(product.oldPrice) - Number(product.price)) / Number(product.oldPrice)) * 100)
     : null;
 
+  const isRealUser = user && user.email !== 'qonaq@atlasmall.az';
+
   const requireAuth = (message, action) => {
-    if (user) {
+    if (isRealUser) {
       action();
     } else {
       setAuthModal({ open: true, message, action });
@@ -51,6 +53,18 @@ const ProductCard = ({ product }) => {
       toggleWishlist(product);
     });
   };
+
+  const commentsList = product.comments || [];
+  const reviewsCount = commentsList.length > 0 ? commentsList.length : (product.reviews || 0);
+  const hasReviews = reviewsCount > 0;
+
+  let effectiveRating = 0;
+  if (commentsList.length > 0) {
+    const sum = commentsList.reduce((acc, c) => acc + Number(c.rating || 5), 0);
+    effectiveRating = Number((sum / commentsList.length).toFixed(1));
+  } else if (product.reviews > 0 && product.rating) {
+    effectiveRating = Number(product.rating);
+  }
 
   return (
     <>
@@ -120,12 +134,12 @@ const ProductCard = ({ product }) => {
                 <Star
                   key={i}
                   size={10}
-                  fill={i < Math.floor(product.rating) ? '#f59e0b' : 'none'}
-                  color={i < Math.floor(product.rating) ? '#f59e0b' : '#d1d5db'}
+                  fill={hasReviews && i < Math.floor(effectiveRating) ? '#f59e0b' : 'none'}
+                  color={hasReviews && i < Math.floor(effectiveRating) ? '#f59e0b' : '#d1d5db'}
                 />
               ))}
             </div>
-            <span className={styles.reviewCount}>({product.reviews})</span>
+            <span className={styles.reviewCount}>({reviewsCount})</span>
           </div>
 
           <div className={styles.priceContainer}>

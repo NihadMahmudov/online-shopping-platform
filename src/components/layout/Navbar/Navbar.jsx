@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Settings, Home, Package, Bell, CheckCheck, Trash2, ShoppingBag, Store, Heart, ShoppingCart, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
@@ -12,6 +12,11 @@ const Navbar = () => {
   const { t } = useLanguage();
   const { getFilteredNotifications, getUnreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isProductPage = location.pathname.startsWith('/product/');
+  const isStorePage = location.pathname.startsWith('/store/');
+  const isCleanHeader = isProductPage || isStorePage;
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -33,10 +38,15 @@ const Navbar = () => {
   useEffect(() => {
     if (isDrawerOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [isDrawerOpen]);
 
   const handleLogout = () => {
@@ -118,160 +128,181 @@ const Navbar = () => {
       <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
         <div className={`container ${styles.navContainer}`}>
           {/* Mobile Menu Button */}
-          <button
-            className={styles.mobileMenuBtn}
-            onClick={() => setIsDrawerOpen(true)}
-            aria-label="Menyunu aç"
-          >
-            <Menu size={24} />
-          </button>
+          {!isCleanHeader && (
+            <button
+              className={styles.mobileMenuBtn}
+              onClick={() => setIsDrawerOpen(true)}
+              aria-label="Menyunu aç"
+            >
+              <Menu size={24} />
+            </button>
+          )}
 
           {/* Logo */}
           <div className={styles.logo}>
             <Link to={user ? (isVendor ? '/store-dashboard' : isSuperAdmin ? '/dashboard' : '/panel') : '/'}>Atlas<span>Mall</span></Link>
+            {!isCleanHeader && user && (
+              <button
+                className={styles.logoBellBtn}
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                aria-label="Bildirişlər"
+                title="Bildirişlər"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className={styles.logoBellBadge}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Desktop Nav Links */}
-          <div className={styles.navLinks}>
-            {navLinks.map((link, idx) => (
-              link.onClick ? (
-                <button
-                  key={idx}
-                  onClick={link.onClick}
-                  className={styles.navBtn}
-                >
-                  {link.label}
-                </button>
-              ) : (
-                <NavLink
-                  key={link.to || idx}
-                  to={link.to}
-                  className={({ isActive }) => isActive ? styles.activeLink : ''}
-                >
-                  {link.label}
-                </NavLink>
-              )
-            ))}
-          </div>
+          {!isCleanHeader && (
+            <div className={styles.navLinks}>
+              {navLinks.map((link, idx) => (
+                link.onClick ? (
+                  <button
+                    key={idx}
+                    onClick={link.onClick}
+                    className={styles.navBtn}
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <NavLink
+                    key={link.to || idx}
+                    to={link.to}
+                    className={({ isActive }) => isActive ? styles.activeLink : ''}
+                  >
+                    {link.label}
+                  </NavLink>
+                )
+              ))}
+            </div>
+          )}
 
           {/* Actions */}
-          <div className={styles.navActions}>
-            {/* User */}
-            {user ? (
-              <div className={styles.userMenu}>
-                <span className={styles.userName}>{user.name}</span>
-                {isSuperAdmin && (
-                  <Link to="/dashboard" className={styles.adminBtn} title={t('navbar.adminPanel')}>
-                    <Settings size={20} />
-                  </Link>
-                )}
-                {isVendor && (
-                  <Link to="/store-dashboard" className={styles.adminBtn} title="Mağaza Paneli">
-                    <Settings size={20} />
-                  </Link>
-                )}
-                {!isSuperAdmin && !isVendor && (
-                  <Link to="/panel" className={styles.adminBtn} title="İstifadəçi Paneli">
-                    <User size={20} />
-                  </Link>
-                )}
+          {!isCleanHeader && (
+            <div className={styles.navActions}>
+              {/* User */}
+              {user ? (
+                <div className={styles.userMenu}>
+                  <span className={styles.userName}>{user.name}</span>
+                  {isSuperAdmin && (
+                    <Link to="/dashboard" className={styles.adminBtn} title={t('navbar.adminPanel')}>
+                      <Settings size={20} />
+                    </Link>
+                  )}
+                  {isVendor && (
+                    <Link to="/store-dashboard" className={styles.adminBtn} title="Mağaza Paneli">
+                      <Settings size={20} />
+                    </Link>
+                  )}
+                  {!isSuperAdmin && !isVendor && (
+                    <Link to="/panel" className={styles.adminBtn} title="İstifadəçi Paneli">
+                      <User size={20} />
+                    </Link>
+                  )}
 
-                {/* Notification Bell — right side */}
-                <div className={styles.notifWrapper}>
-                  <button 
-                    className={styles.notifBtn} 
-                    onClick={() => setIsNotifOpen(!isNotifOpen)} 
-                    aria-label="Bildirişlər"
-                    title="Bildirişlər"
-                  >
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className={styles.notifBadge}>
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                    )}
-                  </button>
+                  {/* Notification Bell — right next to profile icon */}
+                  <div className={styles.notifWrapper}>
+                    <button 
+                      className={styles.notifBtn} 
+                      onClick={() => setIsNotifOpen(!isNotifOpen)} 
+                      aria-label="Bildirişlər"
+                      title="Bildirişlər"
+                    >
+                      <Bell size={20} />
+                      {unreadCount > 0 && (
+                        <span className={styles.notifBadge}>
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </button>
 
-                  <AnimatePresence>
-                    {isNotifOpen && (
-                      <>
-                        <div className={styles.langDropdownOverlay} onClick={() => setIsNotifOpen(false)} />
-                        <motion.div 
-                          className={styles.notifMenu}
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.18 }}
-                        >
-                          <div className={styles.notifHeader}>
-                            <div>
-                              <h4>Bildirişlər 🔔</h4>
-                              <span className={styles.notifSub}>{unreadCount} oxunmamış bildiriş</span>
+                    <AnimatePresence>
+                      {isNotifOpen && (
+                        <>
+                          <div className={styles.langDropdownOverlay} onClick={() => setIsNotifOpen(false)} />
+                          <motion.div 
+                            className={styles.notifMenu}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.18 }}
+                          >
+                            <div className={styles.notifHeader}>
+                              <div>
+                                <h4>Bildirişlər 🔔</h4>
+                                <span className={styles.notifSub}>{unreadCount} oxunmamış bildiriş</span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                {filteredNotifs.length > 0 && (
+                                  <>
+                                    <button 
+                                      className={styles.notifActionBtn}
+                                      onClick={() => markAllAsRead(userEmail, storeId, isSuperAdmin)}
+                                      title="Hamısını oxunmuş et"
+                                    >
+                                      <CheckCheck size={16} />
+                                    </button>
+                                    <button 
+                                      className={styles.notifActionBtn}
+                                      onClick={() => clearNotifications(userEmail, storeId, isSuperAdmin)}
+                                      title="Təmizlə"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              {filteredNotifs.length > 0 && (
-                                <>
-                                  <button 
-                                    className={styles.notifActionBtn}
-                                    onClick={() => markAllAsRead(userEmail, storeId, isSuperAdmin)}
-                                    title="Hamısını oxunmuş et"
+
+                            <div className={styles.notifList}>
+                              {filteredNotifs.length === 0 ? (
+                                <div className={styles.emptyNotif}>
+                                  <Bell size={32} style={{ opacity: 0.3 }} />
+                                  <p>Heç bir bildirişiniz yoxdur.</p>
+                                </div>
+                              ) : (
+                                filteredNotifs.map(n => (
+                                  <div 
+                                    key={n.id} 
+                                    className={`${styles.notifItem} ${!n.read ? styles.unreadItem : ''}`}
+                                    onClick={() => handleNotifClick(n)}
                                   >
-                                    <CheckCheck size={16} />
-                                  </button>
-                                  <button 
-                                    className={styles.notifActionBtn}
-                                    onClick={() => clearNotifications(userEmail, storeId, isSuperAdmin)}
-                                    title="Təmizlə"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
+                                    <div className={styles.notifDot} style={{ background: !n.read ? '#D4AF37' : '#CBD5E1' }} />
+                                    <div className={styles.notifContent}>
+                                      <h5>{n.title}</h5>
+                                      <p>{n.message}</p>
+                                      <span className={styles.notifTime}>
+                                        {new Date(n.createdAt).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))
                               )}
                             </div>
-                          </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-                          <div className={styles.notifList}>
-                            {filteredNotifs.length === 0 ? (
-                              <div className={styles.emptyNotif}>
-                                <Bell size={32} style={{ opacity: 0.3 }} />
-                                <p>Heç bir bildirişiniz yoxdur.</p>
-                              </div>
-                            ) : (
-                              filteredNotifs.map(n => (
-                                <div 
-                                  key={n.id} 
-                                  className={`${styles.notifItem} ${!n.read ? styles.unreadItem : ''}`}
-                                  onClick={() => handleNotifClick(n)}
-                                >
-                                  <div className={styles.notifDot} style={{ background: !n.read ? '#D4AF37' : '#CBD5E1' }} />
-                                  <div className={styles.notifContent}>
-                                    <h5>{n.title}</h5>
-                                    <p>{n.message}</p>
-                                    <span className={styles.notifTime}>
-                                      {new Date(n.createdAt).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
+                  <button onClick={handleLogout} className={styles.logoutBtn} title={t('navbar.logout')}>
+                    <LogOut size={20} />
+                  </button>
                 </div>
-
-                <button onClick={handleLogout} className={styles.logoutBtn} title={t('navbar.logout')}>
-                  <LogOut size={20} />
-                </button>
-              </div>
-            ) : (
-              <Link to="/login" className={styles.loginBtn} title={t('navbar.login')}>
-                <User size={18} />
-                <span className={styles.loginText}>{t('navbar.login')}</span>
-              </Link>
-            )}
-          </div>
+              ) : (
+                <Link to="/login" className={styles.loginBtn} title={t('navbar.login')}>
+                  <User size={18} />
+                  <span className={styles.loginText}>{t('navbar.login')}</span>
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 

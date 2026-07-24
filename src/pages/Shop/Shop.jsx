@@ -178,7 +178,21 @@ const Shop = ({ inPanel = false }) => {
           </div>
         </div>
 
-
+        {/* Category Pills Bar */}
+        <div className={styles.categoryPillsBar}>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              className={`${styles.catPill} ${activeCategory === cat.id ? styles.catPillActive : ''}`}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                navigate(`/shop?category=${cat.id}`, { replace: true });
+              }}
+            >
+              {cat.label || cat.name || cat.id}
+            </button>
+          ))}
+        </div>
 
         {/* Results Info */}
         <div className={styles.resultInfo}>

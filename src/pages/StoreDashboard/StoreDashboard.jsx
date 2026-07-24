@@ -13,6 +13,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useOrders } from '../../context/OrderContext';
 import { useStore } from '../../context/StoreContext';
 import { useNotifications } from '../../context/NotificationContext';
+import ConfirmModal from '../../components/common/ConfirmModal/ConfirmModal';
 import styles from './StoreDashboard.module.css';
 
 const TABS = ['Məhsullarım', 'Məhsul Əlavə Et', 'Mağaza Kateqoriyaları', 'Sifarişlər', 'Bildirişlər', 'Analitika', 'Rəylər', 'Mağaza Parametrləri'];
@@ -43,6 +44,45 @@ const StoreDashboard = () => {
   const [success, setSuccess] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    itemName: '',
+    onConfirm: null
+  });
+
+  const promptDeleteProduct = (product) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Məhsulu silmək istəyirsiniz?',
+      message: 'Bu məhsul mağazanızdan tamamilə silinəcək və bərpa edilə bilməyəcək.',
+      itemName: product.name,
+      onConfirm: () => deleteProduct(product.id)
+    });
+  };
+
+  const promptDeleteCategory = (category) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Kateqoriyanı silmək istəyirsiniz?',
+      message: 'Bu mağaza kateqoriyası siyahıdan silinəcək.',
+      itemName: category.label,
+      onConfirm: () => deleteCategory(category.id)
+    });
+  };
+
+  const promptDeleteComment = (productId, commentId, reviewerName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Rəyi silmək istəyirsiniz?',
+      message: 'Bu müştəri rəyi mağaza rəylərindən silinəcək.',
+      itemName: reviewerName ? `${reviewerName} rəyi` : 'Seçilmiş rəy',
+      onConfirm: () => deleteComment(productId, commentId)
+    });
+  };
 
 
 
@@ -234,6 +274,21 @@ const StoreDashboard = () => {
       navigate('/store-login');
     }
   }, [user, navigate]);
+
+  // Lock body scroll when mobile menu drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   if (!user || user.role !== 'vendor') {
     return null;
@@ -440,6 +495,7 @@ const StoreDashboard = () => {
           {user.storeName?.charAt(0).toUpperCase()}
         </div>
       </header>
+
       {/* Slide Drawer for Mobile */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -741,7 +797,7 @@ const StoreDashboard = () => {
                             </div>
                             <span className={styles.catTag}>{categories.find(c => c.id === p.category)?.label || p.category}</span>
                             <span className={styles.priceCell}>{p.price} AZN</span>
-                            <span>⭐ {p.rating || 5.0}</span>
+                            <span>⭐ {(p.reviews > 0 || p.comments?.length > 0) ? (p.rating ? Number(p.rating).toFixed(1) : '0.0') : 'Rəy yoxdur'}</span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                               <button 
                                 className={styles.deleteBtn} 
@@ -753,7 +809,7 @@ const StoreDashboard = () => {
                               >
                                 <Edit size={16} />
                               </button>
-                              <button className={styles.deleteBtn} onClick={() => deleteProduct(p.id)} title="Sil">
+                              <button className={styles.deleteBtn} onClick={() => promptDeleteProduct(p)} title="Sil">
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -793,7 +849,7 @@ const StoreDashboard = () => {
                               <button 
                                 className={styles.actionBtnGhost} 
                                 style={{ padding: '8px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.15)' }}
-                                onClick={() => deleteProduct(p.id)} 
+                                onClick={() => promptDeleteProduct(p)} 
                                 title="Sil"
                               >
                                 <Trash2 size={14} />
@@ -808,7 +864,7 @@ const StoreDashboard = () => {
                               </div>
                               <div className={styles.chip}>
                                 <span className={styles.chipIcon}>⭐</span>
-                                <span>{p.rating || 5.0} reytinq</span>
+                                <span>{(p.reviews > 0 || p.comments?.length > 0) ? `${p.rating ? Number(p.rating).toFixed(1) : '0.0'} reytinq` : '0 reytinq'}</span>
                               </div>
                             </div>
                           </div>
@@ -971,7 +1027,7 @@ const StoreDashboard = () => {
 
                   <button type="submit" className={styles.submitBtn} disabled={submittingProduct}>
                     {submittingProduct ? (
-                      <>⏳ Şəkil Cloudinary-ə yüklənir və baza yenilənir...</>
+                      <>⏳ Məhsul yaradılır, xahiş olunur gözləyin...</>
                     ) : (
                       <><PlusCircle size={20} /> Məhsul Əlavə Et</>
                     )}
@@ -1029,7 +1085,7 @@ const StoreDashboard = () => {
                           <span style={{ fontWeight: 500, color: '#0F172A', fontSize: '0.95rem' }}>{cat.label}</span>
                           <button 
                             type="button"
-                            onClick={() => deleteCategory(cat.id)}
+                            onClick={() => promptDeleteCategory(cat)}
                             style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             title="Sil"
                           >
@@ -1288,7 +1344,7 @@ const StoreDashboard = () => {
                           {'⭐'.repeat(r.rating)}
                         </div>
                         <p className={styles.reviewText}>{r.text}</p>
-                        <button className={styles.deleteReviewBtn} onClick={() => deleteComment(r.product.id, r.id)}>
+                        <button className={styles.deleteReviewBtn} onClick={() => promptDeleteComment(r.product.id, r.id, r.name)}>
                           Rəyi Sil
                         </button>
                       </div>
@@ -1418,6 +1474,15 @@ const StoreDashboard = () => {
           </AnimatePresence>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        itemName={confirmModal.itemName}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -22,8 +22,10 @@ const Cart = ({ inPanel = false }) => {
   const [promoInput, setPromoInput] = useState('');
   const [promoMessage, setPromoMessage] = useState({ text: '', type: '' });
 
+  const isRealUser = user && user.email !== 'qonaq@atlasmall.az';
+
   const handleCheckout = () => {
-    if (!user) {
+    if (!isRealUser) {
       setShowAuthModal(true);
       return;
     }
@@ -206,6 +208,42 @@ const Cart = ({ inPanel = false }) => {
             <span>{finalTotal.toFixed(2)} AZN</span>
           </div>
 
+          {!isRealUser && (
+            <div style={{
+              background: 'rgba(212, 175, 55, 0.08)',
+              border: '1px solid rgba(212, 175, 55, 0.25)',
+              borderRadius: '10px',
+              padding: '12px',
+              margin: '15px 0 5px 0',
+              fontSize: '0.88rem',
+              color: 'var(--text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              flexWrap: 'wrap'
+            }}>
+              <span>🔒 Sifarişi tamamlamaq üçün qeydiyyatdan keçin</span>
+              <button 
+                type="button" 
+                onClick={() => setShowAuthModal(true)}
+                style={{
+                  background: 'var(--primary)',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Qeydiyyat / Daxil Ol
+              </button>
+            </div>
+          )}
+
           <div className={styles.checkoutForm}>
             <h3>Çatdırılma Məlumatları</h3>
             <div className={styles.formGroup}>
@@ -238,8 +276,13 @@ const Cart = ({ inPanel = false }) => {
 
       <AuthModal
         isOpen={showAuthModal}
-        onClose={(success) => setShowAuthModal(false)}
-        message="Sifariş vermək üçün hesabınıza daxil olun"
+        onClose={(success) => {
+          setShowAuthModal(false);
+          if (success) {
+            handleCheckout();
+          }
+        }}
+        message="Sifariş vermək üçün hesabınıza daxil olun və ya qeydiyyatdan keçin"
       />
     </div>
   );

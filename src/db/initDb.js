@@ -126,7 +126,7 @@ export async function initDatabase() {
     if (parseInt(userRes.rows[0].count) === 0) {
       console.log('🌱 [Neon DB] Seeding initial users...');
       const defaultUsers = [
-        ['atlas@admin.com', 'AtlasMall Admin', 'admin123', 'superadmin', 'active', null, null, null, null],
+        ['rovshan.mammad03@gmail.com', 'Rövşən Məmmədov (Admin)', 'admin123', 'superadmin', 'active', null, null, null, null],
         ['qonaq@atlasmall.az', 'Qonaq İstifadəçi', 'qonaq123', 'user', 'active', null, null, null, null],
         ['vogue@bame.az', 'Vogue Art', 'vogue', 'vendor', 'approved', 'vogue_art', 'Vogue Art', 'Premium', '+994 50 111 22 33'],
         ['modernist@bame.az', 'Modernist', 'modernist', 'vendor', 'approved', 'modernist', 'Modernist', 'Müasir', '+994 51 222 33 44'],

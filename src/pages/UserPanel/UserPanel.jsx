@@ -37,6 +37,22 @@ const UserPanel = () => {
     }
   }
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Lock body scroll when mobile menu drawer is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   const [storeSearchTerm, setStoreSearchTerm] = useState('');
 
   // Compute boutiques list
@@ -114,6 +130,7 @@ const UserPanel = () => {
           {user.name.charAt(0).toUpperCase()}
         </div>
       </header>
+
       {/* Slide Drawer for Mobile (user info + logout) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
