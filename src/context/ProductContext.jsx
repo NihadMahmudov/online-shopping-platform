@@ -290,37 +290,55 @@ export const ProductProvider = ({ children }) => {
     localStorage.setItem('atlas_showcase_cards', JSON.stringify(showcaseCards));
   }, [products, categories, badges, collections, flashSale, stories, showcaseCards]);
 
+  // Helper function to upload multiple image candidates to Cloudinary
+  const processProductImages = async (imagesList) => {
+    if (!Array.isArray(imagesList) || imagesList.length === 0) return [];
+    const sliced = imagesList.slice(0, 5);
+    const uploaded = await Promise.all(
+      sliced.map(async (img) => {
+        if (typeof img === 'string' && (img.startsWith('data:') || img.startsWith('blob:'))) {
+          try {
+            const res = await uploadImageToCloudinary(img, 'atlasmall_products');
+            return res?.url || img;
+          } catch (err) {
+            console.warn('Failed to upload base64 image to Cloudinary:', err);
+            return img;
+          }
+        } else if (img && typeof img === 'object' && (img instanceof File || img instanceof Blob)) {
+          try {
+            const res = await uploadImageToCloudinary(img, 'atlasmall_products');
+            return res?.url || '';
+          } catch (err) {
+            console.warn('Failed to upload File object to Cloudinary:', err);
+            return '';
+          }
+        }
+        return img;
+      })
+    );
+    return uploaded.filter(Boolean);
+  };
+
   // ── Products ────────────────────────────────────────────
   const addProduct = async (product, storeId = null, storeName = null) => {
-    let imageUrl = product.img;
+    let candidateImages = Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : (product.img ? [product.img] : []);
 
-    // If image is a File or base64 data URL, upload to Cloudinary first
-    if (product.imageFile || (typeof product.img === 'string' && product.img.startsWith('data:'))) {
-      try {
-        const uploadResult = await uploadImageToCloudinary(
-          product.imageFile || product.img,
-          'atlasmall_products'
-        );
-        if (uploadResult && uploadResult.url) {
-          imageUrl = uploadResult.url;
-        }
-      } catch (err) {
-        console.warn('Cloudinary upload fallback to current image:', err);
-      }
+    if (product.imageFile && !candidateImages.includes(product.imageFile)) {
+      candidateImages = [product.imageFile, ...candidateImages];
     }
 
-    const rawImages = Array.isArray(product.images) && product.images.length > 0
-      ? product.images
-      : (imageUrl ? [imageUrl] : []);
-    const productImages = rawImages.slice(0, 5);
+    const uploadedImages = await processProductImages(candidateImages);
+    const mainImg = uploadedImages[0] || product.img || '';
 
     const newProductData = {
       name: product.name,
       category: product.category || 'all',
       price: Number(product.price),
       oldPrice: product.oldPrice ? Number(product.oldPrice) : null,
-      img: productImages[0] || imageUrl,
-      images: productImages,
+      img: mainImg,
+      images: uploadedImages.length > 0 ? uploadedImages : [mainImg],
       badge: product.badge || 'Yeni',
       collections: product.collections || ['flash'],
       storeId: storeId || product.storeId || 'bame_demo',
@@ -364,9 +382,23 @@ export const ProductProvider = ({ children }) => {
   };
 
   const updateProduct = async (id, data) => {
-    setProducts(prev => prev.map(p => String(p.id) === String(id) ? { ...p, ...data } : p));
+    let updatedData = { ...data };
+
+    if (updatedData.images || updatedData.img) {
+      const candidateImages = Array.isArray(updatedData.images) && updatedData.images.length > 0
+        ? updatedData.images
+        : (updatedData.img ? [updatedData.img] : []);
+
+      const uploadedImages = await processProductImages(candidateImages);
+      if (uploadedImages.length > 0) {
+        updatedData.images = uploadedImages;
+        updatedData.img = uploadedImages[0];
+      }
+    }
+
+    setProducts(prev => prev.map(p => String(p.id) === String(id) ? { ...p, ...updatedData } : p));
     try {
-      await updateProductApi(id, data);
+      await updateProductApi(id, updatedData);
     } catch (e) {
       console.warn('Backend product update error:', e);
     }

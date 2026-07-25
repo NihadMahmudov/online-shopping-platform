@@ -28,7 +28,8 @@ const upload = multer({
 });
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Initialize database tables on server start if DATABASE_URL is available
 initDatabase().catch(err => {
