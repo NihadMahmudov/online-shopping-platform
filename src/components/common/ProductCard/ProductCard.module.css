@@ -50,6 +50,72 @@
   }
 }
 
+/* ─── Carousel Controls ─── */
+.carouselBtnLeft,
+.carouselBtnRight {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  opacity: 0.85;
+}
+
+.carouselBtnLeft:hover,
+.carouselBtnRight:hover {
+  background: #ffffff;
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carouselBtnLeft {
+  left: 6px;
+}
+
+.carouselBtnRight {
+  right: 6px;
+}
+
+.imageDots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px 6px;
+  border-radius: 12px;
+  backdrop-filter: blur(2px);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activeDot {
+  background: #D4AF37;
+  width: 12px;
+  border-radius: 4px;
+}
+
 /* ─── Top Badge (Bestseller / Yeni) ─── */
 .topBadge {
   position: absolute;

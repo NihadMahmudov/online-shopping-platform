@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, ShoppingCart, Bookmark } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Heart, MessageCircle, Share2, ShoppingCart, Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
@@ -15,6 +15,24 @@ const ProductCard = ({ product }) => {
   const [likes, setLikes] = useState(product.likes || 124);
   const isLiked = isInWishlist(product.id);
   const [authModal, setAuthModal] = useState({ open: false, message: '', action: null });
+  const [currentImgIdx, setCurrentImgIdx] = useState(0);
+
+  const allImages = useMemo(() => {
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      return product.images;
+    }
+    return product.img ? [product.img] : [];
+  }, [product.images, product.img]);
+
+  const handlePrevImage = (e) => {
+    e?.stopPropagation();
+    setCurrentImgIdx(prev => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleNextImage = (e) => {
+    e?.stopPropagation();
+    setCurrentImgIdx(prev => (prev + 1) % allImages.length);
+  };
 
   const isRealUser = user && user.email !== 'qonaq@atlasmall.az';
 
@@ -63,7 +81,41 @@ const ProductCard = ({ product }) => {
         </div>
 
         <div className={styles.imageWrapper}>
-          <img src={product.img} alt={product.name} />
+          <img src={allImages[currentImgIdx] || product.img} alt={product.name} />
+
+          {allImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                className={styles.carouselBtnLeft}
+                onClick={handlePrevImage}
+                aria-label="Əvvəlki şəkil"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                className={styles.carouselBtnRight}
+                onClick={handleNextImage}
+                aria-label="Növbəti şəkil"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              <div className={styles.imageDots}>
+                {allImages.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`${styles.dot} ${idx === currentImgIdx ? styles.activeDot : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImgIdx(idx);
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className={styles.actions}>

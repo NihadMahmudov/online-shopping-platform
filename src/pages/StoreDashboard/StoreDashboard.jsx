@@ -5,7 +5,8 @@ import {
   LogOut, Store, TrendingUp, ShoppingBag, Eye, ImagePlus,
   ShoppingCart, Zap, Calendar, CheckCircle, Camera,
   Phone, MapPin, User, Users, Clock, MessageSquare, Check, Truck,
-  ChevronDown, ChevronUp, Mail, Search, Tag, Menu, X, Settings, Bell
+  ChevronDown, ChevronUp, Mail, Search, Tag, Menu, X, Settings, Bell,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -44,6 +45,7 @@ const StoreDashboard = () => {
   const [success, setSuccess] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [formPreviewIdx, setFormPreviewIdx] = useState(0);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -313,8 +315,7 @@ const StoreDashboard = () => {
   };
 
   const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+    const files = Array.from(e.target.files).slice(0, 5);
     const readers = files.map(file => new Promise(resolve => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -326,6 +327,7 @@ const StoreDashboard = () => {
         img: results[0],
         images: results
       }));
+      setFormPreviewIdx(0);
     });
   };
 
@@ -334,6 +336,7 @@ const StoreDashboard = () => {
       const newImages = prev.images.filter((_, i) => i !== index);
       return { ...prev, images: newImages, img: newImages[0] || '' };
     });
+    setFormPreviewIdx(prev => Math.max(0, prev - 1));
   };
 
   const handleSubmit = async e => {
@@ -990,22 +993,59 @@ const StoreDashboard = () => {
 
                       {/* Uploaded images gallery */}
                       {form.images.length > 0 && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
-                          {form.images.map((img, idx) => (
-                            <div key={idx} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', aspectRatio: '1', border: idx === 0 ? '2.5px solid #D4AF37' : '1.5px solid #E2E8F0' }}>
-                              <img src={img} alt={`şəkil ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              {idx === 0 && (
-                                <span style={{ position: 'absolute', top: 4, left: 4, background: '#D4AF37', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '2px 5px', borderRadius: '4px' }}>ANA</span>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveImage(idx)}
-                                style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                        <div style={{ marginBottom: '16px' }}>
+                          {/* Main preview box with left & right buttons */}
+                          <div style={{ position: 'relative', width: '100%', height: '220px', borderRadius: '14px', overflow: 'hidden', background: '#1e293b', marginBottom: '10px' }}>
+                            <img 
+                              src={form.images[formPreviewIdx] || form.img} 
+                              alt="Önizləmə" 
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            />
+                            {form.images.length > 1 && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormPreviewIdx(prev => (prev - 1 + form.images.length) % form.images.length)}
+                                  style={{ position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
+                                >
+                                  <ChevronLeft size={18} color="#000" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormPreviewIdx(prev => (prev + 1) % form.images.length)}
+                                  style={{ position: 'absolute', top: '50%', right: '10px', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
+                                >
+                                  <ChevronRight size={18} color="#000" />
+                                </button>
+                                <span style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px', borderRadius: '12px' }}>
+                                  {formPreviewIdx + 1} / {form.images.length}
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Thumbnails grid */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '8px' }}>
+                            {form.images.map((img, idx) => (
+                              <div 
+                                key={idx} 
+                                onClick={() => setFormPreviewIdx(idx)}
+                                style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', aspectRatio: '1', border: idx === formPreviewIdx ? '2.5px solid #D4AF37' : '1.5px solid #E2E8F0', cursor: 'pointer' }}
                               >
-                                <X size={11} />
-                              </button>
-                            </div>
-                          ))}
+                                <img src={img} alt={`şəkil ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                {idx === 0 && (
+                                  <span style={{ position: 'absolute', top: 2, left: 2, background: '#D4AF37', color: '#fff', fontSize: '0.55rem', fontWeight: 800, padding: '1px 4px', borderRadius: '3px' }}>ANA</span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                                  style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                                >
+                                  <X size={10} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 

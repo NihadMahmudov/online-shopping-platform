@@ -43,15 +43,16 @@
   color: var(--text-muted);
 }
 
-/* ─── Category Pills Bar ─── */
+/* ─── Category Pills Bar (Image 1 Design) ─── */
 .categoryPillsBar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  padding: 4px 2px 14px;
-  margin-bottom: 8px;
+  padding: 8px 4px 16px;
+  margin-bottom: 12px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .categoryPillsBar::-webkit-scrollbar {
@@ -59,31 +60,33 @@
 }
 
 .catPill {
-  background: var(--bg-alt);
-  border: 1px solid var(--border);
-  color: var(--secondary);
-  padding: 8px 16px;
+  background: #f4f1ea;
+  border: 1px solid #e4dfd3;
+  color: #2b2b2b;
+  padding: 9px 20px;
   border-radius: 50px;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .catPill:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--white);
+  background: #eae5da;
+  border-color: #d8ceb9;
+  color: #1a1a1a;
   transform: translateY(-1px);
 }
 
 .catPillActive {
-  background: var(--primary) !important;
+  background: #d4a017 !important;
   color: #ffffff !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+  border-color: #d4a017 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.38) !important;
 }
 
 /* ─── Shop Container ─── */
