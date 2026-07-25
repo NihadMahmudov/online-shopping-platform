@@ -319,41 +319,87 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, price, oldPrice, img, images, badge, collections, description, stock } = req.body;
+    const { name, category, price, oldPrice, img, images, badge, collections, description, stock, storeId, storeName } = req.body;
 
     const rawImagesList = Array.isArray(images) && images.length > 0 ? images : (img ? [img] : []);
     const imagesList = rawImagesList.slice(0, 5);
     const mainImg = imagesList[0] || img || '';
 
     if (getPool()) {
-      const targetId = !isNaN(Number(id)) ? Number(id) : id;
-      await query(
-        `UPDATE products SET
-          name = COALESCE($1, name),
-          category_id = COALESCE($2, category_id),
-          price = COALESCE($3, price),
-          old_price = $4,
-          img = CASE WHEN $5 != '' THEN $5 ELSE img END,
-          images = $6::jsonb,
-          badge = $7,
-          collections = COALESCE($8, collections),
-          description = COALESCE($9, description),
-          stock = COALESCE($10, stock)
-         WHERE id = $11`,
-        [
-          name,
-          category,
-          price ? Number(price) : null,
-          oldPrice ? Number(oldPrice) : null,
-          mainImg,
-          JSON.stringify(imagesList),
-          badge || '',
-          collections,
-          description,
-          stock ? Number(stock) : null,
-          targetId
-        ]
-      );
+      const isNumeric = !isNaN(Number(id));
+      const targetId = isNumeric ? Number(id) : null;
+
+      let updateResult = { rowCount: 0 };
+      if (targetId !== null) {
+        updateResult = await query(
+          `UPDATE products SET
+            name = COALESCE($1, name),
+            category_id = COALESCE($2, category_id),
+            price = COALESCE($3, price),
+            old_price = $4,
+            img = CASE WHEN $5 != '' THEN $5 ELSE img END,
+            images = $6::jsonb,
+            badge = $7,
+            collections = COALESCE($8, collections),
+            description = COALESCE($9, description),
+            stock = COALESCE($10, stock)
+           WHERE id = $11`,
+          [
+            name || null,
+            category || null,
+            price ? Number(price) : null,
+            oldPrice ? Number(oldPrice) : null,
+            mainImg,
+            JSON.stringify(imagesList),
+            badge || '',
+            collections || null,
+            description || null,
+            stock ? Number(stock) : null,
+            targetId
+          ]
+        );
+      }
+
+      // If no existing row was updated in Neon DB, insert as new product
+      if (updateResult.rowCount === 0) {
+        const targetStoreId = storeId || 'vogue_art';
+        const targetStoreName = storeName || 'Vogue Art';
+        const targetCategory = category || 'decor';
+
+        await query(
+          `INSERT INTO stores (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+          [targetStoreId, targetStoreName, 'Boutique Store']
+        );
+        await query(
+          `INSERT INTO categories (id, label, name) VALUES ($1, $2, $2) ON CONFLICT (id) DO NOTHING`,
+          [targetCategory, targetCategory]
+        );
+
+        const insertRes = await query(
+          `INSERT INTO products (name, category_id, price, old_price, rating, reviews, img, images, badge, collections, store_id, store_name, description, stock)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14)
+           RETURNING *`,
+          [
+            name || 'Məhsul',
+            targetCategory,
+            price ? Number(price) : 0,
+            oldPrice ? Number(oldPrice) : null,
+            5.0,
+            0,
+            mainImg,
+            JSON.stringify(imagesList),
+            badge || 'Yeni',
+            collections || ['flash'],
+            targetStoreId,
+            targetStoreName,
+            description || '',
+            stock ? Number(stock) : 10
+          ]
+        );
+        const newRow = insertRes.rows[0];
+        return res.json({ success: true, id: newRow.id, images: imagesList, img: mainImg });
+      }
+
       return res.json({ success: true, id, images: imagesList, img: mainImg });
     }
 
@@ -368,11 +414,16 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (getPool()) {
-      await query('DELETE FROM products WHERE id = $1', [id]);
+      if (!isNaN(Number(id))) {
+        await query('DELETE FROM products WHERE id = $1', [Number(id)]);
+      } else {
+        await query('DELETE FROM products WHERE name = $1', [id]);
+      }
       return res.json({ success: true, message: 'Product deleted from Neon database' });
     }
     res.json({ success: true, message: 'Deleted locally' });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('DELETE /api/products/:id error:', error);
     res.status(500).json({ error: error.message });
   }
 });

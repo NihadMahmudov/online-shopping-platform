@@ -88,6 +88,15 @@ export async function initDatabase() {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
       ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB;
+      DO $$ 
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'products' AND column_name = 'images' AND data_type = 'text'
+        ) THEN
+          ALTER TABLE products ALTER COLUMN images TYPE JSONB USING images::jsonb;
+        END IF;
+      END $$;
       UPDATE products SET images = jsonb_build_array(img) WHERE (images IS NULL OR images = 'null'::jsonb) AND img IS NOT NULL AND img != '';
     `);
 
