@@ -49,7 +49,7 @@ export async function initDatabase() {
     // 3. Create PRODUCTS table
     await query(`
       CREATE TABLE IF NOT EXISTS products (
-        id SERIAL PRIMARY KEY,
+        id BIGSERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         category_id VARCHAR(100) REFERENCES categories(id) ON DELETE SET NULL,
         price NUMERIC(10,2) NOT NULL,
@@ -57,6 +57,7 @@ export async function initDatabase() {
         rating NUMERIC(3,2) DEFAULT 5.0,
         reviews INT DEFAULT 0,
         img TEXT NOT NULL,
+        images JSONB,
         badge VARCHAR(50),
         collections TEXT[],
         store_id VARCHAR(100) REFERENCES stores(id) ON DELETE SET NULL,
@@ -92,12 +93,30 @@ export async function initDatabase() {
       BEGIN
         IF EXISTS (
           SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'products' AND column_name = 'images' AND data_type = 'text'
+          WHERE table_name = 'products' AND column_name = 'id' AND data_type = 'integer'
         ) THEN
-          ALTER TABLE products ALTER COLUMN images TYPE JSONB USING images::jsonb;
+          ALTER TABLE products ALTER COLUMN id TYPE BIGINT;
         END IF;
       END $$;
-      UPDATE products SET images = jsonb_build_array(img) WHERE (images IS NULL OR images = 'null'::jsonb) AND img IS NOT NULL AND img != '';
+      DO $$ 
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'products' AND column_name = 'images' AND data_type != 'jsonb'
+        ) THEN
+          BEGIN
+            ALTER TABLE products ALTER COLUMN images TYPE JSONB USING to_jsonb(images);
+          EXCEPTION WHEN OTHERS THEN
+            BEGIN
+              ALTER TABLE products ALTER COLUMN images TYPE JSONB USING images::jsonb;
+            EXCEPTION WHEN OTHERS THEN
+              ALTER TABLE products DROP COLUMN images;
+              ALTER TABLE products ADD COLUMN images JSONB;
+            END;
+          END;
+        END IF;
+      END $$;
+      UPDATE products SET images = jsonb_build_array(img) WHERE (images IS NULL OR images = 'null'::jsonb OR images = '[]'::jsonb) AND img IS NOT NULL AND img != '';
     `);
 
     // 5. Create NOTIFICATIONS table

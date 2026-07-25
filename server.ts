@@ -326,39 +326,35 @@ app.put('/api/products/:id', async (req, res) => {
     const mainImg = imagesList[0] || img || '';
 
     if (getPool()) {
-      const isNumeric = !isNaN(Number(id));
-      const targetId = isNumeric ? Number(id) : null;
+      const targetIdStr = String(id);
 
-      let updateResult = { rowCount: 0 };
-      if (targetId !== null) {
-        updateResult = await query(
-          `UPDATE products SET
-            name = COALESCE($1, name),
-            category_id = COALESCE($2, category_id),
-            price = COALESCE($3, price),
-            old_price = $4,
-            img = CASE WHEN $5 != '' THEN $5 ELSE img END,
-            images = $6::jsonb,
-            badge = $7,
-            collections = COALESCE($8, collections),
-            description = COALESCE($9, description),
-            stock = COALESCE($10, stock)
-           WHERE id = $11`,
-          [
-            name || null,
-            category || null,
-            price ? Number(price) : null,
-            oldPrice ? Number(oldPrice) : null,
-            mainImg,
-            JSON.stringify(imagesList),
-            badge || '',
-            collections || null,
-            description || null,
-            stock ? Number(stock) : null,
-            targetId
-          ]
-        );
-      }
+      const updateResult = await query(
+        `UPDATE products SET
+          name = COALESCE($1, name),
+          category_id = COALESCE($2, category_id),
+          price = COALESCE($3, price),
+          old_price = $4,
+          img = CASE WHEN $5 != '' THEN $5 ELSE img END,
+          images = $6::jsonb,
+          badge = $7,
+          collections = COALESCE($8, collections),
+          description = COALESCE($9, description),
+          stock = COALESCE($10, stock)
+         WHERE id::text = $11`,
+        [
+          name || null,
+          category || null,
+          price ? Number(price) : null,
+          oldPrice ? Number(oldPrice) : null,
+          mainImg,
+          JSON.stringify(imagesList),
+          badge || '',
+          collections || null,
+          description || null,
+          stock ? Number(stock) : null,
+          targetIdStr
+        ]
+      );
 
       // If no existing row was updated in Neon DB, insert as new product
       if (updateResult.rowCount === 0) {
@@ -414,11 +410,7 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (getPool()) {
-      if (!isNaN(Number(id))) {
-        await query('DELETE FROM products WHERE id = $1', [Number(id)]);
-      } else {
-        await query('DELETE FROM products WHERE name = $1', [id]);
-      }
+      await query('DELETE FROM products WHERE id::text = $1 OR name = $1', [String(id)]);
       return res.json({ success: true, message: 'Product deleted from Neon database' });
     }
     res.json({ success: true, message: 'Deleted locally' });
