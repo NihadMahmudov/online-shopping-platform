@@ -384,16 +384,14 @@ export const ProductProvider = ({ children }) => {
   const updateProduct = async (id, data) => {
     let updatedData = { ...data };
 
-    if (updatedData.images || updatedData.img) {
-      const candidateImages = Array.isArray(updatedData.images) && updatedData.images.length > 0
+    if (updatedData.images !== undefined || updatedData.img !== undefined) {
+      const candidateImages = Array.isArray(updatedData.images)
         ? updatedData.images
         : (updatedData.img ? [updatedData.img] : []);
 
       const uploadedImages = await processProductImages(candidateImages);
-      if (uploadedImages.length > 0) {
-        updatedData.images = uploadedImages;
-        updatedData.img = uploadedImages[0];
-      }
+      updatedData.images = uploadedImages;
+      updatedData.img = uploadedImages[0] || '';
     }
 
     setProducts(prev => prev.map(p => String(p.id) === String(id) ? { ...p, ...updatedData } : p));

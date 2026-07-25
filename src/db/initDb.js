@@ -88,6 +88,7 @@ export async function initDatabase() {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
       ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB;
+      UPDATE products SET images = jsonb_build_array(img) WHERE (images IS NULL OR images = 'null'::jsonb) AND img IS NOT NULL AND img != '';
     `);
 
     // 5. Create NOTIFICATIONS table

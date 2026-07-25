@@ -173,12 +173,16 @@ app.get('/api/products', async (req, res) => {
         }
 
         let parsedImages: string[] = [];
-        try {
-          if (r.images) {
-            parsedImages = typeof r.images === 'string' ? JSON.parse(r.images) : r.images;
+        if (r.images) {
+          if (Array.isArray(r.images)) {
+            parsedImages = r.images;
+          } else if (typeof r.images === 'string') {
+            try {
+              parsedImages = JSON.parse(r.images);
+            } catch (e) {
+              parsedImages = [r.images];
+            }
           }
-        } catch (e) {
-          parsedImages = [];
         }
         if (!Array.isArray(parsedImages) || parsedImages.length === 0) {
           if (r.img) parsedImages = [r.img];
@@ -246,7 +250,7 @@ app.post('/api/products', async (req, res) => {
 
       const result = await query(
         `INSERT INTO products (name, category_id, price, old_price, rating, reviews, img, images, badge, collections, store_id, store_name, description, stock)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14)
          RETURNING *`,
         [
           name,
@@ -322,14 +326,15 @@ app.put('/api/products/:id', async (req, res) => {
     const mainImg = imagesList[0] || img || '';
 
     if (getPool()) {
+      const targetId = !isNaN(Number(id)) ? Number(id) : id;
       await query(
         `UPDATE products SET
           name = COALESCE($1, name),
           category_id = COALESCE($2, category_id),
           price = COALESCE($3, price),
           old_price = $4,
-          img = COALESCE($5, img),
-          images = $6,
+          img = CASE WHEN $5 != '' THEN $5 ELSE img END,
+          images = $6::jsonb,
           badge = $7,
           collections = COALESCE($8, collections),
           description = COALESCE($9, description),
@@ -346,7 +351,7 @@ app.put('/api/products/:id', async (req, res) => {
           collections,
           description,
           stock ? Number(stock) : null,
-          id
+          targetId
         ]
       );
       return res.json({ success: true, id, images: imagesList, img: mainImg });
