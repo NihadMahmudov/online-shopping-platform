@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import {
+  fetchNotificationsFromApi,
+  sendBroadcastNotificationApi,
+  sendNotificationApi,
+  markNotificationReadApi,
+  markAllNotificationsReadApi,
+  clearNotificationsApi
+} from '../services/api';
 
 const NotificationContext = createContext();
 
@@ -35,6 +43,66 @@ export const NotificationProvider = ({ children }) => {
     ];
   });
 
+  // Fetch from Neon PostgreSQL
+  const loadNotificationsFromApi = useCallback(async (userEmail, storeId, isSuperAdmin, role) => {
+    try {
+      const dbNotifs = await fetchNotificationsFromApi({ userEmail, storeId, isSuperAdmin, role });
+      if (Array.isArray(dbNotifs) && dbNotifs.length > 0) {
+        setNotifications(prev => {
+          // Merge dbNotifs with local state to avoid duplicates
+          const dbMap = new Map();
+          dbNotifs.forEach(n => dbMap.set(String(n.id), n));
+          
+          prev.forEach(n => {
+            if (!dbMap.has(String(n.id))) {
+              dbMap.set(String(n.id), n);
+            }
+          });
+
+          const merged = Array.from(dbMap.values()).sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          localStorage.setItem('atlas_notifications_db', JSON.stringify(merged));
+          return merged;
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load notifications from API:', e);
+    }
+  }, []);
+
+  // Poll notifications from API every 10 seconds
+  useEffect(() => {
+    const savedUser = localStorage.getItem('atlas_user');
+    let currentUser = null;
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+      } catch (e) {
+        console.warn('Failed to parse user from localStorage:', e);
+      }
+    }
+
+    const email = currentUser?.email;
+    const storeId = currentUser?.storeId;
+    const isSuperAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin' || currentUser?.isSuperAdmin;
+    const role = currentUser?.role || 'user';
+
+    // Delay initial load slightly or run inside timeout to avoid sync setState in effect render phase
+    const timer = setTimeout(() => {
+      loadNotificationsFromApi(email, storeId, isSuperAdmin, role);
+    }, 0);
+
+    const interval = setInterval(() => {
+      loadNotificationsFromApi(email, storeId, isSuperAdmin, role);
+    }, 10000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [loadNotificationsFromApi]);
+
   useEffect(() => {
     localStorage.setItem('atlas_notifications_db', JSON.stringify(notifications));
   }, [notifications]);
@@ -54,7 +122,7 @@ export const NotificationProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const addNotification = ({ userEmail, storeId, title, message, orderId, sender = null, type = 'info' }) => {
+  const addNotification = async ({ userEmail, storeId, title, message, orderId, sender = null, type = 'info' }) => {
     const newNotif = {
       id: `NOTIF-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       userEmail: userEmail || null,
@@ -67,11 +135,27 @@ export const NotificationProvider = ({ children }) => {
       read: false,
       createdAt: new Date().toISOString()
     };
+
     setNotifications(prev => [newNotif, ...prev]);
+
+    // Async push to Neon DB
+    try {
+      await sendNotificationApi({
+        userEmail: userEmail || null,
+        storeId: storeId || null,
+        title,
+        message,
+        sender: newNotif.sender
+      });
+    } catch (e) {
+      console.warn('Failed to push notification to DB:', e);
+    }
+
     return newNotif;
   };
 
-  const broadcastNotification = ({ targetGroup = 'all', title, message, sender = '👑 AtlasMall SuperAdmin' }) => {
+  const broadcastNotification = async ({ targetGroup = 'all', title, message, sender = '👑 AtlasMall SuperAdmin' }) => {
+    // 1. Local update for immediate UI feedback
     const savedUsers = localStorage.getItem('atlas_users_db');
     let usersList = savedUsers ? JSON.parse(savedUsers) : [];
 
@@ -100,14 +184,28 @@ export const NotificationProvider = ({ children }) => {
     });
 
     setNotifications(prev => [...newNotifs, ...prev]);
-    return newNotifs.length;
+
+    // 2. Persistent update in Neon PostgreSQL Database!
+    try {
+      const apiRes = await sendBroadcastNotificationApi({ targetGroup, title, message, sender });
+      console.log('✅ Broadcast saved to Neon PostgreSQL:', apiRes);
+    } catch (e) {
+      console.error('❌ Error sending broadcast to Neon DB:', e);
+    }
+
+    return newNotifs.length || 1;
   };
 
-  const markAsRead = (id) => {
+  const markAsRead = async (id) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    try {
+      await markNotificationReadApi(id);
+    } catch (e) {
+      console.warn('Failed to mark read on API:', e);
+    }
   };
 
-  const markAllAsRead = (userEmail, storeId, isSuperAdmin) => {
+  const markAllAsRead = async (userEmail, storeId, isSuperAdmin) => {
     setNotifications(prev => prev.map(n => {
       let isForUser = false;
       if (isSuperAdmin) isForUser = true;
@@ -116,15 +214,25 @@ export const NotificationProvider = ({ children }) => {
 
       return isForUser ? { ...n, read: true } : n;
     }));
+    try {
+      await markAllNotificationsReadApi({ userEmail, storeId, isSuperAdmin });
+    } catch (e) {
+      console.warn('Failed to mark all read on API:', e);
+    }
   };
 
-  const clearNotifications = (userEmail, storeId, isSuperAdmin) => {
+  const clearNotifications = async (userEmail, storeId, isSuperAdmin) => {
     setNotifications(prev => prev.filter(n => {
       if (isSuperAdmin) return false;
       if (storeId && n.storeId === storeId) return false;
       if (userEmail && n.userEmail === userEmail) return false;
       return true;
     }));
+    try {
+      await clearNotificationsApi({ userEmail, storeId, isSuperAdmin });
+    } catch (e) {
+      console.warn('Failed to clear notifications on API:', e);
+    }
   };
 
   const getFilteredNotifications = (userEmail, storeId, isSuperAdmin) => {
@@ -132,6 +240,7 @@ export const NotificationProvider = ({ children }) => {
       if (isSuperAdmin) return true; // Superadmin sees all notifications
       if (storeId && n.storeId === storeId) return true; // Vendor sees store notifications
       if (userEmail && n.userEmail === userEmail) return true; // Customer sees user notifications
+      if (n.isGlobal) return true; // Global notifications
       return false;
     });
   };
@@ -149,7 +258,8 @@ export const NotificationProvider = ({ children }) => {
       markAllAsRead,
       clearNotifications,
       getFilteredNotifications,
-      getUnreadCount
+      getUnreadCount,
+      refreshNotifications: loadNotificationsFromApi
     }}>
       {children}
     </NotificationContext.Provider>

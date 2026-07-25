@@ -161,3 +161,116 @@ export async function createOrderApi(orderData) {
     throw error;
   }
 }
+
+/**
+ * Fetch notifications from Neon PostgreSQL
+ */
+export async function fetchNotificationsFromApi(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.userEmail) queryParams.append('userEmail', params.userEmail);
+    if (params.storeId) queryParams.append('storeId', params.storeId);
+    if (params.isSuperAdmin) queryParams.append('isSuperAdmin', 'true');
+    if (params.role) queryParams.append('role', params.role);
+
+    const queryString = queryParams.toString();
+    const res = await fetch(`/api/notifications${queryString ? `?${queryString}` : ''}`);
+    if (!res.ok) throw new Error('Failed to fetch notifications');
+    return await res.json();
+  } catch (error) {
+    console.warn('[API] Fetch notifications error:', error);
+    return null;
+  }
+}
+
+/**
+ * Broadcast bulk notification to all/customers/vendors via Neon PostgreSQL
+ */
+export async function sendBroadcastNotificationApi(data) {
+  try {
+    const res = await fetch('/api/notifications/broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to send broadcast notification');
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Send broadcast error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send individual notification
+ */
+export async function sendNotificationApi(data) {
+  try {
+    const res = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to send notification');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Send notification error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mark notification as read
+ */
+export async function markNotificationReadApi(id) {
+  try {
+    const res = await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+    if (!res.ok) throw new Error('Failed to mark read');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Mark notification read error:', error);
+    return null;
+  }
+}
+
+/**
+ * Mark all notifications as read
+ */
+export async function markAllNotificationsReadApi(data) {
+  try {
+    const res = await fetch('/api/notifications/read-all', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to mark all read');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Mark all notifications read error:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear notifications
+ */
+export async function clearNotificationsApi(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.userEmail) queryParams.append('userEmail', params.userEmail);
+    if (params.storeId) queryParams.append('storeId', params.storeId);
+    if (params.isSuperAdmin) queryParams.append('isSuperAdmin', 'true');
+    if (params.id) queryParams.append('id', params.id);
+
+    const queryString = queryParams.toString();
+    const res = await fetch(`/api/notifications${queryString ? `?${queryString}` : ''}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to clear notifications');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Clear notifications error:', error);
+    return null;
+  }
+}

@@ -88,12 +88,20 @@ export async function initDatabase() {
         id SERIAL PRIMARY KEY,
         recipient_email VARCHAR(255),
         store_id VARCHAR(100),
+        sender VARCHAR(255) DEFAULT '👑 AtlasMall SuperAdmin',
         title VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
         is_global BOOLEAN DEFAULT FALSE,
+        target_group VARCHAR(50) DEFAULT 'all',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Ensure columns exist if table was already created earlier
+    await query(`
+      ALTER TABLE notifications ADD COLUMN IF NOT EXISTS sender VARCHAR(255) DEFAULT '👑 AtlasMall SuperAdmin';
+      ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_group VARCHAR(50) DEFAULT 'all';
     `);
 
     // 6. Create USERS table

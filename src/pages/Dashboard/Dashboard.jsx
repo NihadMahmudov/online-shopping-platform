@@ -129,11 +129,11 @@ const Dashboard = () => {
     });
   };
 
-  const handleSendBroadcast = (e) => {
+  const handleSendBroadcast = async (e) => {
     e.preventDefault();
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
 
-    broadcastNotification({
+    await broadcastNotification({
       targetGroup: broadcastTarget,
       title: broadcastTitle.trim(),
       message: broadcastMessage.trim(),

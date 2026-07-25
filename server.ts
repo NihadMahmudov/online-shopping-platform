@@ -645,6 +645,196 @@ app.post('/api/auth/verify-code', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// 9. NOTIFICATIONS ENDPOINTS (Neon PostgreSQL)
+// ─────────────────────────────────────────────────────────────
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const { userEmail, storeId, isSuperAdmin, role } = req.query;
+
+    if (getPool()) {
+      if (isSuperAdmin === 'true') {
+        const result = await query(`
+          SELECT id, recipient_email as "userEmail", store_id as "storeId", sender, title, message, is_read as "read", is_global as "isGlobal", target_group as "targetGroup", created_at as "createdAt"
+          FROM notifications
+          ORDER BY created_at DESC
+        `);
+        return res.json(result.rows);
+      } else {
+        const cleanEmail = (userEmail || '').toString().toLowerCase().trim();
+        const cleanStoreId = storeId ? storeId.toString() : null;
+        const userRole = (role || 'user').toString();
+
+        const result = await query(
+          `SELECT id, recipient_email as "userEmail", store_id as "storeId", sender, title, message, is_read as "read", is_global as "isGlobal", target_group as "targetGroup", created_at as "createdAt"
+           FROM notifications
+           WHERE (LOWER(recipient_email) = LOWER($1) AND $1 != '')
+              OR ($2::text IS NOT NULL AND store_id = $2)
+              OR (is_global = TRUE AND (
+                    target_group = 'all' OR target_group IS NULL
+                    OR ($3::text = 'user' AND target_group = 'customers')
+                    OR ($3::text = 'vendor' AND target_group = 'vendors')
+                 ))
+           ORDER BY created_at DESC`,
+          [cleanEmail, cleanStoreId, userRole]
+        );
+        return res.json(result.rows);
+      }
+    }
+
+    res.json([]);
+  } catch (error) {
+    console.error('GET /api/notifications error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/notifications/broadcast', async (req, res) => {
+  try {
+    const { targetGroup, title, message, sender } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ error: 'Başlıq və mətn tələb olunur.' });
+    }
+
+    const group = targetGroup || 'all';
+    const senderName = sender || '👑 AtlasMall SuperAdmin';
+
+    if (getPool()) {
+      // 1. Fetch matching users from Neon DB
+      let userQuery = 'SELECT email, store_id, role FROM users';
+      const queryParams = [];
+      if (group === 'customers') {
+        userQuery += " WHERE role = 'user'";
+      } else if (group === 'vendors') {
+        userQuery += " WHERE role = 'vendor'";
+      }
+
+      const usersRes = await query(userQuery, queryParams);
+      const matchedUsers = usersRes.rows;
+
+      // 2. Insert notifications for each existing user
+      let insertedCount = 0;
+      for (const u of matchedUsers) {
+        await query(
+          `INSERT INTO notifications (recipient_email, store_id, sender, title, message, is_read, is_global, target_group)
+           VALUES ($1, $2, $3, $4, $5, FALSE, FALSE, $6)`,
+          [u.email, u.store_id || null, senderName, title, message, group]
+        );
+        insertedCount++;
+      }
+
+      // 3. Also insert 1 global entry so future/offline users match
+      await query(
+        `INSERT INTO notifications (recipient_email, store_id, sender, title, message, is_read, is_global, target_group)
+         VALUES (NULL, NULL, $1, $2, $3, FALSE, TRUE, $4)`,
+        [senderName, title, message, group]
+      );
+
+      return res.status(201).json({
+        success: true,
+        count: insertedCount,
+        message: 'Kütləvi bildiriş Neon PostgreSQL bazasına uğurla yazıldı.'
+      });
+    }
+
+    res.status(201).json({ success: true, count: 0, message: 'Local fallback mode' });
+  } catch (error) {
+    console.error('POST /api/notifications/broadcast error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const { userEmail, storeId, title, message, sender } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ error: 'Başlıq və mətn tələb olunur.' });
+    }
+
+    const senderName = sender || '🔔 AtlasMall Sistem';
+
+    if (getPool()) {
+      const result = await query(
+        `INSERT INTO notifications (recipient_email, store_id, sender, title, message, is_read, is_global)
+         VALUES ($1, $2, $3, $4, $5, FALSE, FALSE)
+         RETURNING id, recipient_email as "userEmail", store_id as "storeId", sender, title, message, is_read as "read", is_global as "isGlobal", created_at as "createdAt"`,
+        [userEmail || null, storeId || null, senderName, title, message]
+      );
+      return res.status(201).json(result.rows[0]);
+    }
+
+    res.status(201).json({
+      id: Date.now(),
+      userEmail,
+      storeId,
+      sender: senderName,
+      title,
+      message,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('POST /api/notifications error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (getPool()) {
+      await query('UPDATE notifications SET is_read = TRUE WHERE id = $1', [id]);
+      return res.json({ success: true });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/notifications/read-all', async (req, res) => {
+  try {
+    const { userEmail, storeId, isSuperAdmin } = req.body;
+    if (getPool()) {
+      if (isSuperAdmin) {
+        await query('UPDATE notifications SET is_read = TRUE');
+      } else {
+        await query(
+          `UPDATE notifications SET is_read = TRUE
+           WHERE LOWER(recipient_email) = LOWER($1) OR ($2::text IS NOT NULL AND store_id = $2) OR is_global = TRUE`,
+          [userEmail || '', storeId || null]
+        );
+      }
+      return res.json({ success: true });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/notifications', async (req, res) => {
+  try {
+    const { userEmail, storeId, isSuperAdmin, id } = req.query;
+    if (getPool()) {
+      if (id) {
+        await query('DELETE FROM notifications WHERE id = $1', [id]);
+      } else if (isSuperAdmin === 'true') {
+        await query('DELETE FROM notifications');
+      } else {
+        await query(
+          `DELETE FROM notifications WHERE LOWER(recipient_email) = LOWER($1) OR ($2::text IS NOT NULL AND store_id = $2)`,
+          [userEmail || '', storeId || null]
+        );
+      }
+      return res.json({ success: true });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // VITE MIDDLEWARE / PRODUCTION STATIC SERVING
 // ─────────────────────────────────────────────────────────────
 async function startServer() {
@@ -665,6 +855,19 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 [AtlasMall Server] running on http://0.0.0.0:${PORT}`);
+
+    // Self-ping Keep-Alive function to prevent Render.com 15-minute free tier spin-down
+    const KEEP_ALIVE_INTERVAL = 10 * 60 * 1000; // 10 minutes (600,000 ms)
+    setInterval(async () => {
+      try {
+        const externalUrl = process.env.RENDER_EXTERNAL_URL || process.env.SERVER_URL || `http://localhost:${PORT}`;
+        const pingUrl = `${externalUrl.replace(/\/$/, '')}/api/health`;
+        const response = await fetch(pingUrl);
+        console.log(`[Keep-Alive Ping] ${new Date().toISOString()} - Status: ${response.status}`);
+      } catch (err) {
+        console.error('[Keep-Alive Ping Error]:', err?.message || err);
+      }
+    }, KEEP_ALIVE_INTERVAL);
   });
 }
 
