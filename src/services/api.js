@@ -145,6 +145,26 @@ export async function updateStoreApi(storeId, storeData) {
 }
 
 /**
+ * Fetch orders from Neon PostgreSQL
+ */
+export async function fetchOrdersFromApi(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.userEmail) queryParams.append('userEmail', params.userEmail);
+    if (params.storeId) queryParams.append('storeId', params.storeId);
+    if (params.isSuperAdmin) queryParams.append('isSuperAdmin', 'true');
+
+    const queryString = queryParams.toString();
+    const res = await fetch(`/api/orders${queryString ? `?${queryString}` : ''}`);
+    if (!res.ok) throw new Error('Failed to fetch orders');
+    return await res.json();
+  } catch (error) {
+    console.warn('[API] Fetch orders error:', error);
+    return null;
+  }
+}
+
+/**
  * Create order in Neon PostgreSQL
  */
 export async function createOrderApi(orderData) {
@@ -158,6 +178,24 @@ export async function createOrderApi(orderData) {
     return await res.json();
   } catch (error) {
     console.error('[API] Create order error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update order status in Neon PostgreSQL
+ */
+export async function updateOrderStatusApi(orderId, status) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error('Failed to update order status');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Update order status error:', error);
     throw error;
   }
 }

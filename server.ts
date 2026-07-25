@@ -328,23 +328,19 @@ app.put('/api/stores/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// 6. ORDERS ENDPOINTS
+// 6. ORDERS ENDPOINTS (Neon PostgreSQL)
 // ─────────────────────────────────────────────────────────────
 app.get('/api/orders', async (req, res) => {
   try {
     if (getPool()) {
-      const { userEmail, storeId } = req.query;
+      const { userEmail, storeId, isSuperAdmin } = req.query;
       let sql = 'SELECT * FROM orders';
-      const params = [];
-      const conditions = [];
+      const params: any[] = [];
+      const conditions: string[] = [];
 
-      if (userEmail) {
+      if (userEmail && isSuperAdmin !== 'true') {
         params.push(userEmail);
-        conditions.push(`user_email = $${params.length}`);
-      }
-      if (storeId) {
-        params.push(storeId);
-        conditions.push(`store_id = $${params.length}`);
+        conditions.push(`LOWER(user_email) = LOWER($${params.length})`);
       }
 
       if (conditions.length > 0) {
@@ -353,45 +349,163 @@ app.get('/api/orders', async (req, res) => {
 
       sql += ' ORDER BY created_at DESC';
       const result = await query(sql, params);
-      return res.json(result.rows);
+
+      const mapped = result.rows.map(r => {
+        let parsedItems = [];
+        try {
+          parsedItems = typeof r.items === 'string' ? JSON.parse(r.items) : (r.items || []);
+        } catch (e) {
+          parsedItems = r.items || [];
+        }
+
+        return {
+          id: r.id,
+          userEmail: r.user_email,
+          customerName: r.customer_name || r.user_email?.split('@')[0] || 'Müştəri',
+          storeId: r.store_id,
+          items: parsedItems,
+          total: Number(r.total_amount),
+          totalAmount: Number(r.total_amount),
+          status: r.status || 'pending',
+          address: r.shipping_address || '',
+          shippingAddress: r.shipping_address || '',
+          phone: r.phone || '',
+          paymentMethod: r.payment_method || 'Nağd',
+          createdAt: r.created_at
+        };
+      });
+
+      if (storeId && isSuperAdmin !== 'true') {
+        const storeFiltered = mapped.filter(o =>
+          o.storeId === storeId ||
+          (Array.isArray(o.items) && o.items.some((item: any) => item.storeId === storeId))
+        );
+        return res.json(storeFiltered);
+      }
+
+      return res.json(mapped);
     }
     res.json([]);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('GET /api/orders error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { userEmail, storeId, items, totalAmount, shippingAddress, paymentMethod } = req.body;
-    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+    const { id, userEmail, customerName, storeId, items, total, totalAmount, shippingAddress, address, phone, paymentMethod } = req.body;
+    const orderId = id || ('ORD-' + Math.floor(100000 + Math.random() * 900000));
+    const finalTotal = total || totalAmount || 0;
+    const finalAddress = address || shippingAddress || '';
 
     if (getPool()) {
-      const targetStoreId = storeId || 'vogue_art';
-      await query(
-        `INSERT INTO stores (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
-        [targetStoreId, targetStoreId, 'Boutique Store']
-      );
+      const targetStoreId = storeId || (items && items[0]?.storeId) || 'vogue_art';
+      if (targetStoreId) {
+        await query(
+          `INSERT INTO stores (id, name, description) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+          [targetStoreId, targetStoreId, 'Boutique Store']
+        );
+      }
 
       const result = await query(
-        `INSERT INTO orders (id, user_email, store_id, items, total_amount, shipping_address, payment_method)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO orders (id, user_email, customer_name, store_id, items, total_amount, shipping_address, phone, payment_method, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (id) DO UPDATE SET
+           status = EXCLUDED.status,
+           total_amount = EXCLUDED.total_amount,
+           items = EXCLUDED.items,
+           customer_name = EXCLUDED.customer_name,
+           phone = EXCLUDED.phone
          RETURNING *`,
-        [orderId, userEmail, targetStoreId, JSON.stringify(items), totalAmount, shippingAddress, paymentMethod || 'Nağd']
+        [
+          orderId,
+          userEmail || '',
+          customerName || userEmail || 'Müştəri',
+          targetStoreId,
+          JSON.stringify(items || []),
+          finalTotal,
+          finalAddress,
+          phone || '',
+          paymentMethod || 'Nağd',
+          'pending'
+        ]
       );
-      return res.status(201).json(result.rows[0]);
+
+      const r = result.rows[0];
+      return res.status(201).json({
+        id: r.id,
+        userEmail: r.user_email,
+        customerName: r.customer_name,
+        storeId: r.store_id,
+        items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+        total: Number(r.total_amount),
+        status: r.status,
+        address: r.shipping_address,
+        phone: r.phone,
+        createdAt: r.created_at
+      });
     }
 
     res.status(201).json({
       id: orderId,
-      user_email: userEmail,
-      store_id: storeId,
+      userEmail,
+      customerName,
+      storeId,
       items,
-      total_amount: totalAmount,
-      status: 'Gözləmədə',
-      created_at: new Date().toISOString()
+      total: finalTotal,
+      status: 'pending',
+      address: finalAddress,
+      phone,
+      createdAt: new Date().toISOString()
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('POST /api/orders error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    if (getPool()) {
+      const result = await query(
+        `UPDATE orders SET status = $1 WHERE id = $2 RETURNING *`,
+        [status, id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Sifariş tapılmadı.' });
+      }
+      const r = result.rows[0];
+      let parsedItems = [];
+      try {
+        parsedItems = typeof r.items === 'string' ? JSON.parse(r.items) : r.items;
+      } catch (e) {
+        parsedItems = r.items || [];
+      }
+      return res.json({
+        id: r.id,
+        userEmail: r.user_email,
+        customerName: r.customer_name,
+        storeId: r.store_id,
+        items: parsedItems,
+        total: Number(r.total_amount),
+        status: r.status,
+        address: r.shipping_address,
+        phone: r.phone,
+        createdAt: r.created_at
+      });
+    }
+
+    res.json({ id, status });
+  } catch (error: any) {
+    console.error('PUT /api/orders/:id/status error:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -72,14 +72,21 @@ export async function initDatabase() {
       CREATE TABLE IF NOT EXISTS orders (
         id VARCHAR(100) PRIMARY KEY,
         user_email VARCHAR(255) NOT NULL,
-        store_id VARCHAR(100) REFERENCES stores(id) ON DELETE CASCADE,
+        customer_name VARCHAR(255),
+        store_id VARCHAR(100),
         items JSONB NOT NULL,
         total_amount NUMERIC(10,2) NOT NULL,
-        status VARCHAR(50) DEFAULT 'Gözləmədə',
+        status VARCHAR(50) DEFAULT 'pending',
         shipping_address TEXT,
+        phone VARCHAR(50),
         payment_method VARCHAR(50) DEFAULT 'Nağd',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    await query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
     `);
 
     // 5. Create NOTIFICATIONS table
