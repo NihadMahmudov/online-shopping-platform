@@ -149,21 +149,6 @@ const Navbar = () => {
           {/* Logo */}
           <div className={styles.logo}>
             <Link to={user ? (isVendor ? '/store-dashboard' : isSuperAdmin ? '/dashboard' : '/panel') : '/'}>Atlas<span>Mall</span></Link>
-            {!isCleanHeader && user && (
-              <button
-                className={styles.logoBellBtn}
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                aria-label="Bildirişlər"
-                title="Bildirişlər"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className={styles.logoBellBadge}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-            )}
           </div>
 
           {/* Desktop Nav Links */}
