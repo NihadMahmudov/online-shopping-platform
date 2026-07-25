@@ -28,6 +28,11 @@ const Home = () => {
       } else {
         navigate('/panel', { replace: true });
       }
+    } else if (window.location.hash === '#stores-directory') {
+      setTimeout(() => {
+        const el = document.getElementById('stores-directory');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
   }, [user, isVendor, isSuperAdmin, navigate]);
 

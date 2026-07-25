@@ -85,19 +85,14 @@ const Navbar = () => {
         ]
       : [
           { 
-            label: 'Kataloq', 
-            onClick: () => navigate('/panel', { state: { activeTab: 'kataloq' } }), 
-            icon: <ShoppingBag size={20} /> 
+            label: 'Mağazalar', 
+            onClick: () => navigate('/panel', { state: { activeTab: 'stores' } }), 
+            icon: <Store size={20} /> 
           },
           { 
             label: 'Kateqoriyalar', 
             onClick: () => navigate('/panel', { state: { activeTab: 'categories' } }), 
             icon: <LayoutGrid size={20} /> 
-          },
-          { 
-            label: 'Mağazalar', 
-            onClick: () => navigate('/panel', { state: { activeTab: 'stores' } }), 
-            icon: <Store size={20} /> 
           },
           { 
             label: 'Sevimlilər', 
@@ -116,11 +111,24 @@ const Navbar = () => {
           },
         ]
     : [
-        { to: '/', label: t('navbar.home'), icon: <Home size={20} /> },
-        { to: '/shop', label: 'Kataloq', icon: <ShoppingBag size={20} /> },
+        { 
+          label: 'Mağazalar', 
+          icon: <Store size={20} />,
+          onClick: () => {
+            if (location.pathname === '/') {
+              const el = document.getElementById('stores-directory');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              navigate('/#stores-directory');
+              setTimeout(() => {
+                const el = document.getElementById('stores-directory');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 150);
+            }
+          }
+        },
         { to: '/categories', label: 'Kateqoriyalar', icon: <LayoutGrid size={20} /> },
         { to: '/about', label: t('navbar.about'), icon: <User size={20} /> },
-        { to: '/contact', label: t('navbar.contact'), icon: <Package size={20} /> },
       ];
 
   return (

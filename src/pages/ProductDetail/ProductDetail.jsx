@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Heart, ShoppingCart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, ShoppingCart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -27,8 +27,6 @@ const ProductDetail = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [showCommentSuccess, setShowCommentSuccess] = useState(false);
   const [authModal, setAuthModal] = useState({ open: false, message: '', action: null });
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const categoryLabel = categories.find(c => c.id === product?.category)?.label || product?.category;
 
@@ -170,24 +168,6 @@ const ProductDetail = () => {
     }
   };
 
-  const allImages = useMemo(() => {
-    if (!product) return [];
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      return product.images;
-    }
-    return product.img ? [product.img] : [];
-  }, [product]);
-
-  const handlePrevImage = (e) => {
-    e?.stopPropagation();
-    setSelectedImageIdx(prev => (prev - 1 + allImages.length) % allImages.length);
-  };
-
-  const handleNextImage = (e) => {
-    e?.stopPropagation();
-    setSelectedImageIdx(prev => (prev + 1) % allImages.length);
-  };
-
   return (
     <>
       <motion.div 
@@ -203,55 +183,9 @@ const ProductDetail = () => {
         <div className={styles.productGrid}>
           <div className={styles.imageSection}>
             <div className={styles.mainImage}>
-              <img 
-                src={allImages[selectedImageIdx] || product.img} 
-                alt={product.name}
-                onClick={() => setIsLightboxOpen(true)}
-                title="Böyütmək üçün klikləyin"
-              />
+              <img src={product.img} alt={product.name} />
               {product.badge && <span className={styles.badge}>{product.badge}</span>}
-
-              {/* Left / Right Arrow Buttons */}
-              {allImages.length > 1 && (
-                <>
-                  <button 
-                    type="button" 
-                    className={styles.arrowLeftBtn} 
-                    onClick={handlePrevImage}
-                    aria-label="Əvvəlki şəkil"
-                  >
-                    <ChevronLeft size={22} />
-                  </button>
-                  <button 
-                    type="button" 
-                    className={styles.arrowRightBtn} 
-                    onClick={handleNextImage}
-                    aria-label="Növbəti şəkil"
-                  >
-                    <ChevronRight size={22} />
-                  </button>
-
-                  <div className={styles.imageCounter}>
-                    {selectedImageIdx + 1} / {allImages.length}
-                  </div>
-                </>
-              )}
             </div>
-
-            {/* Thumbnail Strip */}
-            {allImages.length > 1 && (
-              <div className={styles.thumbnailStrip}>
-                {allImages.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className={`${styles.thumbnailItem} ${idx === selectedImageIdx ? styles.activeThumbnail : ''}`}
-                    onClick={() => setSelectedImageIdx(idx)}
-                  >
-                    <img src={img} alt={`şəkil ${idx + 1}`} />
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className={styles.infoSection}>
@@ -464,56 +398,6 @@ const ProductDetail = () => {
         onClose={handleAuthClose}
         message={authModal.message}
       />
-
-      {/* Lightbox Modal for Fullscreen Image View */}
-      <AnimatePresence>
-        {isLightboxOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={styles.lightboxOverlay}
-            onClick={() => setIsLightboxOpen(false)}
-          >
-            <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
-              <button 
-                type="button" 
-                className={styles.lightboxClose}
-                onClick={() => setIsLightboxOpen(false)}
-              >
-                <X size={24} />
-              </button>
-
-              <img 
-                src={allImages[selectedImageIdx] || product.img} 
-                alt={product.name} 
-                className={styles.lightboxImage}
-              />
-
-              {allImages.length > 1 && (
-                <>
-                  <button 
-                    type="button" 
-                    className={styles.arrowLeftBtn} 
-                    onClick={handlePrevImage}
-                    style={{ left: '-60px' }}
-                  >
-                    <ChevronLeft size={26} />
-                  </button>
-                  <button 
-                    type="button" 
-                    className={styles.arrowRightBtn} 
-                    onClick={handleNextImage}
-                    style={{ right: '-60px' }}
-                  >
-                    <ChevronRight size={26} />
-                  </button>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 };

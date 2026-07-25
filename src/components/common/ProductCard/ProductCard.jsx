@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Star, ShoppingCart, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Star, ShoppingCart, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
@@ -15,26 +15,6 @@ const ProductCard = ({ product }) => {
   const isLiked = isInWishlist(product.id);
   const [added, setAdded] = useState(false);
   const [authModal, setAuthModal] = useState({ open: false, message: '', action: null });
-  const [currentImgIdx, setCurrentImgIdx] = useState(0);
-
-  const allImages = useMemo(() => {
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      return product.images;
-    }
-    return product.img ? [product.img] : [];
-  }, [product.images, product.img]);
-
-  const handlePrevImage = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setCurrentImgIdx(prev => (prev - 1 + allImages.length) % allImages.length);
-  };
-
-  const handleNextImage = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setCurrentImgIdx(prev => (prev + 1) % allImages.length);
-  };
 
   const hasDiscount = product.oldPrice && Number(product.oldPrice) > Number(product.price);
   const discountPercent = hasDiscount
@@ -100,7 +80,7 @@ const ProductCard = ({ product }) => {
         <div className={styles.imageWrapper}>
           <Link to={`/product/${product.id}`} tabIndex={-1}>
             <img
-              src={allImages[currentImgIdx] || product.img}
+              src={product.img}
               alt={product.name}
               loading="lazy"
               onError={e => {
@@ -109,42 +89,6 @@ const ProductCard = ({ product }) => {
               }}
             />
           </Link>
-
-          {/* Left/Right Carousel Controls */}
-          {allImages.length > 1 && (
-            <>
-              <button
-                type="button"
-                className={styles.carouselBtnLeft}
-                onClick={handlePrevImage}
-                aria-label="Əvvəlki şəkil"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                className={styles.carouselBtnRight}
-                onClick={handleNextImage}
-                aria-label="Növbəti şəkil"
-              >
-                <ChevronRight size={16} />
-              </button>
-
-              <div className={styles.imageDots}>
-                {allImages.map((_, idx) => (
-                  <span
-                    key={idx}
-                    className={`${styles.dot} ${idx === currentImgIdx ? styles.activeDot : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentImgIdx(idx);
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
 
           {/* Top Badge */}
           {product.badge && (
