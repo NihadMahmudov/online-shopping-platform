@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { products as initialProducts } from '../data/products';
-import { fetchProductsFromApi, createProductApi, deleteProductApi, uploadImageToCloudinary } from '../services/api';
+import { fetchProductsFromApi, createProductApi, updateProductApi, deleteProductApi, uploadImageToCloudinary, addCommentApi, deleteCommentApi } from '../services/api';
 
 const ProductContext = createContext();
 
@@ -246,18 +246,39 @@ export const ProductProvider = ({ children }) => {
     ];
   });
 
-  // Sync with Neon PostgreSQL backend on mount
-  useEffect(() => {
-    let isMounted = true;
-    fetchProductsFromApi()
-      .then(apiProducts => {
-        if (isMounted && Array.isArray(apiProducts) && apiProducts.length > 0) {
-          setProducts(apiProducts);
-        }
-      })
-      .catch(err => console.warn('Product sync from API failed, using cached state:', err));
-    return () => { isMounted = false; };
+  const loadProductsFromApi = useCallback(async () => {
+    try {
+      const apiProducts = await fetchProductsFromApi();
+      if (Array.isArray(apiProducts) && apiProducts.length > 0) {
+        setProducts(prev => {
+          // Merge API products with local state
+          const apiMap = new Map();
+          apiProducts.forEach(p => apiMap.set(String(p.id), p));
+
+          // Retain local products if created offline and not synced yet
+          prev.forEach(p => {
+            if (!apiMap.has(String(p.id))) {
+              apiMap.set(String(p.id), p);
+            }
+          });
+
+          return Array.from(apiMap.values());
+        });
+      }
+    } catch (err) {
+      console.warn('Product sync from API failed, using cached state:', err);
+    }
   }, []);
+
+  // Sync with Neon PostgreSQL backend on mount and poll every 10 seconds
+  useEffect(() => {
+    const timer = setTimeout(loadProductsFromApi, 0);
+    const interval = setInterval(loadProductsFromApi, 10000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [loadProductsFromApi]);
 
   useEffect(() => {
     localStorage.setItem('atlas_products', JSON.stringify(products));
@@ -288,12 +309,18 @@ export const ProductProvider = ({ children }) => {
       }
     }
 
+    const rawImages = Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : (imageUrl ? [imageUrl] : []);
+    const productImages = rawImages.slice(0, 5);
+
     const newProductData = {
       name: product.name,
       category: product.category || 'all',
       price: Number(product.price),
       oldPrice: product.oldPrice ? Number(product.oldPrice) : null,
-      img: imageUrl,
+      img: productImages[0] || imageUrl,
+      images: productImages,
       badge: product.badge || 'Yeni',
       collections: product.collections || ['flash'],
       storeId: storeId || product.storeId || 'bame_demo',
@@ -336,8 +363,13 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  const updateProduct = (id, data) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  const updateProduct = async (id, data) => {
+    setProducts(prev => prev.map(p => String(p.id) === String(id) ? { ...p, ...data } : p));
+    try {
+      await updateProductApi(id, data);
+    } catch (e) {
+      console.warn('Backend product update error:', e);
+    }
   };
 
   // Filter by storeId for vendor dashboards
@@ -378,10 +410,16 @@ export const ProductProvider = ({ children }) => {
   const updateFlashSale = (data) => setFlashSale(prev => ({ ...prev, ...data }));
 
   // ── Comments ────────────────────────────────────────────
-  const addComment = (productId, comment) => {
-    const newComment = { ...comment, id: Date.now(), date: new Date().toLocaleDateString('az-AZ') };
+  const addComment = async (productId, comment) => {
+    const commentId = String(comment.id || Date.now());
+    const newComment = {
+      ...comment,
+      id: commentId,
+      date: comment.date || new Date().toLocaleDateString('az-AZ')
+    };
+
     setProducts(prev => prev.map(p => {
-      if (p.id !== productId) return p;
+      if (String(p.id) !== String(productId)) return p;
       const updatedComments = [newComment, ...(p.comments || [])];
       const sum = updatedComments.reduce((acc, c) => acc + Number(c.rating || 5), 0);
       const avg = Number((sum / updatedComments.length).toFixed(1));
@@ -392,12 +430,19 @@ export const ProductProvider = ({ children }) => {
         rating: avg
       };
     }));
+
+    try {
+      await addCommentApi(productId, newComment);
+      loadProductsFromApi();
+    } catch (err) {
+      console.warn('Failed to save comment to Neon database:', err);
+    }
   };
 
-  const deleteComment = (productId, commentId) => {
+  const deleteComment = async (productId, commentId) => {
     setProducts(prev => prev.map(p => {
-      if (p.id !== productId) return p;
-      const updatedComments = (p.comments || []).filter(c => c.id !== commentId);
+      if (String(p.id) !== String(productId)) return p;
+      const updatedComments = (p.comments || []).filter(c => String(c.id) !== String(commentId));
       const sum = updatedComments.reduce((acc, c) => acc + Number(c.rating || 5), 0);
       const avg = updatedComments.length > 0 ? Number((sum / updatedComments.length).toFixed(1)) : 0;
       return {
@@ -407,6 +452,13 @@ export const ProductProvider = ({ children }) => {
         rating: avg
       };
     }));
+
+    try {
+      await deleteCommentApi(productId, commentId);
+      loadProductsFromApi();
+    } catch (err) {
+      console.warn('Failed to delete comment from Neon database:', err);
+    }
   };
 
   // ── Stories ─────────────────────────────────────────────

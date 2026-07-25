@@ -87,6 +87,7 @@ export async function initDatabase() {
     await query(`
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB;
     `);
 
     // 5. Create NOTIFICATIONS table
@@ -132,6 +133,20 @@ export async function initDatabase() {
       CREATE TABLE IF NOT EXISTS verification_codes (
         email VARCHAR(255) PRIMARY KEY,
         code VARCHAR(10) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 8. Create PRODUCT_COMMENTS table
+    await query(`
+      CREATE TABLE IF NOT EXISTS product_comments (
+        id VARCHAR(100) PRIMARY KEY,
+        product_id INT NOT NULL,
+        user_email VARCHAR(255),
+        name VARCHAR(255) NOT NULL,
+        rating NUMERIC(3,1) DEFAULT 5.0,
+        text TEXT NOT NULL,
+        date VARCHAR(50),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);

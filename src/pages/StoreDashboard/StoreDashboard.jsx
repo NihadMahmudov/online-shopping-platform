@@ -90,19 +90,23 @@ const StoreDashboard = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '', price: '', oldPrice: '', category: 'decor', storeCategory: '',
-    img: '', description: '', badge: '', collections: []
+    img: '', images: [], description: '', badge: '', collections: []
   });
   const [editSuccess, setEditSuccess] = useState(false);
 
   const startEditing = (product) => {
     setEditingProduct(product);
+    const existingImages = (product.images && product.images.length > 0)
+      ? product.images
+      : (product.img ? [product.img] : []);
     setEditForm({
       name: product.name || '',
       price: product.price !== undefined ? String(product.price) : '',
       oldPrice: product.oldPrice !== undefined && product.oldPrice !== null ? String(product.oldPrice) : '',
       category: product.category || 'decor',
       storeCategory: product.storeCategory || '',
-      img: product.img || '',
+      img: existingImages[0] || '',
+      images: existingImages,
       description: product.description || '',
       badge: product.badge || '',
       collections: product.collections || []
@@ -122,26 +126,48 @@ const StoreDashboard = () => {
   };
 
   const handleEditImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const readers = files.map(file => new Promise(resolve => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditForm({ ...editForm, img: reader.result });
-      };
+      reader.onloadend = () => resolve(reader.result);
       reader.readAsDataURL(file);
-    }
+    }));
+    Promise.all(readers).then(results => {
+      setEditForm(prev => {
+        const combined = [...(prev.images || []), ...results].slice(0, 5);
+        return {
+          ...prev,
+          img: combined[0] || '',
+          images: combined
+        };
+      });
+    });
+  };
+
+  const handleEditRemoveImage = (index) => {
+    setEditForm(prev => {
+      const newImages = (prev.images || []).filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: newImages,
+        img: newImages[0] || ''
+      };
+    });
   };
 
   const handleEditSubmit = e => {
     e.preventDefault();
-    if (!editForm.name || !editForm.price || !editForm.img) return;
+    if (!editForm.name || !editForm.price || (!editForm.img && editForm.images.length === 0)) return;
+    const finalImages = editForm.images.length > 0 ? editForm.images : [editForm.img];
     updateProduct(editingProduct.id, {
       name: editForm.name,
       price: Number(editForm.price),
       oldPrice: editForm.oldPrice ? Number(editForm.oldPrice) : null,
       category: editForm.category,
       storeCategory: editForm.storeCategory || null,
-      img: editForm.img,
+      img: finalImages[0] || '',
+      images: finalImages,
       description: editForm.description,
       badge: editForm.badge,
       collections: editForm.collections
@@ -321,11 +347,14 @@ const StoreDashboard = () => {
       reader.readAsDataURL(file);
     }));
     Promise.all(readers).then(results => {
-      setForm(prev => ({
-        ...prev,
-        img: results[0],
-        images: results
-      }));
+      setForm(prev => {
+        const combined = [...(prev.images || []), ...results].slice(0, 5);
+        return {
+          ...prev,
+          img: combined[0] || '',
+          images: combined
+        };
+      });
     });
   };
 
@@ -368,11 +397,11 @@ const StoreDashboard = () => {
   };
 
   // Filter reviews of products belonging to this vendor
-  const storeProductIds = new Set(storeProducts.map(p => p.id));
+  const storeProductIds = new Set(storeProducts.map(p => String(p.id)));
   const storeReviews = products
-    .filter(p => p.storeId === user.storeId)
+    .filter(p => (user.storeId && String(p.storeId) === String(user.storeId)) || storeProductIds.has(String(p.id)))
     .flatMap(p => (p.comments || []).map(c => ({ ...c, product: p })))
-    .sort((a, b) => b.id - a.id);
+    .sort((a, b) => (b.id || 0) - (a.id || 0));
 
   // Status screens
   if (user.status === 'pending') {
@@ -735,26 +764,42 @@ const StoreDashboard = () => {
                       </div>
 
                       <div className={styles.formSectionBox}>
-                        <h3 className={styles.boxTitle}>Məhsul Şəkli *</h3>
-                        <div className={styles.imageUploadBox}>
-                          <input type="file" accept="image/*" onChange={handleEditImageUpload} />
-                          {editForm.img ? (
-                            <div className={styles.imgPreviewContainer}>
-                              <img src={editForm.img} alt="preview" className={styles.imgPreviewFull} />
-                              <div className={styles.changeImgOverlay}>
-                                <Camera size={24} />
-                                <span>Şəkli Dəyişdir</span>
+                        <h3 className={styles.boxTitle}>Məhsul Şəkilləri * <span style={{ fontWeight: 400, fontSize: '0.78rem', color: '#94A3B8' }}>(Maks. 5 şəkil)</span></h3>
+
+                        {/* Uploaded images gallery */}
+                        {(editForm.images || []).length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                            {editForm.images.map((img, idx) => (
+                              <div key={idx} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', aspectRatio: '1', border: idx === 0 ? '2.5px solid #D4AF37' : '1.5px solid #E2E8F0' }}>
+                                <img src={img} alt={`şəkil ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                {idx === 0 && (
+                                  <span style={{ position: 'absolute', top: 4, left: 4, background: '#D4AF37', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '2px 5px', borderRadius: '4px' }}>ANA</span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditRemoveImage(idx)}
+                                  style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                                >
+                                  <X size={11} />
+                                </button>
                               </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Upload trigger */}
+                        {(editForm.images || []).length < 5 && (
+                          <div className={styles.imageUploadBox}>
+                            <input type="file" accept="image/*" multiple onChange={handleEditImageUpload} required={(editForm.images || []).length === 0 && !editForm.img} />
+                            <div className={styles.uploadIconWrapper}>
+                              <ImagePlus size={28} />
                             </div>
-                          ) : (
-                            <>
-                              <div className={styles.uploadIconWrapper}>
-                                <ImagePlus size={32} />
-                              </div>
-                              <div className={styles.uploadText}>Şəkil yükləmək üçün klikləyin</div>
-                            </>
-                          )}
-                        </div>
+                            <div className={styles.uploadText}>
+                              {(editForm.images || []).length === 0 ? 'Şəkillər yükləmək üçün klikləyin' : `Daha şəkil əlavə edin (${(editForm.images || []).length}/5)`}
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: '#94A3B8', marginTop: '4px' }}>İlk seçilən şəkil ana şəkil olacaq</div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

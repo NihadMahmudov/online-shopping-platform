@@ -99,6 +99,24 @@ export async function createProductApi(productData) {
 }
 
 /**
+ * Update product in Neon PostgreSQL
+ */
+export async function updateProductApi(id, productData) {
+  try {
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
+    });
+    if (!res.ok) throw new Error('Failed to update product');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Update product error:', error);
+    throw error;
+  }
+}
+
+/**
  * Delete product from Neon PostgreSQL
  */
 export async function deleteProductApi(id) {
@@ -310,5 +328,39 @@ export async function clearNotificationsApi(params = {}) {
   } catch (error) {
     console.error('[API] Clear notifications error:', error);
     return null;
+  }
+}
+
+/**
+ * Add product comment/review to Neon PostgreSQL
+ */
+export async function addCommentApi(productId, commentData) {
+  try {
+    const res = await fetch(`/api/products/${productId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(commentData)
+    });
+    if (!res.ok) throw new Error('Failed to post comment');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Add comment error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete product comment/review from Neon PostgreSQL
+ */
+export async function deleteCommentApi(productId, commentId) {
+  try {
+    const res = await fetch(`/api/products/${productId}/comments/${commentId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete comment');
+    return await res.json();
+  } catch (error) {
+    console.error('[API] Delete comment error:', error);
+    throw error;
   }
 }

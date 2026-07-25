@@ -139,22 +139,69 @@ app.get('/api/products', async (req, res) => {
       sql += ' ORDER BY created_at DESC';
 
       const result = await query(sql, params);
-      const mapped = result.rows.map(r => ({
-        id: r.id,
-        name: r.name,
-        category: r.category_id,
-        price: Number(r.price),
-        oldPrice: r.old_price ? Number(r.old_price) : null,
-        rating: Number(r.rating || 5.0),
-        reviews: r.reviews || 0,
-        img: r.img, // Cloudinary URL
-        badge: r.badge,
-        collections: r.collections || [],
-        storeId: r.store_id,
-        storeName: r.store_name,
-        description: r.description,
-        stock: r.stock
-      }));
+
+      // Fetch comments for all products
+      let commentsByProduct: Record<string, any[]> = {};
+      try {
+        const commentsRes = await query('SELECT * FROM product_comments ORDER BY created_at DESC');
+        commentsRes.rows.forEach(c => {
+          const pid = String(c.product_id);
+          if (!commentsByProduct[pid]) commentsByProduct[pid] = [];
+          commentsByProduct[pid].push({
+            id: c.id,
+            productId: c.product_id,
+            userEmail: c.user_email,
+            name: c.name,
+            rating: Number(c.rating || 5),
+            text: c.text,
+            date: c.date
+          });
+        });
+      } catch (cErr) {
+        console.warn('Could not fetch product comments:', cErr);
+      }
+
+      const mapped = result.rows.map(r => {
+        const pid = String(r.id);
+        const pComments = commentsByProduct[pid] || [];
+        const reviewsCount = pComments.length > 0 ? pComments.length : (r.reviews || 0);
+        let effectiveRating = Number(r.rating || 5.0);
+        if (pComments.length > 0) {
+          const sum = pComments.reduce((acc, c) => acc + c.rating, 0);
+          effectiveRating = Number((sum / pComments.length).toFixed(1));
+        }
+
+        let parsedImages: string[] = [];
+        try {
+          if (r.images) {
+            parsedImages = typeof r.images === 'string' ? JSON.parse(r.images) : r.images;
+          }
+        } catch (e) {
+          parsedImages = [];
+        }
+        if (!Array.isArray(parsedImages) || parsedImages.length === 0) {
+          if (r.img) parsedImages = [r.img];
+        }
+
+        return {
+          id: r.id,
+          name: r.name,
+          category: r.category_id,
+          price: Number(r.price),
+          oldPrice: r.old_price ? Number(r.old_price) : null,
+          rating: effectiveRating,
+          reviews: reviewsCount,
+          comments: pComments,
+          img: parsedImages[0] || r.img, // Cloudinary URL
+          images: parsedImages,
+          badge: r.badge,
+          collections: r.collections || [],
+          storeId: r.store_id,
+          storeName: r.store_name,
+          description: r.description,
+          stock: r.stock
+        };
+      });
 
       return res.json(mapped);
     }
@@ -169,9 +216,13 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   try {
-    const { name, category, price, oldPrice, img, badge, collections, storeId, storeName, description, stock } = req.body;
+    const { name, category, price, oldPrice, img, images, badge, collections, storeId, storeName, description, stock } = req.body;
 
-    if (!name || !price || !img) {
+    const rawImagesList = Array.isArray(images) && images.length > 0 ? images : (img ? [img] : []);
+    const imagesList = rawImagesList.slice(0, 5);
+    const mainImg = imagesList[0] || img || '';
+
+    if (!name || !price || !mainImg) {
       return res.status(400).json({ error: 'Name, price and image URL are required' });
     }
 
@@ -193,8 +244,8 @@ app.post('/api/products', async (req, res) => {
       );
 
       const result = await query(
-        `INSERT INTO products (name, category_id, price, old_price, rating, reviews, img, badge, collections, store_id, store_name, description, stock)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `INSERT INTO products (name, category_id, price, old_price, rating, reviews, img, images, badge, collections, store_id, store_name, description, stock)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          RETURNING *`,
         [
           name,
@@ -203,7 +254,8 @@ app.post('/api/products', async (req, res) => {
           oldPrice || null,
           5.0,
           0,
-          img, // Store Cloudinary URL in Neon DB
+          mainImg,
+          JSON.stringify(imagesList),
           badge || 'Yeni',
           collections || ['flash'],
           targetStoreId,
@@ -223,6 +275,7 @@ app.post('/api/products', async (req, res) => {
         rating: Number(r.rating),
         reviews: r.reviews,
         img: r.img,
+        images: imagesList,
         badge: r.badge,
         collections: r.collections,
         storeId: r.store_id,
@@ -241,7 +294,8 @@ app.post('/api/products', async (req, res) => {
       oldPrice: oldPrice ? Number(oldPrice) : null,
       rating: 5.0,
       reviews: 0,
-      img,
+      img: mainImg,
+      images: imagesList,
       badge: badge || 'Yeni',
       collections: collections || ['flash'],
       storeId: storeId || 'vogue_art',
@@ -251,8 +305,55 @@ app.post('/api/products', async (req, res) => {
     };
 
     res.status(201).json(newProduct);
-  } catch (error) {
+  } catch (error: any) {
     console.error('POST /api/products error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, category, price, oldPrice, img, images, badge, collections, description, stock } = req.body;
+
+    const rawImagesList = Array.isArray(images) && images.length > 0 ? images : (img ? [img] : []);
+    const imagesList = rawImagesList.slice(0, 5);
+    const mainImg = imagesList[0] || img || '';
+
+    if (getPool()) {
+      await query(
+        `UPDATE products SET
+          name = COALESCE($1, name),
+          category_id = COALESCE($2, category_id),
+          price = COALESCE($3, price),
+          old_price = $4,
+          img = COALESCE($5, img),
+          images = $6,
+          badge = $7,
+          collections = COALESCE($8, collections),
+          description = COALESCE($9, description),
+          stock = COALESCE($10, stock)
+         WHERE id = $11`,
+        [
+          name,
+          category,
+          price ? Number(price) : null,
+          oldPrice ? Number(oldPrice) : null,
+          mainImg,
+          JSON.stringify(imagesList),
+          badge || '',
+          collections,
+          description,
+          stock ? Number(stock) : null,
+          id
+        ]
+      );
+      return res.json({ success: true, id, images: imagesList, img: mainImg });
+    }
+
+    res.json({ success: true, id });
+  } catch (error: any) {
+    console.error('PUT /api/products/:id error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -266,6 +367,87 @@ app.delete('/api/products/:id', async (req, res) => {
     }
     res.json({ success: true, message: 'Deleted locally' });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add comment to product
+app.post('/api/products/:id/comments', async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { id, userEmail, name, rating, text, date } = req.body;
+    const commentId = String(id || Date.now());
+    const commentDate = date || new Date().toLocaleDateString('az-AZ');
+
+    if (getPool()) {
+      await query(
+        `INSERT INTO product_comments (id, product_id, user_email, name, rating, text, date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO UPDATE SET
+           rating = EXCLUDED.rating,
+           text = EXCLUDED.text
+         RETURNING *`,
+        [commentId, productId, userEmail || '', name || 'Müştəri', rating || 5.0, text, commentDate]
+      );
+
+      // Recalculate rating & reviews count
+      const countRes = await query(
+        `SELECT COUNT(*), AVG(rating) FROM product_comments WHERE product_id = $1`,
+        [productId]
+      );
+      const newReviewsCount = parseInt(countRes.rows[0].count, 10);
+      const newRating = Number(parseFloat(countRes.rows[0].avg || 5.0).toFixed(1));
+
+      await query(
+        `UPDATE products SET rating = $1, reviews = $2 WHERE id = $3`,
+        [newRating, newReviewsCount, productId]
+      );
+
+      return res.status(201).json({
+        id: commentId,
+        productId: Number(productId),
+        userEmail,
+        name,
+        rating: Number(rating || 5),
+        text,
+        date: commentDate
+      });
+    }
+
+    res.status(201).json({ id: commentId, productId, userEmail, name, rating, text, date: commentDate });
+  } catch (error: any) {
+    console.error('POST /api/products/:id/comments error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete comment from product
+app.delete('/api/products/:id/comments/:commentId', async (req, res) => {
+  try {
+    const { id: productId, commentId } = req.params;
+
+    if (getPool()) {
+      await query(`DELETE FROM product_comments WHERE id = $1`, [commentId]);
+
+      // Recalculate rating & reviews count
+      const countRes = await query(
+        `SELECT COUNT(*), AVG(rating) FROM product_comments WHERE product_id = $1`,
+        [productId]
+      );
+      const newReviewsCount = parseInt(countRes.rows[0].count, 10);
+      const newRating = countRes.rows[0].avg ? Number(parseFloat(countRes.rows[0].avg).toFixed(1)) : 5.0;
+
+      await query(
+        `UPDATE products SET rating = $1, reviews = $2 WHERE id = $3`,
+        [newRating, newReviewsCount, productId]
+      );
+
+      return res.json({ success: true, message: 'Comment deleted' });
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('DELETE comment error:', error);
     res.status(500).json({ error: error.message });
   }
 });

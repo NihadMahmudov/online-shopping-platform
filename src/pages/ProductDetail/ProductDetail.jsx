@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Heart, ShoppingCart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { Heart, ShoppingCart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProducts } from '../../context/ProductContext';
 import { useCart } from '../../context/CartContext';
@@ -20,6 +20,9 @@ const ProductDetail = () => {
   const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -76,6 +79,7 @@ const ProductDetail = () => {
       const reviewerName = user?.name || user?.email?.split('@')[0] || 'İstifadəçi';
       addComment(product.id, {
         name: reviewerName,
+        userEmail: user?.email || '',
         rating: commentForm.rating || 5,
         text: commentForm.text.trim()
       });
@@ -98,7 +102,8 @@ const ProductDetail = () => {
     document.body.scrollTop = 0;
 
     const timer = setTimeout(() => {
-      const foundProduct = products.find(p => p.id === parseInt(id));
+      setSelectedImageIndex(0);
+      const foundProduct = products.find(p => String(p.id) === String(id));
       if (foundProduct) {
         setProduct(foundProduct);
         
@@ -168,6 +173,45 @@ const ProductDetail = () => {
     }
   };
 
+  const galleryImages = (product?.images && Array.isArray(product.images) && product.images.length > 0)
+    ? product.images
+    : (product?.img ? [product.img] : []);
+
+  const currentImage = galleryImages[selectedImageIndex] || product?.img || '';
+
+  const handlePrevImage = (e) => {
+    e?.stopPropagation();
+    setSelectedImageIndex(prev => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = (e) => {
+    e?.stopPropagation();
+    setSelectedImageIndex(prev => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const minSwipeDistance = 40;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      handleNextImage();
+    } else if (isRightSwipe) {
+      handlePrevImage();
+    }
+  };
+
   return (
     <>
       <motion.div 
@@ -182,10 +226,55 @@ const ProductDetail = () => {
 
         <div className={styles.productGrid}>
           <div className={styles.imageSection}>
-            <div className={styles.mainImage}>
-              <img src={product.img} alt={product.name} />
+            <div 
+              className={styles.mainImage}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
+              <img src={currentImage} alt={product.name} key={selectedImageIndex} />
               {product.badge && <span className={styles.badge}>{product.badge}</span>}
+
+              {galleryImages.length > 1 && (
+                <>
+                  <button 
+                    type="button" 
+                    className={`${styles.navBtn} ${styles.prevBtn}`}
+                    onClick={handlePrevImage}
+                    aria-label="Əvvəlki şəkil"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`${styles.navBtn} ${styles.nextBtn}`}
+                    onClick={handleNextImage}
+                    aria-label="Növbəti şəkil"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+
+                  <div className={styles.imageCounter}>
+                    {selectedImageIndex + 1} / {galleryImages.length}
+                  </div>
+                </>
+              )}
             </div>
+
+            {galleryImages.length > 1 && (
+              <div className={styles.thumbnailContainer}>
+                {galleryImages.map((imgUrl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`${styles.thumbnailBtn} ${selectedImageIndex === idx ? styles.activeThumbnail : ''}`}
+                    onClick={() => setSelectedImageIndex(idx)}
+                  >
+                    <img src={imgUrl} alt={`${product.name} ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className={styles.infoSection}>
